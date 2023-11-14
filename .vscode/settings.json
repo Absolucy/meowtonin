@@ -1,0 +1,33 @@
+{
+	"rust-analyzer.assist.emitMustUse": true,
+	"rust-analyzer.check.command": "clippy",
+	"rust-analyzer.inlayHints.lifetimeElisionHints.enable": "skip_trivial",
+	"rust-analyzer.lru.capacity": 512,
+	"rust-analyzer.restartServerOnConfigChange": true,
+	"rust-analyzer.typing.autoClosingAngleBrackets.enable": true,
+	"rust-analyzer.rustfmt.extraArgs": ["+nightly"],
+	"psi-header.config": {
+		"license": "0BSD",
+		"forceToTop": true
+	},
+	"psi-header.changes-tracking": {
+		"isActive": true,
+		"include": ["rust"],
+		"autoHeader": "autoSave",
+		"enforceHeader": true
+	},
+	"psi-header.lang-config": [
+		{
+			"language": "*",
+			"begin": "",
+			"end": "",
+			"prefix": "// "
+		}
+	],
+	"psi-header.templates": [
+		{
+			"language": "rust",
+			"template": ["SPDX-License-Identifier: <<spdxid>>"]
+		}
+	]
+}

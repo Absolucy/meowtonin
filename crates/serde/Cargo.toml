@@ -1,0 +1,13 @@
+[package]
+name = "meowtonin-serde"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+meowtonin = { path = "../core" }
+serde = "1"
+thiserror = "1"

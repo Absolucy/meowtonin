@@ -1,0 +1,21 @@
+{
+	"recommendations": [
+		"barbosshack.crates-io",
+		"eamodio.gitlens",
+		"editorconfig.editorconfig",
+		"jscearcy.rust-doc-viewer",
+		"marclipovsky.string-manipulation",
+		"ms-vscode.cpptools",
+		"nhoizey.gremlins",
+		"pnp.polacode",
+		"rust-lang.rust-analyzer",
+		"swellaby.vscode-rust-test-adapter",
+		"tamasfe.even-better-toml",
+		"tyriar.sort-lines",
+		"usernamehw.errorlens",
+		"vadimcn.vscode-lldb",
+		"wayou.vscode-todo-highlight",
+		"yzhang.markdown-all-in-one",
+		"psioniq.psi-header"
+	]
+}

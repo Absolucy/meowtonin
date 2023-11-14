@@ -1,0 +1,182 @@
+// SPDX-License-Identifier: 0BSD
+use crate::{byond, sys::ByondValueType as InternalByondValueType, ByondValue};
+use std::{
+	borrow::Cow,
+	fmt::{self, Display},
+	ops::Deref,
+};
+
+impl ByondValue {
+	/// Determines if the [`ByondValue`] is a null value.
+	///
+	/// # Returns
+	/// `true` if the value is null, `false` otherwise.
+	#[inline]
+	pub fn is_null(&self) -> bool {
+		unsafe { byond().ByondValue_IsNull(&self.0) }
+	}
+
+	/// Checks if the [`ByondValue`] is a number.
+	///
+	/// # Returns
+	/// `true` if the value is a number, `false` otherwise.
+	#[inline]
+	pub fn is_number(&self) -> bool {
+		unsafe { byond().ByondValue_IsNum(&self.0) }
+	}
+
+	/// Checks if the [`ByondValue`] is a string.
+	///
+	/// # Returns
+	/// `true` if the value is a string, `false` otherwise.
+	#[inline]
+	pub fn is_string(&self) -> bool {
+		unsafe { byond().ByondValue_IsStr(&self.0) }
+	}
+
+	/// Determines if the [`ByondValue`] represents a list.
+	///
+	/// # Returns
+	/// `true` if the value is a list, `false` otherwise.
+	#[inline]
+	pub fn is_list(&self) -> bool {
+		unsafe { byond().ByondValue_IsList(&self.0) }
+	}
+
+	/// Evaluates whether the [`ByondValue`] is considered "true" or not.
+	///
+	/// # Returns
+	/// `true` if the value is logically true, `false` otherwise.
+	#[inline]
+	pub fn is_true(&self) -> bool {
+		unsafe { byond().ByondValue_IsTrue(&self.0) }
+	}
+
+	#[inline]
+	pub fn is_ref(&self) -> bool {
+		self.get_type() == ByondValueType::POINTER
+	}
+}
+
+#[repr(transparent)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub struct ByondValueType(pub InternalByondValueType);
+
+#[rustfmt::skip]
+impl ByondValueType {
+	/// The type of a null value.
+	pub const NULL: Self = Self(0x00);
+	/// A value that represents a `/turf` object.
+	pub const TURF: Self = Self(0x01);
+	/// A value that represents an `/obj` object.
+	pub const OBJ: Self = Self(0x02);
+	/// A value that represents a `/mob` object.
+	pub const MOB: Self = Self(0x03);
+	/// A value that represents an `/area` object.
+	pub const AREA: Self = Self(0x04);
+	/// A value that represents an `/client` object.
+	pub const CLIENT: Self = Self(0x05);
+	/// A value that represents a string.
+	pub const STRING: Self = Self(0x06);
+	/// A value that represents an `/mob` typepath;
+	pub const MOB_TYPEPATH: Self = Self(0x08);
+	/// A value that represents an `/obj` typepath;
+	pub const OBJ_TYPEPATH: Self = Self(0x09);
+	/// A value that represents an `/turf` typepath;
+	pub const TURF_TYPEPATH: Self = Self(0x0A);
+	/// A value that represents an `/area` typepath;
+	pub const AREA_TYPEPATH: Self = Self(0x0B);
+	/// A value that represents an `/image` object.
+	pub const IMAGE: Self = Self(0x0D);
+	/// A value that represents the `/world` object.
+	pub const WORLD: Self = Self(0x0E);
+	/// A value that represents a `/list` object.
+	pub const LIST: Self = Self(0x0F);
+	/// A value that represents a `/datum` typepath.
+	pub const DATUM_TYPEPATH: Self = Self(0x20);
+	/// A value that represents a `/datum` object.
+	pub const DATUM: Self = Self(0x21);
+	/// A value that represents a number.
+	pub const NUMBER: Self = Self(0x2A);
+	/// A pointer value.
+	pub const POINTER: Self = Self(0x3C);
+}
+
+impl ByondValueType {
+	/// Returns a simple string representation of the type.
+	#[must_use]
+	pub fn name(&self) -> Cow<'static, str> {
+		match *self {
+			Self::NULL => Cow::Borrowed("null"),
+			Self::TURF => Cow::Borrowed("turf"),
+			Self::OBJ => Cow::Borrowed("obj"),
+			Self::MOB => Cow::Borrowed("mob"),
+			Self::AREA => Cow::Borrowed("area"),
+			Self::CLIENT => Cow::Borrowed("client"),
+			Self::STRING => Cow::Borrowed("string"),
+			Self::MOB_TYPEPATH => Cow::Borrowed("mob typepath"),
+			Self::OBJ_TYPEPATH => Cow::Borrowed("obj typepath"),
+			Self::TURF_TYPEPATH => Cow::Borrowed("turf typepath"),
+			Self::AREA_TYPEPATH => Cow::Borrowed("area typepath"),
+			Self::IMAGE => Cow::Borrowed("image"),
+			Self::WORLD => Cow::Borrowed("world"),
+			Self::LIST => Cow::Borrowed("list"),
+			Self::DATUM_TYPEPATH => Cow::Borrowed("datum typepath"),
+			Self::DATUM => Cow::Borrowed("datum"),
+			Self::NUMBER => Cow::Borrowed("number"),
+			Self::POINTER => Cow::Borrowed("pointer"),
+			_ => Cow::Owned(format!("unknown type {:X}", self.0)),
+		}
+	}
+}
+
+impl Display for ByondValueType {
+	#[inline]
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "{}", self.name())
+	}
+}
+
+impl AsRef<InternalByondValueType> for ByondValueType {
+	#[inline]
+	fn as_ref(&self) -> &InternalByondValueType {
+		&self.0
+	}
+}
+
+impl Deref for ByondValueType {
+	type Target = InternalByondValueType;
+
+	#[inline]
+	fn deref(&self) -> &Self::Target {
+		&self.0
+	}
+}
+
+impl PartialEq<InternalByondValueType> for ByondValueType {
+	#[inline]
+	fn eq(&self, other: &InternalByondValueType) -> bool {
+		self.0 == *other
+	}
+}
+
+impl PartialEq<ByondValueType> for InternalByondValueType {
+	#[inline]
+	fn eq(&self, other: &ByondValueType) -> bool {
+		*self == other.0
+	}
+}
+
+impl From<InternalByondValueType> for ByondValueType {
+	#[inline]
+	fn from(value: InternalByondValueType) -> Self {
+		Self(value)
+	}
+}
+
+impl From<ByondValueType> for InternalByondValueType {
+	#[inline]
+	fn from(value: ByondValueType) -> Self {
+		value.0
+	}
+}
