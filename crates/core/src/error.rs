@@ -3,7 +3,7 @@ use crate::byond;
 use std::{
 	borrow::Cow,
 	convert::Infallible,
-	ffi::{CStr, CString, FromBytesWithNulError, IntoStringError, NulError},
+	ffi::{CStr, CString, FromBytesUntilNulError, IntoStringError, NulError},
 	str::Utf8Error,
 };
 
@@ -81,9 +81,9 @@ impl From<Utf8Error> for ByondError {
 	}
 }
 
-impl From<FromBytesWithNulError> for ByondError {
+impl From<FromBytesUntilNulError> for ByondError {
 	#[inline]
-	fn from(_: FromBytesWithNulError) -> Self {
+	fn from(_: FromBytesUntilNulError) -> Self {
 		Self::NonUtf8String
 	}
 }

@@ -23,9 +23,7 @@ impl ToByond for String {
 impl ToByond for &CStr {
 	#[inline]
 	fn to_byond(&self) -> ByondResult<ByondValue> {
-		self.to_str()
-			.map_err(|_| ByondError::NonUtf8String)
-			.map(ByondValue::new_string)
+		Ok(ByondValue::new_string(self.to_bytes()))
 	}
 }
 
