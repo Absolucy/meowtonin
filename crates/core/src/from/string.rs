@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{ByondError, ByondResult, ByondValue, FromByond};
-use std::{ffi::CString, path::PathBuf};
+use crate::{ByondResult, ByondValue, FromByond};
+use std::{
+	ffi::{CStr, CString},
+	path::PathBuf,
+};
 
 impl FromByond for CString {
 	#[inline]
 	fn from_byond(value: &ByondValue) -> ByondResult<Self> {
-		value
-			.get_string()
-			.and_then(|s| CString::new(s).map_err(|_| ByondError::NonUtf8String))
+		Ok(CStr::from_bytes_until_nul(value.get_string_bytes()?.as_slice())?.to_owned())
 	}
 }
 

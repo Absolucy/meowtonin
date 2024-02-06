@@ -8,9 +8,9 @@ impl ByondValue {
 	#[inline]
 	pub fn new_string<Str>(string: Str) -> Self
 	where
-		Str: Into<String>,
+		Str: Into<Vec<u8>>,
 	{
-		let mut string = string.into().into_bytes();
+		let mut string = string.into();
 		string.push(0);
 		unsafe {
 			let mut value = MaybeUninit::uninit();
@@ -21,14 +21,14 @@ impl ByondValue {
 
 	pub fn set_string<Str>(&mut self, string: Str)
 	where
-		Str: Into<String>,
+		Str: Into<Vec<u8>>,
 	{
-		let mut string = string.into().into_bytes();
+		let mut string = string.into();
 		string.push(0);
 		unsafe { byond().ByondValue_SetStr(&mut self.0, string.as_ptr().cast()) }
 	}
 
-	pub fn get_string(&self) -> ByondResult<String> {
+	pub fn get_string_bytes(&self) -> ByondResult<Vec<u8>> {
 		thread_local! {
 			static STRING_BUFFER: RefCell<Vec<u8>> = RefCell::new(Vec::with_capacity(DEFAULT_BUFFER_CAPACITY));
 		}
@@ -38,7 +38,7 @@ impl ByondValue {
 				// Safety: if this returns true, then the buffer was large enough, and thus
 				// needed_len <= capacity.
 				buffer.set_len(needed_len);
-				return buffer_to_string(buffer);
+				return Ok(buffer.clone());
 			}
 			buffer.reserve(needed_len.saturating_sub(buffer.len()));
 			map_byond_error!(byond().Byond_ToString(
@@ -49,13 +49,17 @@ impl ByondValue {
 			// Safety: needed_len is always <= capacity here,
 			// unless BYOND did a really bad fucky wucky.
 			buffer.set_len(needed_len);
-			buffer_to_string(buffer)
+			Ok(buffer.clone())
 		})
+	}
+
+	pub fn get_string(&self) -> ByondResult<String> {
+		buffer_to_string(&self.get_string_bytes()?)
 	}
 }
 
 #[inline]
 fn buffer_to_string(buffer: &[u8]) -> ByondResult<String> {
-	let cstr = CStr::from_bytes_with_nul(buffer)?;
+	let cstr = CStr::from_bytes_until_nul(buffer)?;
 	Ok(cstr.to_str().map(str::to_owned)?)
 }
