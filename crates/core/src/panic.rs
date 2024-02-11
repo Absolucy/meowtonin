@@ -113,8 +113,9 @@ fn panic_hook(panic_info: &PanicInfo) {
 			.unwrap()
 			.as_secs();
 		let filename = format!("meowtonin-panic-{}.json", timestamp);
-		let file = std::io::BufWriter::new(std::fs::File::create(filename).unwrap());
-		serde_json::to_writer_pretty(file, &panic).unwrap();
+		let mut file = std::fs::File::create(filename).unwrap();
+		serde_json::to_writer_pretty(&mut file, &panic).unwrap();
+		file.sync_all().unwrap();
 	}
 	LAST_PANIC.set(Some(panic));
 }
@@ -129,8 +130,12 @@ pub fn setup_panic_hook() {
 /// Gets the last panic that occurred, resetting it to `None`.
 #[inline]
 pub fn get_last_panic() -> ByondValue {
-	#[cfg(all(target_os = "linux", debug_assertions))]
-	LAST_PANIC.with_borrow(|panic| eprintln!("=== PANIC! ===\n{:#?}\n=== PANIC! ===", panic));
+	#[cfg(debug_assertions)]
+	LAST_PANIC.with_borrow(|panic| {
+		if let Some(panic) = panic {
+			error!("{:#?}", panic);
+		}
+	});
 	match LAST_PANIC
 		.take()
 		.and_then(|panic| serde_json::to_string(&panic).ok())
