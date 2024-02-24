@@ -11,8 +11,6 @@
 #[macro_use]
 extern crate cfg_if;
 #[macro_use]
-extern crate static_init;
-#[macro_use]
 extern crate log;
 
 pub mod byond;

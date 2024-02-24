@@ -2,15 +2,20 @@
 use crate::{byond, sys::u4c};
 use ahash::AHasher;
 use nohash_hasher::{BuildNoHashHasher, IntMap};
+use once_cell::sync::Lazy;
+use parking_lot::RwLock;
 use std::{
 	ffi::CString,
 	hash::{Hash, Hasher},
 };
 
 const DEFAULT_CACHE_CAPACITY: usize = 512;
-#[dynamic(drop)]
-static mut STRID_CACHE: IntMap<u64, u4c> =
-	IntMap::with_capacity_and_hasher(DEFAULT_CACHE_CAPACITY, BuildNoHashHasher::default());
+pub(crate) static STRID_CACHE: Lazy<RwLock<IntMap<u64, u4c>>> = Lazy::new(|| {
+	RwLock::new(IntMap::with_capacity_and_hasher(
+		DEFAULT_CACHE_CAPACITY,
+		BuildNoHashHasher::default(),
+	))
+});
 
 fn string_hash(string: impl AsRef<str>) -> u64 {
 	let mut hasher = AHasher::default();

@@ -6,9 +6,13 @@ use std::sync::OnceLock;
 static BYOND: OnceLock<ByondApi> = OnceLock::new();
 
 fn init_lib() -> ByondApi {
+	// Clear string ID cache, just in case anything's changed.
+	crate::cache::strid::STRID_CACHE.write().clear();
+	// Run any custom initialization functions.
 	for func in inventory::iter::<InitFunc> {
 		func.0();
 	}
+	// Dynamically load the byondcore dylib.
 	let library = {
 		cfg_if! {
 			if #[cfg(windows)] {
@@ -19,6 +23,7 @@ fn init_lib() -> ByondApi {
 			}
 		}
 	};
+	// Initialize ByondApi with the loaded dylib.
 	unsafe { byondapi_sys::ByondApi::init_from_library(library) }
 		.expect("failed to initialize byondapi")
 }
