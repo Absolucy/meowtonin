@@ -9,10 +9,10 @@ inventory::collect!(InitFunc);
 /// ```
 pub struct InitFunc(pub fn() -> ());
 
-#[cfg(debug_assertions)]
+#[cfg(any(debug_assertions, feature = "rel-debugging"))]
 inventory::submit! {
 	InitFunc(|| unsafe {
-		#[cfg(windows)]
+		#[cfg(all(windows, not(feature = "rel-debugging")))] // don't allocate a console in release mode
 		let _ = windows::Win32::System::Console::AllocConsole();
 		use simplelog::*;
 		let timestamp = std::time::SystemTime::now()

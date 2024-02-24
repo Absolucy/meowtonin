@@ -54,7 +54,9 @@ macro_rules! byondval {
 			::std::sync::OnceLock::new();
 		__BYONDVAL
 			.get_or_init(|| {
-				$crate::ToByond::to_byond(&$value).expect("failed to initialize const byondval")
+				$crate::ToByond::to_byond(&$value)
+					.expect("failed to initialize const byondval")
+					.persist()
 			})
 			.clone()
 	}};

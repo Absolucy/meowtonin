@@ -107,7 +107,7 @@ fn panic_hook(panic_info: &PanicInfo) {
 		location,
 		backtrace,
 	};
-	if cfg!(debug_assertions) {
+	if cfg!(any(debug_assertions, feature = "rel-debugging")) {
 		let timestamp = std::time::SystemTime::now()
 			.duration_since(std::time::UNIX_EPOCH)
 			.unwrap()
@@ -130,7 +130,7 @@ pub fn setup_panic_hook() {
 /// Gets the last panic that occurred, resetting it to `None`.
 #[inline]
 pub fn get_last_panic() -> ByondValue {
-	#[cfg(debug_assertions)]
+	#[cfg(any(debug_assertions, feature = "rel-debugging"))]
 	LAST_PANIC.with_borrow(|panic| {
 		if let Some(panic) = panic {
 			error!("{:#?}", panic);

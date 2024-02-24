@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: 0BSD
-use bindgen::callbacks::ParseCallbacks;
+use bindgen::{callbacks::ParseCallbacks, Abi};
 use std::path::PathBuf;
 
 fn main() {
@@ -12,6 +12,7 @@ fn main() {
 		.dynamic_link_require_all(true)
 		.allowlist_item("C?Byond.*")
 		.allowlist_item("[su][1-9].*")
+		.override_abi(Abi::CUnwind, "Byond.*")
 		.generate_block(true)
 		.derive_default(true)
 		.derive_debug(true)
