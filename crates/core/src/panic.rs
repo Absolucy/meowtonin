@@ -1,8 +1,28 @@
 // SPDX-License-Identifier: 0BSD
 use crate::ByondValue;
 use backtrace::Backtrace;
+use once_cell::sync::Lazy;
+use parking_lot::RwLock;
 use serde::Serialize;
-use std::{borrow::Cow, cell::RefCell, panic::PanicInfo, sync::Once};
+use std::{
+	borrow::Cow,
+	cell::RefCell,
+	panic::PanicInfo,
+	path::{Path, PathBuf},
+	sync::Once,
+};
+
+static PANIC_OUTPUT_FOLDER: Lazy<RwLock<PathBuf>> = Lazy::new(|| RwLock::new(PathBuf::from(".")));
+
+/// Sets the folder where panic output files will be written.
+pub fn set_panic_output_folder(path: impl AsRef<Path>) {
+	let path = path.as_ref().to_path_buf();
+	if path.exists() || std::fs::create_dir_all(&path).is_ok() {
+		*PANIC_OUTPUT_FOLDER.write() = path;
+	} else {
+		*PANIC_OUTPUT_FOLDER.write() = PathBuf::from(".");
+	}
+}
 
 /// A panic that occurred in the code.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -112,7 +132,9 @@ fn panic_hook(panic_info: &PanicInfo) {
 			.duration_since(std::time::UNIX_EPOCH)
 			.unwrap()
 			.as_secs();
-		let filename = format!("meowtonin-panic-{}.json", timestamp);
+		let filename = PANIC_OUTPUT_FOLDER
+			.read()
+			.join(format!("meowtonin-panic-{}.json", timestamp));
 		let mut file = std::fs::File::create(filename).unwrap();
 		serde_json::to_writer_pretty(&mut file, &panic).unwrap();
 		file.sync_all().unwrap();
