@@ -85,6 +85,13 @@ const BLACKLIST: &[&str] = &[
 	"BaseThread",
 	"Thunk",
 	"invoke_main",
+	"SteamAvailableCheck",
+	"CallWindowProcW",
+	"DispatchMessageW",
+	"Ordinal",
+	"DungPager",
+	"TimeLib",
+	"LocalDB",
 ];
 
 fn panic_hook(panic_info: &PanicInfo) {
