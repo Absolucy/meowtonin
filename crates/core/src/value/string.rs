@@ -61,5 +61,9 @@ impl ByondValue {
 #[inline]
 fn buffer_to_string(buffer: &[u8]) -> ByondResult<String> {
 	let cstr = CStr::from_bytes_until_nul(buffer)?;
-	Ok(cstr.to_str().map(str::to_owned)?)
+	if cfg!(feature = "lossy-utf8") {
+		Ok(cstr.to_string_lossy().into_owned())
+	} else {
+		Ok(cstr.to_str().map(str::to_owned)?)
+	}
 }
