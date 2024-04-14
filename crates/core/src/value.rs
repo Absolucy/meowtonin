@@ -72,6 +72,7 @@ impl ByondValue {
 	/// Returns a reference to the "global" object.
 	#[inline]
 	pub fn global() -> Self {
+		// SAFETY: cross your fingers and pray
 		unsafe { Self::new_ref_unchecked(ByondValueType::WORLD, 1) }
 	}
 
