@@ -96,9 +96,9 @@ impl<'a> Serializer for &'a mut ByondSerializer {
 		Ok(ByondValue::null())
 	}
 
-	fn serialize_some<T: ?Sized>(self, value: &T) -> Result<Self::Ok, Self::Error>
+	fn serialize_some<T>(self, value: &T) -> Result<Self::Ok, Self::Error>
 	where
-		T: Serialize,
+		T: Serialize + ?Sized,
 	{
 		value.serialize(self)
 	}
@@ -124,18 +124,18 @@ impl<'a> Serializer for &'a mut ByondSerializer {
 	}
 
 	#[inline]
-	fn serialize_newtype_struct<T: ?Sized>(
+	fn serialize_newtype_struct<T>(
 		self,
 		_name: &'static str,
 		value: &T,
 	) -> Result<Self::Ok, Self::Error>
 	where
-		T: Serialize,
+		T: Serialize + ?Sized,
 	{
 		value.serialize(self)
 	}
 
-	fn serialize_newtype_variant<T: ?Sized>(
+	fn serialize_newtype_variant<T>(
 		self,
 		_name: &'static str,
 		_variant_index: u32,
@@ -143,7 +143,7 @@ impl<'a> Serializer for &'a mut ByondSerializer {
 		value: &T,
 	) -> Result<Self::Ok, Self::Error>
 	where
-		T: Serialize,
+		T: Serialize + ?Sized,
 	{
 		let mut list = ByondValue::new_list()?;
 		let value = value.serialize(self)?;

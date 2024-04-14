@@ -66,7 +66,7 @@ pub struct PanicFrame {
 }
 
 thread_local! {
-	static LAST_PANIC: RefCell<Option<Panic>> = RefCell::new(None);
+	static LAST_PANIC: RefCell<Option<Panic>> = const { RefCell::new(None) };
 }
 
 static SET_HOOK: Once = Once::new();
