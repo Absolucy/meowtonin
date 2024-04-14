@@ -69,6 +69,12 @@ impl ByondValue {
 		}
 	}
 
+	/// Returns a reference to the "global" object.
+	#[inline]
+	pub fn global() -> Self {
+		unsafe { Self::new_ref_unchecked(ByondValueType::WORLD, 1) }
+	}
+
 	/// Returns the length of the value.
 	/// Equivalent to calling `length(self)` in DM.
 	pub fn length<Type>(&self) -> ByondResult<Type>
