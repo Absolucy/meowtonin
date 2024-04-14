@@ -27,9 +27,9 @@ impl<'a> SerializeTupleVariant for ByondVariantSerializer<'a> {
 	type Ok = ByondValue;
 	type Error = SerializeError;
 
-	fn serialize_field<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
+	fn serialize_field<T>(&mut self, value: &T) -> Result<(), Self::Error>
 	where
-		T: Serialize,
+		T: Serialize + ?Sized,
 	{
 		self.sequence
 			.push_list(value.serialize(&mut *self.serializer)?)

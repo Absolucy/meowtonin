@@ -22,9 +22,9 @@ impl<'a> SerializeSeq for ByondSeqSerializer<'a> {
 	type Ok = ByondValue;
 	type Error = SerializeError;
 
-	fn serialize_element<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
+	fn serialize_element<T>(&mut self, value: &T) -> Result<(), Self::Error>
 	where
-		T: Serialize,
+		T: Serialize + ?Sized,
 	{
 		self.list
 			.push_list(value.serialize(&mut *self.serializer)?)?;
@@ -41,9 +41,9 @@ impl<'a> SerializeTuple for ByondSeqSerializer<'a> {
 	type Ok = ByondValue;
 	type Error = SerializeError;
 
-	fn serialize_element<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
+	fn serialize_element<T>(&mut self, value: &T) -> Result<(), Self::Error>
 	where
-		T: Serialize,
+		T: Serialize + ?Sized,
 	{
 		self.list
 			.push_list(value.serialize(&mut *self.serializer)?)
@@ -60,9 +60,9 @@ impl<'a> SerializeTupleStruct for ByondSeqSerializer<'a> {
 	type Ok = ByondValue;
 	type Error = SerializeError;
 
-	fn serialize_field<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
+	fn serialize_field<T>(&mut self, value: &T) -> Result<(), Self::Error>
 	where
-		T: Serialize,
+		T: Serialize + ?Sized,
 	{
 		self.list
 			.push_list(value.serialize(&mut *self.serializer)?)

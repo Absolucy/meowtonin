@@ -29,17 +29,17 @@ impl<'a> SerializeMap for ByondMapSerializer<'a> {
 	type Ok = ByondValue;
 	type Error = SerializeError;
 
-	fn serialize_key<T: ?Sized>(&mut self, key: &T) -> Result<(), Self::Error>
+	fn serialize_key<T>(&mut self, key: &T) -> Result<(), Self::Error>
 	where
-		T: Serialize,
+		T: Serialize + ?Sized,
 	{
 		self.key = key.serialize(&mut *self.serializer)?;
 		Ok(())
 	}
 
-	fn serialize_value<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
+	fn serialize_value<T>(&mut self, value: &T) -> Result<(), Self::Error>
 	where
-		T: Serialize,
+		T: Serialize + ?Sized,
 	{
 		let key = std::mem::take(&mut self.key);
 		let value = value.serialize(&mut *self.serializer)?;
@@ -57,13 +57,9 @@ impl<'a> SerializeStruct for ByondMapSerializer<'a> {
 	type Ok = ByondValue;
 	type Error = SerializeError;
 
-	fn serialize_field<T: ?Sized>(
-		&mut self,
-		key: &'static str,
-		value: &T,
-	) -> Result<(), Self::Error>
+	fn serialize_field<T>(&mut self, key: &'static str, value: &T) -> Result<(), Self::Error>
 	where
-		T: Serialize,
+		T: Serialize + ?Sized,
 	{
 		let key = key.to_byond()?;
 		let value = value.serialize(&mut *self.serializer)?;
@@ -81,13 +77,9 @@ impl<'a> SerializeStructVariant for ByondMapSerializer<'a> {
 	type Ok = ByondValue;
 	type Error = SerializeError;
 
-	fn serialize_field<T: ?Sized>(
-		&mut self,
-		key: &'static str,
-		value: &T,
-	) -> Result<(), Self::Error>
+	fn serialize_field<T>(&mut self, key: &'static str, value: &T) -> Result<(), Self::Error>
 	where
-		T: Serialize,
+		T: Serialize + ?Sized,
 	{
 		let key = key.to_byond()?;
 		let value = value.serialize(&mut *self.serializer)?;
