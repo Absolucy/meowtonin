@@ -222,11 +222,10 @@ unsafe fn stupid_assoc_cast(list: Vec<ByondValue>) -> Vec<[ByondValue; 2]> {
 		std::mem::size_of::<[ByondValue; 2]>()
 	);
 	if list.len() % 2 != 0 {
-		unsafe { std::hint::unreachable_unchecked() };
+		std::hint::unreachable_unchecked();
 	}
 	let stupid: Vec<CByondValue> = list.into_iter().map(|x| x.0).collect();
-	let assoc_list: Vec<[CByondValue; 2]> = bytemuck::try_cast_vec(stupid)
-		.unwrap_or_else(|_| unsafe { std::hint::unreachable_unchecked() });
+	let assoc_list: Vec<[CByondValue; 2]> = bytemuck::try_cast_vec(stupid).unwrap_unchecked();
 	assoc_list
 		.into_iter()
 		.map(|[a, b]| [ByondValue(a), ByondValue(b)])
