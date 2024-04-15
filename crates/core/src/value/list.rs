@@ -1,12 +1,6 @@
 // SPDX-License-Identifier: 0BSD
 use crate::{byond, ByondError, ByondResult, ByondValue, FromByond, ToByond};
-use std::{cell::RefCell, mem::MaybeUninit};
-
-const DEFAULT_BUFFER_CAPACITY: usize = 32;
-
-thread_local! {
-	static LIST_BUFFER: RefCell<Vec<ByondValue>> = RefCell::new(Vec::with_capacity(DEFAULT_BUFFER_CAPACITY));
-}
+use std::mem::MaybeUninit;
 
 impl ByondValue {
 	#[inline]
@@ -22,13 +16,14 @@ impl ByondValue {
 		if !self.is_list() {
 			return Err(ByondError::NotAList);
 		}
-		LIST_BUFFER.with_borrow_mut(|buffer| unsafe {
-			let mut needed_len = buffer.capacity();
+		unsafe {
+			let mut buffer = Vec::<ByondValue>::new();
+			let mut needed_len = 0;
 			if byond().Byond_ReadList(&self.0, buffer.as_mut_ptr().cast(), &mut needed_len) {
 				// Safety: if this returns true, then the buffer was large enough, and thus
 				// needed_len <= capacity.
 				buffer.set_len(needed_len);
-				return Ok(buffer.clone());
+				return Ok(buffer);
 			}
 			buffer.reserve(needed_len.saturating_sub(buffer.len()));
 			map_byond_error!(byond().Byond_ReadList(
@@ -39,22 +34,23 @@ impl ByondValue {
 			// Safety: needed_len is always <= capacity here,
 			// unless BYOND did a really bad fucky wucky.
 			buffer.set_len(needed_len);
-			Ok(buffer.clone())
-		})
+			Ok(buffer)
+		}
 	}
 
 	pub fn read_assoc_list(&self) -> ByondResult<Vec<[Self; 2]>> {
 		if !self.is_list() {
 			return Err(ByondError::NotAList);
 		}
-		LIST_BUFFER.with_borrow_mut(|buffer| unsafe {
-			let mut needed_len = buffer.capacity();
+		unsafe {
+			let mut buffer = Vec::<ByondValue>::new();
+			let mut needed_len = 0;
 			if byond().Byond_ReadListAssoc(&self.0, buffer.as_mut_ptr().cast(), &mut needed_len) {
 				// Safety: if this returns true, then the buffer was large enough, and thus
 				// needed_len <= capacity.
 				buffer.set_len(needed_len);
 				// Safety: with assoc lists, len should always be a multiple of 2.
-				return Ok(stupid_assoc_cast(buffer.clone()));
+				return Ok(stupid_assoc_cast(buffer));
 			}
 			buffer.reserve(needed_len.saturating_sub(buffer.len()));
 			map_byond_error!(byond().Byond_ReadListAssoc(
@@ -66,8 +62,8 @@ impl ByondValue {
 			// unless BYOND did a really bad fucky wucky.
 			buffer.set_len(needed_len);
 			// Safety: with assoc lists, len should always be a multiple of 2.
-			Ok(stupid_assoc_cast(buffer.clone()))
-		})
+			Ok(stupid_assoc_cast(buffer))
+		}
 	}
 
 	pub fn write_list<List>(&mut self, contents: List) -> ByondResult<()>

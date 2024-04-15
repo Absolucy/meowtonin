@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: 0BSD
 use crate::{byond, ByondResult, ByondValue, ByondXYZ};
-use std::{cell::RefCell, mem::MaybeUninit};
-
-const DEFAULT_BUFFER_CAPACITY: usize = 256;
+use std::mem::MaybeUninit;
 
 pub fn block(corner_a: ByondXYZ, corner_b: ByondXYZ) -> ByondResult<Vec<ByondValue>> {
-	thread_local! {
-		static BLOCK_BUFFER: RefCell<Vec<ByondValue>> = RefCell::new(Vec::with_capacity(DEFAULT_BUFFER_CAPACITY));
-	}
-	BLOCK_BUFFER.with_borrow_mut(|buffer| unsafe {
+	unsafe {
+		let mut buffer =
+			Vec::<ByondValue>::with_capacity(corner_a.total_block_size(&corner_b) as usize);
 		let mut needed_len = buffer.capacity();
 		if byond().Byond_Block(
 			&corner_a.0,
@@ -19,7 +16,7 @@ pub fn block(corner_a: ByondXYZ, corner_b: ByondXYZ) -> ByondResult<Vec<ByondVal
 			// Safety: if this returns true, then the buffer was large enough, and thus
 			// needed_len <= capacity.
 			buffer.set_len(needed_len);
-			return Ok(std::mem::take(buffer));
+			return Ok(buffer);
 		}
 
 		buffer.reserve(needed_len.saturating_sub(buffer.len()));
@@ -32,8 +29,8 @@ pub fn block(corner_a: ByondXYZ, corner_b: ByondXYZ) -> ByondResult<Vec<ByondVal
 		// Safety: needed_len is always <= capacity here,
 		// unless BYOND did a really bad fucky wucky.
 		buffer.set_len(needed_len);
-		Ok(std::mem::take(buffer))
-	})
+		Ok(buffer)
+	}
 }
 
 pub fn locate_xyz(location: ByondXYZ) -> ByondResult<ByondValue> {
