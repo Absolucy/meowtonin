@@ -16,7 +16,6 @@ use std::{
 
 #[must_use]
 #[repr(transparent)]
-#[derive(Clone)]
 pub struct ByondValue(pub CByondValue);
 
 impl ByondValue {
@@ -65,7 +64,7 @@ impl ByondValue {
 				args.len() as _,
 				result.as_mut_ptr()
 			))?;
-			Ok(Self(result.assume_init()))
+			Ok(Self(result.assume_init()).persist())
 		}
 	}
 
@@ -73,7 +72,7 @@ impl ByondValue {
 	#[inline]
 	pub fn global() -> Self {
 		// SAFETY: cross your fingers and pray
-		unsafe { Self::new_ref_unchecked(ByondValueType::WORLD, 1) }
+		unsafe { Self::new_ref_unchecked(ByondValueType::WORLD, 1) }.persist()
 	}
 
 	/// Returns the length of the value.
@@ -85,7 +84,7 @@ impl ByondValue {
 		unsafe {
 			let mut result = MaybeUninit::uninit();
 			map_byond_error!(byond().Byond_Length(&self.0, result.as_mut_ptr()))
-				.and_then(|_| Type::from_byond(&Self(result.assume_init())))
+				.and_then(|_| Type::from_byond(&Self(result.assume_init()).persist()))
 		}
 	}
 
@@ -121,7 +120,7 @@ impl ByondValue {
 				c_string.as_c_str().as_ptr(),
 				result.as_mut_ptr()
 			))?;
-			let result = Self(result.assume_init());
+			let result = Self(result.assume_init()).persist();
 			Return::from_byond(&result)
 		}
 	}
@@ -147,7 +146,7 @@ impl ByondValue {
 		unsafe {
 			let mut result = MaybeUninit::uninit();
 			map_byond_error!(byond().Byond_ReadPointer(&self.0, result.as_mut_ptr()))?;
-			let result = Self(result.assume_init());
+			let result = Self(result.assume_init()).persist();
 			Return::from_byond(&result)
 		}
 	}
@@ -187,7 +186,7 @@ impl Eq for ByondValue {}
 impl From<CByondValue> for ByondValue {
 	#[inline]
 	fn from(value: CByondValue) -> Self {
-		Self(value)
+		Self(value).persist()
 	}
 }
 
@@ -245,5 +244,19 @@ impl fmt::Display for ByondValue {
 				write!(f, "<{type_name}>: {string}")
 			}
 		}
+	}
+}
+
+impl Drop for ByondValue {
+	fn drop(&mut self) {
+		self.dec_ref();
+	}
+}
+
+impl Clone for ByondValue {
+	#[inline]
+	fn clone(&self) -> Self {
+		self.inc_ref();
+		Self(self.0)
 	}
 }

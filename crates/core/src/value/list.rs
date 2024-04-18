@@ -8,7 +8,7 @@ impl ByondValue {
 		unsafe {
 			let mut value = MaybeUninit::uninit();
 			map_byond_error!(byond().Byond_CreateList(value.as_mut_ptr()))?;
-			Ok(Self(value.assume_init()))
+			Ok(Self(value.assume_init()).persist())
 		}
 	}
 
@@ -23,7 +23,7 @@ impl ByondValue {
 				// Safety: if this returns true, then the buffer was large enough, and thus
 				// needed_len <= capacity.
 				buffer.set_len(needed_len);
-				return Ok(buffer);
+				return Ok(crate::inc_ref_list_contents(buffer));
 			}
 			buffer.reserve(needed_len.saturating_sub(buffer.len()));
 			map_byond_error!(byond().Byond_ReadList(
@@ -34,7 +34,7 @@ impl ByondValue {
 			// Safety: needed_len is always <= capacity here,
 			// unless BYOND did a really bad fucky wucky.
 			buffer.set_len(needed_len);
-			Ok(buffer)
+			Ok(crate::inc_ref_list_contents(buffer))
 		}
 	}
 
@@ -50,7 +50,9 @@ impl ByondValue {
 				// needed_len <= capacity.
 				buffer.set_len(needed_len);
 				// Safety: with assoc lists, len should always be a multiple of 2.
-				return Ok(stupid_assoc_cast(buffer));
+				return Ok(crate::inc_ref_assoc_list_contents(stupid_assoc_cast(
+					buffer,
+				)));
 			}
 			buffer.reserve(needed_len.saturating_sub(buffer.len()));
 			map_byond_error!(byond().Byond_ReadListAssoc(
@@ -62,7 +64,9 @@ impl ByondValue {
 			// unless BYOND did a really bad fucky wucky.
 			buffer.set_len(needed_len);
 			// Safety: with assoc lists, len should always be a multiple of 2.
-			Ok(stupid_assoc_cast(buffer))
+			Ok(crate::inc_ref_assoc_list_contents(stupid_assoc_cast(
+				buffer,
+			)))
 		}
 	}
 
@@ -90,7 +94,7 @@ impl ByondValue {
 			let mut result = MaybeUninit::uninit();
 			let idx = idx.to_byond()?;
 			map_byond_error!(byond().Byond_ReadListIndex(&self.0, &idx.0, result.as_mut_ptr()))?;
-			let result = Self(result.assume_init());
+			let result = Self(result.assume_init()).persist();
 			Value::from_byond(&result)
 		}
 	}

@@ -16,7 +16,7 @@ pub fn block(corner_a: ByondXYZ, corner_b: ByondXYZ) -> ByondResult<Vec<ByondVal
 			// Safety: if this returns true, then the buffer was large enough, and thus
 			// needed_len <= capacity.
 			buffer.set_len(needed_len);
-			return Ok(buffer);
+			return Ok(crate::inc_ref_list_contents(buffer));
 		}
 
 		buffer.reserve(needed_len.saturating_sub(buffer.len()));
@@ -29,7 +29,7 @@ pub fn block(corner_a: ByondXYZ, corner_b: ByondXYZ) -> ByondResult<Vec<ByondVal
 		// Safety: needed_len is always <= capacity here,
 		// unless BYOND did a really bad fucky wucky.
 		buffer.set_len(needed_len);
-		Ok(buffer)
+		Ok(crate::inc_ref_list_contents(buffer))
 	}
 }
 
@@ -37,7 +37,7 @@ pub fn locate_xyz(location: ByondXYZ) -> ByondResult<ByondValue> {
 	unsafe {
 		let mut result = MaybeUninit::uninit();
 		map_byond_error!(byond().Byond_LocateXYZ(&location.0, result.as_mut_ptr()))?;
-		Ok(ByondValue(result.assume_init()))
+		Ok(ByondValue(result.assume_init()).persist())
 	}
 }
 
@@ -52,6 +52,6 @@ pub fn locate(
 			.map(|list| &list.0 as *const _)
 			.unwrap_or_else(std::ptr::null);
 		map_byond_error!(byond().Byond_LocateIn(&typepath.0, list, result.as_mut_ptr()))?;
-		Ok(ByondValue(result.assume_init()))
+		Ok(ByondValue(result.assume_init()).persist())
 	}
 }

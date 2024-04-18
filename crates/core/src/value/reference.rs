@@ -7,7 +7,9 @@ impl ByondValue {
 	/// This will return `None` if the provided reference is invalid.
 	#[inline]
 	pub fn new_ref(value_type: ByondValueType, ref_id: u32) -> Option<Self> {
-		unsafe { Self::new_ref_unchecked(value_type, ref_id) }.test_ref()
+		unsafe { Self::new_ref_unchecked(value_type, ref_id) }
+			.test_ref()
+			.map(Self::persist)
 	}
 
 	/// Creates a new reference with the given value type and reference ID.
