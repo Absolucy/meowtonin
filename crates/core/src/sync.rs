@@ -10,9 +10,7 @@ extern "C-unwind" fn trampoline<F: FnOnce() -> ByondValue + Send>(
 	data: *mut c_void,
 ) -> CByondValue {
 	let data = unsafe { Box::from_raw(data as *mut CallbackData<F>) };
-	let retval = (data.callback.unwrap())().into_inner();
-	unsafe { byond().ByondValue_IncRef(&retval) };
-	retval
+	(data.callback.unwrap())().into_inner()
 }
 
 pub fn thread_sync<F>(callback: F, block: bool) -> ByondValue
@@ -24,5 +22,5 @@ where
 	});
 	let data_ptr = Box::into_raw(data) as *mut c_void;
 
-	ByondValue(unsafe { byond().Byond_ThreadSync(Some(trampoline::<F>), data_ptr, block) })
+	unsafe { byond().Byond_ThreadSync(Some(trampoline::<F>), data_ptr, block) }.into()
 }

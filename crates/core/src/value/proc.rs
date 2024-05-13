@@ -27,7 +27,7 @@ impl ByondValue {
 				args.len() as _,
 				result.as_mut_ptr(),
 			))?;
-			let result = Self(result.assume_init()).persist();
+			let result = Self(result.assume_init());
 			Return::from_byond(&result)
 		}
 	}

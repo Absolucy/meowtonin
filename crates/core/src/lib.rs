@@ -71,26 +71,5 @@ pub unsafe fn parse_args(argc: sys::u4c, argv: *mut ByondValue) -> Vec<ByondValu
 	if argc == 0 || argv.is_null() {
 		return Vec::new();
 	}
-	inc_ref_list_contents(unsafe { std::slice::from_raw_parts_mut(argv, argc as usize).to_vec() })
-}
-
-#[inline]
-pub fn inc_ref_list_contents<List>(list: List) -> List
-where
-	List: AsRef<[ByondValue]>,
-{
-	list.as_ref().iter().for_each(|value| value.inc_ref());
-	list
-}
-
-#[inline]
-pub fn inc_ref_assoc_list_contents<List>(list: List) -> List
-where
-	List: AsRef<[[ByondValue; 2]]>,
-{
-	list.as_ref().iter().for_each(|[a, b]| {
-		a.inc_ref();
-		b.inc_ref();
-	});
-	list
+	unsafe { std::slice::from_raw_parts_mut(argv, argc as usize).to_vec() }
 }

@@ -25,6 +25,6 @@ where
 			args.len() as _,
 			result.as_mut_ptr(),
 		))?;
-		Return::from_byond(&ByondValue(result.assume_init()).persist())
+		Return::from_byond(&ByondValue(result.assume_init()))
 	}
 }
