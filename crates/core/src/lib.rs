@@ -16,7 +16,7 @@ extern crate log;
 pub mod byond;
 #[macro_use]
 pub mod error;
-pub mod cache;
+/* pub mod cache; */
 pub mod from;
 pub mod init;
 pub mod misc;
