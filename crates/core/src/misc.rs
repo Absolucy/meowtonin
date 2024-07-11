@@ -36,8 +36,8 @@ pub fn block(corner_a: ByondXYZ, corner_b: ByondXYZ) -> ByondResult<Vec<ByondVal
 pub fn locate_xyz(location: ByondXYZ) -> ByondResult<ByondValue> {
 	unsafe {
 		let mut result = MaybeUninit::uninit();
-		map_byond_error!(byond().Byond_LocateXYZ(&location.0, result.as_mut_ptr()))?;
-		Ok(ByondValue(result.assume_init()))
+		map_byond_error!(byond().Byond_LocateXYZ(&location.0, result.as_mut_ptr()))
+			.map(|_| ByondValue(result.assume_init()))
 	}
 }
 
@@ -51,7 +51,7 @@ pub fn locate(
 		let list = list
 			.map(|list| &list.0 as *const _)
 			.unwrap_or_else(std::ptr::null);
-		map_byond_error!(byond().Byond_LocateIn(&typepath.0, list, result.as_mut_ptr()))?;
-		Ok(ByondValue(result.assume_init()))
+		map_byond_error!(byond().Byond_LocateIn(&typepath.0, list, result.as_mut_ptr()))
+			.map(|_| ByondValue(result.assume_init()))
 	}
 }

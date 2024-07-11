@@ -7,8 +7,8 @@ impl ByondValue {
 	pub fn new_list() -> ByondResult<Self> {
 		unsafe {
 			let mut value = MaybeUninit::uninit();
-			map_byond_error!(byond().Byond_CreateList(value.as_mut_ptr()))?;
-			Ok(Self(value.assume_init()))
+			map_byond_error!(byond().Byond_CreateList(value.as_mut_ptr()))
+				.map(|_| Self(value.assume_init()))
 		}
 	}
 
