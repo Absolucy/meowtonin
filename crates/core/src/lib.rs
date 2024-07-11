@@ -39,6 +39,7 @@ pub use crate::{
 pub use inventory;
 pub use meowtonin_impl::byond_fn;
 
+/*
 /// A simple macro to create a [`ByondValue`] from any Rust value that
 /// implements [`ToByond`].
 #[macro_export]
@@ -57,7 +58,7 @@ macro_rules! byondval {
 	($value:expr) => {
 		$crate::ToByond::to_byond(&$value).unwrap()
 	};
-}
+} */
 
 /// # Safety
 /// Don't pass in a null argv pointer please god
