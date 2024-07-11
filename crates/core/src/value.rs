@@ -6,7 +6,7 @@ pub mod reference;
 pub mod string;
 pub mod typecheck;
 
-use crate::{byond, sys::CByondValue, ByondError, ByondResult, ByondValueType, FromByond, ToByond};
+use crate::{byond, sys::CByondValue, ByondError, ByondResult, ByondValueType};
 use std::{
 	ffi::CString,
 	fmt,
@@ -30,24 +30,6 @@ impl ByondValue {
 		Self::default()
 	}
 
-	/// Shorthand for [ToByond::to_byond].
-	#[inline]
-	pub fn new_value<Value>(value: Value) -> ByondResult<Self>
-	where
-		Value: ToByond,
-	{
-		value.to_byond()
-	}
-
-	/// Shorthand for [FromByond::from_byond].
-	#[inline]
-	pub fn to<Return>(&self) -> ByondResult<Return>
-	where
-		Return: FromByond,
-	{
-		Return::from_byond(self)
-	}
-
 	/// Creates a new [ByondValue], using the given path and arguments.
 	/// Equivalent to `new path(args...)` in DM.
 	pub fn new<Path, Args>(path: Path, args: Args) -> ByondResult<Self>
@@ -57,15 +39,15 @@ impl ByondValue {
 	{
 		unsafe {
 			let mut result = MaybeUninit::uninit();
-			let path = path.into().to_byond()?;
+			let path = ByondValue::new_string(path.into());
 			let args = args.as_ref();
 			map_byond_error!(byond().Byond_New(
 				&path.0,
 				args.as_ptr().cast(),
 				args.len() as _,
 				result.as_mut_ptr()
-			))?;
-			Ok(Self(result.assume_init()))
+			))
+			.map(|_| Self(result.assume_init()))
 		}
 	}
 
@@ -78,14 +60,11 @@ impl ByondValue {
 
 	/// Returns the length of the value.
 	/// Equivalent to calling `length(self)` in DM.
-	pub fn length<Type>(&self) -> ByondResult<Type>
-	where
-		Type: FromByond,
-	{
+	pub fn length(&self) -> ByondResult<ByondValue> {
 		unsafe {
 			let mut result = MaybeUninit::uninit();
 			map_byond_error!(byond().Byond_Length(&self.0, result.as_mut_ptr()))
-				.and_then(|_| Type::from_byond(&Self(result.assume_init())))
+				.map(|_| Self(result.assume_init()))
 		}
 	}
 
@@ -100,14 +79,13 @@ impl ByondValue {
 	/// Returns the typepath of the value as a string, if it is a reference.
 	#[inline]
 	pub fn typepath(&self) -> ByondResult<String> {
-		self.read_var("type")
+		self.read_var("type").and_then(|var| var.get_string())
 	}
 
 	/// Read a variable through the ref. Fails if this isn't a ref type.
-	pub fn read_var<Name, Return>(&self, name: Name) -> ByondResult<Return>
+	pub fn read_var<Name>(&self, name: Name) -> ByondResult<ByondValue>
 	where
 		Name: AsRef<str>,
-		Return: FromByond,
 	{
 		if self.is_number() || self.is_string() || self.is_null() || self.is_list() || self.is_ref()
 		{
@@ -120,46 +98,35 @@ impl ByondValue {
 				&self.0,
 				c_string.as_c_str().as_ptr(),
 				result.as_mut_ptr()
-			))?;
-			let result = Self(result.assume_init());
-			Return::from_byond(&result)
+			))
+			.map(|_| Self(result.assume_init()))
 		}
 	}
 
 	/// Write to a variable through the ref. Fails if this isn't a ref type.
-	pub fn write_var<Name, Value>(&mut self, name: Name, value: Value) -> ByondResult<()>
+	pub fn write_var<Name, Value>(&mut self, name: Name, value: ByondValue) -> ByondResult<()>
 	where
 		Name: AsRef<str>,
-		Value: ToByond,
 	{
-		let value = value.to_byond()?;
 		let c_string = CString::new(name.as_ref()).map_err(|_| ByondError::NonUtf8String)?;
 		map_byond_error!(byond().Byond_WriteVar(&self.0, c_string.as_c_str().as_ptr(), &value.0))
 	}
 
-	pub fn read_pointer<Return>(&self) -> ByondResult<Return>
-	where
-		Return: FromByond,
-	{
+	pub fn read_pointer<Return>(&self) -> ByondResult<ByondValue> {
 		if !self.is_ref() {
 			return Err(ByondError::NotReferencable);
 		}
 		unsafe {
 			let mut result = MaybeUninit::uninit();
-			map_byond_error!(byond().Byond_ReadPointer(&self.0, result.as_mut_ptr()))?;
-			let result = Self(result.assume_init());
-			Return::from_byond(&result)
+			map_byond_error!(byond().Byond_ReadPointer(&self.0, result.as_mut_ptr()))
+				.map(|_| Self(result.assume_init()))
 		}
 	}
 
-	pub fn write_pointer<Value>(&mut self, value: Value) -> ByondResult<()>
-	where
-		Value: ToByond,
-	{
+	pub fn write_pointer<Value>(&mut self, value: ByondValue) -> ByondResult<()> {
 		if !self.is_ref() {
 			return Err(ByondError::NotReferencable);
 		}
-		let value = value.to_byond()?;
 		unsafe { map_byond_error!(byond().Byond_WritePointer(&self.0, &value.0)) }
 	}
 }
@@ -198,7 +165,7 @@ impl Hash for ByondValue {
 		match value_type {
 			ByondValueType::NULL => {}
 			ByondValueType::CLIENT => {
-				if let Ok(ckey) = self.read_var::<_, String>("ckey") {
+				if let Ok(ckey) = self.read_var("ckey").and_then(|value| value.get_string()) {
 					ckey.hash(state);
 				}
 			}
@@ -222,7 +189,10 @@ impl fmt::Display for ByondValue {
 				write!(f, "{string}")
 			}
 			ByondValueType::LIST => {
-				let length = self.length::<usize>().unwrap_or(0);
+				let length = self
+					.length()
+					.and_then(|val| val.get_number())
+					.unwrap_or(0.0) as usize;
 				write!(f, "list[len={length}]")
 			}
 			ByondValueType::POINTER => {

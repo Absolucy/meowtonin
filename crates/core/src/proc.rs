@@ -1,34 +1,25 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{
-	byond, ByondError, ByondResult, ByondValue, FromByond,
-	ToByond, /* cache::lookup_string_id, */
-};
-use std::{ffi::CString, mem::MaybeUninit};
+use crate::{byond, cache::lookup_string_id, ByondResult, ByondValue};
+use std::mem::MaybeUninit;
 
 /// Calls a global proc.
 ///
 /// Implicitly set waitfor=0, will never block.
-pub fn call_global<Name, Arg, ArgList, Return>(name: Name, args: ArgList) -> ByondResult<Return>
+pub fn call_global<Name, ArgList>(name: Name, args: ArgList) -> ByondResult<ByondValue>
 where
 	Name: AsRef<str>,
-	Arg: ToByond,
-	ArgList: IntoIterator<Item = Arg>,
-	Return: FromByond,
+	ArgList: IntoIterator<Item = ByondValue>,
 {
-	/* let name_id = lookup_string_id(name); */
-	let name = CString::new(name.as_ref()).map_err(|_| ByondError::NonUtf8String)?;
-	let args = args
-		.into_iter()
-		.map(|arg| arg.to_byond())
-		.collect::<ByondResult<Vec<_>>>()?;
+	let name_id = lookup_string_id(name);
+	let args = args.into_iter().collect::<Vec<_>>();
 	unsafe {
 		let mut result = MaybeUninit::uninit();
-		map_byond_error!(byond().Byond_CallGlobalProc(
-			name.as_ptr(),
+		map_byond_error!(byond().Byond_CallGlobalProcByStrId(
+			name_id,
 			args.as_ptr().cast(),
 			args.len() as _,
 			result.as_mut_ptr(),
-		))?;
-		Return::from_byond(&ByondValue(result.assume_init()))
+		))
+		.map(|_| ByondValue(result.assume_init()))
 	}
 }

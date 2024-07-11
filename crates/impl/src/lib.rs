@@ -2,7 +2,7 @@
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
-use syn::{parse_macro_input, FnArg, ItemFn, PatType, ReturnType};
+use syn::{parse_macro_input, ItemFn, ReturnType};
 
 #[proc_macro_attribute]
 pub fn byond_fn(_attr: TokenStream, item: TokenStream) -> TokenStream {
@@ -15,9 +15,10 @@ pub fn byond_fn(_attr: TokenStream, item: TokenStream) -> TokenStream {
 	let mod_name = format!("__byond_export_{}", func_name);
 	let mod_ident = syn::Ident::new(&mod_name, func_name.span());
 
-	let mut parse_args = Vec::new();
-
 	let length = func.sig.inputs.len();
+
+	/*
+	let mut parse_args = Vec::new();
 	for (idx, input) in func.sig.inputs.iter().enumerate() {
 		if let FnArg::Typed(PatType { attrs, pat, ty, .. }) = input {
 			let mutability = attrs.iter().find(|attr| attr.path().is_ident("mut"));
@@ -26,6 +27,7 @@ pub fn byond_fn(_attr: TokenStream, item: TokenStream) -> TokenStream {
 			});
 		}
 	}
+	*/
 
 	let return_type: TokenStream2;
 	let return_conversion = match &func.sig.output {
@@ -40,13 +42,11 @@ pub fn byond_fn(_attr: TokenStream, item: TokenStream) -> TokenStream {
 			let ty_name = quote!(#ty).to_string();
 			if ty_name.contains("Result") {
 				quote! {
-					ret
-						.map_err(::std::boxed::Box::from)
-						.and_then(|inner_ret| ::meowtonin::ByondValue::new_value(inner_ret).map_err(::std::boxed::Box::from))
+					ret.map_err(::std::boxed::Box::from)
 				}
 			} else {
 				quote! {
-					::meowtonin::ByondValue::new_value(ret).map_err(::std::boxed::Box::from)
+					ret
 				}
 			}
 		}
@@ -70,8 +70,6 @@ pub fn byond_fn(_attr: TokenStream, item: TokenStream) -> TokenStream {
 				}
 
 				fn #wrapper_ident(mut __byond_args: &[::meowtonin::ByondValue]) -> ::std::result::Result<::meowtonin::ByondValue, ::std::boxed::Box<dyn ::std::error::Error>> {
-					#(#parse_args)*
-
 					let mut __func = move || -> #return_type {
 						#body
 					};

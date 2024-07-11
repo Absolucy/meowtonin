@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{byond, ByondError, ByondResult, ByondValue, FromByond, ToByond};
+use crate::{byond, ByondError, ByondResult, ByondValue};
 use std::mem::MaybeUninit;
 
 impl ByondValue {
@@ -78,33 +78,21 @@ impl ByondValue {
 		))
 	}
 
-	pub fn read_list_index<Idx, Value>(&self, idx: &Idx) -> ByondResult<Value>
-	where
-		Idx: ToByond,
-		Value: FromByond,
-	{
+	pub fn read_list_index(&self, idx: &ByondValue) -> ByondResult<ByondValue> {
 		if !self.is_list() {
 			return Err(ByondError::NotAList);
 		}
 		unsafe {
 			let mut result = MaybeUninit::uninit();
-			let idx = idx.to_byond()?;
-			map_byond_error!(byond().Byond_ReadListIndex(&self.0, &idx.0, result.as_mut_ptr()))?;
-			let result = Self(result.assume_init());
-			Value::from_byond(&result)
+			map_byond_error!(byond().Byond_ReadListIndex(&self.0, &idx.0, result.as_mut_ptr()))
+				.map(|_| Self(result.assume_init()))
 		}
 	}
 
-	pub fn write_list_index<Idx, Value>(&mut self, idx: Idx, value: Value) -> ByondResult<()>
-	where
-		Idx: ToByond,
-		Value: ToByond,
-	{
+	pub fn write_list_index(&mut self, idx: ByondValue, value: ByondValue) -> ByondResult<()> {
 		if !self.is_list() {
 			return Err(ByondError::NotAList);
 		}
-		let idx = idx.to_byond()?;
-		let value = value.to_byond()?;
 		map_byond_error!(byond().Byond_WriteListIndex(&self.0, &idx.0, &value.0))
 	}
 
@@ -113,7 +101,9 @@ impl ByondValue {
 		if !self.is_list() {
 			return Err(ByondError::NotAList);
 		}
-		self.call("Add", [[value]])?; // byond moment
+		let mut stupid_workaround = ByondValue::new_list()?;
+		stupid_workaround.write_list([value])?;
+		let _ = self.call("Add", [stupid_workaround])?; // byond moment
 		Ok(())
 	}
 
@@ -122,12 +112,12 @@ impl ByondValue {
 		if !self.is_list() {
 			return Err(ByondError::NotAList);
 		}
-		let len = self.length::<usize>()?;
-		if len == 0 {
+		let len = self.length()?;
+		if (len.get_number()? as usize) == 0 {
 			return Ok(None);
 		}
 		let value = self.read_list_index(&len)?;
-		self.call("Remove", [&value])?;
+		let _ = self.call("Remove", [value.clone()])?;
 		Ok(Some(value))
 	}
 
@@ -139,7 +129,7 @@ impl ByondValue {
 		if !self.is_list() {
 			return Err(ByondError::NotAList);
 		}
-		let len = self.length::<usize>()?;
+		let len = self.length()?.get_number()? as usize;
 		Ok(ListIterator {
 			value: self,
 			len,
@@ -151,7 +141,7 @@ impl ByondValue {
 		if !self.is_list() {
 			return Err(ByondError::NotAList);
 		}
-		let len = self.length::<usize>()?;
+		let len = self.length()?.get_number()? as usize;
 		Ok(ValueIterator {
 			value: self,
 			len,
