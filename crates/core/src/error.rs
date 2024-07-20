@@ -51,7 +51,6 @@ impl ByondError {
 		}
 	}
 
-	#[inline]
 	pub fn boxed<Err>(err: Err) -> Self
 	where
 		Err: std::error::Error + Send + 'static,
@@ -68,28 +67,24 @@ impl From<Infallible> for ByondError {
 }
 
 impl From<NulError> for ByondError {
-	#[inline]
 	fn from(_: NulError) -> Self {
 		Self::NonUtf8String
 	}
 }
 
 impl From<Utf8Error> for ByondError {
-	#[inline]
 	fn from(_: Utf8Error) -> Self {
 		Self::NonUtf8String
 	}
 }
 
 impl From<FromBytesUntilNulError> for ByondError {
-	#[inline]
 	fn from(_: FromBytesUntilNulError) -> Self {
 		Self::NonUtf8String
 	}
 }
 
 impl From<IntoStringError> for ByondError {
-	#[inline]
 	fn from(_: IntoStringError) -> Self {
 		Self::NonUtf8String
 	}

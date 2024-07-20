@@ -3,7 +3,6 @@ use crate::{byond, ByondError, ByondResult, ByondValue, FromByond, ToByond};
 use std::mem::MaybeUninit;
 
 impl ByondValue {
-	#[inline]
 	pub fn new_list() -> ByondResult<Self> {
 		unsafe {
 			let mut value = MaybeUninit::uninit();

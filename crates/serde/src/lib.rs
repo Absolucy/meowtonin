@@ -9,7 +9,6 @@ use meowtonin::ByondValue;
 
 pub use crate::value::ByondSerde;
 
-#[inline]
 pub fn serialize<Value>(v: &Value) -> Result<ByondValue, error::SerializeError>
 where
 	Value: serde::Serialize,
@@ -17,7 +16,6 @@ where
 	v.serialize(&mut ser::ByondSerializer)
 }
 
-#[inline]
 pub fn deserialize<'de, Value>(value: ByondValue) -> Result<Value, error::DeserializeError>
 where
 	Value: serde::Deserialize<'de>,

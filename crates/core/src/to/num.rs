@@ -7,21 +7,18 @@ use std::borrow::Cow;
 ///////////////////////
 
 impl ToByond for u8 {
-	#[inline]
 	fn to_byond(&self) -> ByondResult<ByondValue> {
 		Ok(ByondValue::new_num(f32::from(*self)))
 	}
 }
 
 impl ToByond for u16 {
-	#[inline]
 	fn to_byond(&self) -> ByondResult<ByondValue> {
 		Ok(ByondValue::new_num(f32::from(*self)))
 	}
 }
 
 impl ToByond for u32 {
-	#[inline]
 	fn to_byond(&self) -> ByondResult<ByondValue> {
 		const MAX_VALUE: u32 = f32::MAX as u32;
 
@@ -38,7 +35,6 @@ impl ToByond for u32 {
 }
 
 impl ToByond for usize {
-	#[inline]
 	fn to_byond(&self) -> ByondResult<ByondValue> {
 		const MAX_VALUE: usize = f32::MAX as usize;
 
@@ -59,21 +55,18 @@ impl ToByond for usize {
 ////////////
 
 impl ToByond for i8 {
-	#[inline]
 	fn to_byond(&self) -> ByondResult<ByondValue> {
 		Ok(ByondValue::new_num(f32::from(*self)))
 	}
 }
 
 impl ToByond for i16 {
-	#[inline]
 	fn to_byond(&self) -> ByondResult<ByondValue> {
 		Ok(ByondValue::new_num(f32::from(*self)))
 	}
 }
 
 impl ToByond for i32 {
-	#[inline]
 	fn to_byond(&self) -> ByondResult<ByondValue> {
 		const MIN_VALUE: i32 = f32::MIN as i32;
 		const MAX_VALUE: i32 = f32::MAX as i32;
@@ -91,7 +84,6 @@ impl ToByond for i32 {
 }
 
 impl ToByond for isize {
-	#[inline]
 	fn to_byond(&self) -> ByondResult<ByondValue> {
 		const MIN_VALUE: isize = f32::MIN as isize;
 		const MAX_VALUE: isize = f32::MAX as isize;
@@ -113,14 +105,12 @@ impl ToByond for isize {
 //////////
 
 impl ToByond for bool {
-	#[inline]
 	fn to_byond(&self) -> ByondResult<ByondValue> {
 		u8::from(*self).to_byond()
 	}
 }
 
 impl ToByond for f32 {
-	#[inline]
 	fn to_byond(&self) -> ByondResult<ByondValue> {
 		Ok(ByondValue::new_num(*self))
 	}

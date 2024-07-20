@@ -21,77 +21,62 @@ impl<'a> Serializer for &'a mut ByondSerializer {
 	type SerializeStruct = map::ByondMapSerializer<'a>;
 	type SerializeStructVariant = map::ByondMapSerializer<'a>;
 
-	#[inline]
 	fn serialize_bool(self, v: bool) -> Result<Self::Ok, Self::Error> {
 		v.to_byond().map_err(SerializeError::from)
 	}
 
-	#[inline]
 	fn serialize_i8(self, v: i8) -> Result<Self::Ok, Self::Error> {
 		v.to_byond().map_err(SerializeError::from)
 	}
 
-	#[inline]
 	fn serialize_i16(self, v: i16) -> Result<Self::Ok, Self::Error> {
 		v.to_byond().map_err(SerializeError::from)
 	}
 
-	#[inline]
 	fn serialize_i32(self, v: i32) -> Result<Self::Ok, Self::Error> {
 		v.to_byond().map_err(SerializeError::from)
 	}
 
-	#[inline]
 	fn serialize_i64(self, v: i64) -> Result<Self::Ok, Self::Error> {
 		(v as i32).to_byond().map_err(SerializeError::from)
 	}
 
-	#[inline]
 	fn serialize_u8(self, v: u8) -> Result<Self::Ok, Self::Error> {
 		v.to_byond().map_err(SerializeError::from)
 	}
 
-	#[inline]
 	fn serialize_u16(self, v: u16) -> Result<Self::Ok, Self::Error> {
 		v.to_byond().map_err(SerializeError::from)
 	}
 
-	#[inline]
 	fn serialize_u32(self, v: u32) -> Result<Self::Ok, Self::Error> {
 		v.to_byond().map_err(SerializeError::from)
 	}
 
-	#[inline]
 	fn serialize_u64(self, v: u64) -> Result<Self::Ok, Self::Error> {
 		(v as u32).to_byond().map_err(SerializeError::from)
 	}
 
-	#[inline]
 	fn serialize_f32(self, v: f32) -> Result<Self::Ok, Self::Error> {
 		v.to_byond().map_err(SerializeError::from)
 	}
 
-	#[inline]
 	fn serialize_f64(self, v: f64) -> Result<Self::Ok, Self::Error> {
 		(v as f32).to_byond().map_err(SerializeError::from)
 	}
 
-	#[inline]
 	fn serialize_char(self, v: char) -> Result<Self::Ok, Self::Error> {
 		v.to_string().to_byond().map_err(SerializeError::from)
 	}
 
-	#[inline]
 	fn serialize_str(self, v: &str) -> Result<Self::Ok, Self::Error> {
 		v.to_byond().map_err(SerializeError::from)
 	}
 
-	#[inline]
 	fn serialize_bytes(self, v: &[u8]) -> Result<Self::Ok, Self::Error> {
 		v.to_vec().to_byond().map_err(SerializeError::from)
 	}
 
-	#[inline]
 	fn serialize_none(self) -> Result<Self::Ok, Self::Error> {
 		Ok(ByondValue::null())
 	}
@@ -103,17 +88,14 @@ impl<'a> Serializer for &'a mut ByondSerializer {
 		value.serialize(self)
 	}
 
-	#[inline]
 	fn serialize_unit(self) -> Result<Self::Ok, Self::Error> {
 		Ok(ByondValue::null())
 	}
 
-	#[inline]
 	fn serialize_unit_struct(self, _name: &'static str) -> Result<Self::Ok, Self::Error> {
 		self.serialize_unit()
 	}
 
-	#[inline]
 	fn serialize_unit_variant(
 		self,
 		_name: &'static str,
@@ -123,7 +105,6 @@ impl<'a> Serializer for &'a mut ByondSerializer {
 		self.serialize_str(variant)
 	}
 
-	#[inline]
 	fn serialize_newtype_struct<T>(
 		self,
 		_name: &'static str,
@@ -151,17 +132,14 @@ impl<'a> Serializer for &'a mut ByondSerializer {
 		Ok(list)
 	}
 
-	#[inline]
 	fn serialize_seq(self, _len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
 		seq::ByondSeqSerializer::new(self)
 	}
 
-	#[inline]
 	fn serialize_tuple(self, _len: usize) -> Result<Self::SerializeTuple, Self::Error> {
 		seq::ByondSeqSerializer::new(self)
 	}
 
-	#[inline]
 	fn serialize_tuple_struct(
 		self,
 		_name: &'static str,
@@ -170,7 +148,6 @@ impl<'a> Serializer for &'a mut ByondSerializer {
 		seq::ByondSeqSerializer::new(self)
 	}
 
-	#[inline]
 	fn serialize_tuple_variant(
 		self,
 		_name: &'static str,
@@ -181,12 +158,10 @@ impl<'a> Serializer for &'a mut ByondSerializer {
 		variant::ByondVariantSerializer::new(self, variant)
 	}
 
-	#[inline]
 	fn serialize_map(self, _len: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
 		map::ByondMapSerializer::new(self, None).map_err(SerializeError::from)
 	}
 
-	#[inline]
 	fn serialize_struct(
 		self,
 		_name: &'static str,
@@ -195,7 +170,6 @@ impl<'a> Serializer for &'a mut ByondSerializer {
 		map::ByondMapSerializer::new(self, None).map_err(SerializeError::from)
 	}
 
-	#[inline]
 	fn serialize_struct_variant(
 		self,
 		_name: &'static str,

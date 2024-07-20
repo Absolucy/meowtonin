@@ -157,7 +157,6 @@ pub fn setup_panic_hook() {
 }
 
 /// Gets the last panic that occurred, resetting it to `None`.
-#[inline]
 pub fn get_last_panic() -> ByondValue {
 	#[cfg(any(debug_assertions, feature = "rel-debugging"))]
 	LAST_PANIC.with_borrow(|panic| {

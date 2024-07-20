@@ -7,7 +7,6 @@ use std::ops::{Add, AddAssign, Sub, SubAssign};
 pub struct ByondXYZ(pub CByondXYZ);
 
 impl ByondXYZ {
-	#[inline]
 	pub const fn new(x: i16, y: i16, z: i16) -> Self {
 		Self(CByondXYZ { x, y, z, junk: 0 })
 	}
@@ -50,7 +49,6 @@ impl ByondXYZ {
 }
 
 impl PartialEq for ByondXYZ {
-	#[inline]
 	fn eq(&self, other: &Self) -> bool {
 		self.0.x == other.0.x && self.0.y == other.0.y && self.0.z == other.0.z
 	}
@@ -59,7 +57,6 @@ impl PartialEq for ByondXYZ {
 impl Eq for ByondXYZ {}
 
 impl std::hash::Hash for ByondXYZ {
-	#[inline]
 	fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
 		self.0.x.hash(state);
 		self.0.y.hash(state);

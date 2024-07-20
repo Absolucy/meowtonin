@@ -3,7 +3,6 @@ use crate::{byond, ByondError, ByondResult, ByondValue, ByondValueType};
 use std::{borrow::Cow, mem::MaybeUninit};
 
 impl ByondValue {
-	#[inline]
 	pub fn new_num<Num>(num: Num) -> Self
 	where
 		Num: Into<f32>,
@@ -15,7 +14,6 @@ impl ByondValue {
 		}
 	}
 
-	#[inline]
 	pub fn set_num<Num>(&mut self, num: Num)
 	where
 		Num: Into<f32>,
@@ -23,7 +21,6 @@ impl ByondValue {
 		unsafe { byond().ByondValue_SetNum(&mut self.0, num.into()) }
 	}
 
-	#[inline]
 	pub fn get_number(&self) -> ByondResult<f32> {
 		let val = self.get_type();
 		match val {

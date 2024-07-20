@@ -20,18 +20,15 @@ use std::{
 pub struct ByondValue(pub CByondValue);
 
 impl ByondValue {
-	#[inline]
 	pub fn into_inner(self) -> CByondValue {
 		self.0
 	}
 
-	#[inline]
 	pub fn null() -> Self {
 		Self::default()
 	}
 
 	/// Shorthand for [ToByond::to_byond].
-	#[inline]
 	pub fn new_value<Value>(value: Value) -> ByondResult<Self>
 	where
 		Value: ToByond,
@@ -40,7 +37,6 @@ impl ByondValue {
 	}
 
 	/// Shorthand for [FromByond::from_byond].
-	#[inline]
 	pub fn to<Return>(&self) -> ByondResult<Return>
 	where
 		Return: FromByond,
@@ -70,7 +66,6 @@ impl ByondValue {
 	}
 
 	/// Returns a reference to the "global" object.
-	#[inline]
 	pub fn global() -> Self {
 		// SAFETY: cross your fingers and pray
 		unsafe { Self::new_ref_unchecked(ByondValueType::WORLD, 1) }
@@ -90,7 +85,6 @@ impl ByondValue {
 	}
 
 	/// Gets the internal type of the value.
-	#[inline]
 	pub fn get_type(&self) -> ByondValueType {
 		// Safety: This operation only fails if our CByondValue is invalid, which cannot
 		// happen.
@@ -98,7 +92,6 @@ impl ByondValue {
 	}
 
 	/// Returns the typepath of the value as a string, if it is a reference.
-	#[inline]
 	pub fn typepath(&self) -> ByondResult<String> {
 		self.read_var("type")
 	}
@@ -165,7 +158,6 @@ impl ByondValue {
 }
 
 impl Default for ByondValue {
-	#[inline]
 	fn default() -> Self {
 		unsafe {
 			let mut value = MaybeUninit::uninit();
@@ -176,21 +168,18 @@ impl Default for ByondValue {
 }
 
 impl PartialEq for ByondValue {
-	#[inline]
 	fn eq(&self, other: &Self) -> bool {
 		unsafe { byond().ByondValue_Equals(&self.0, &other.0) }
 	}
 }
 
 impl PartialEq<bool> for ByondValue {
-	#[inline]
 	fn eq(&self, other: &bool) -> bool {
 		self.is_true() == *other
 	}
 }
 
 impl PartialEq<ByondValue> for bool {
-	#[inline]
 	fn eq(&self, other: &ByondValue) -> bool {
 		*self == other.is_true()
 	}
@@ -199,7 +188,6 @@ impl PartialEq<ByondValue> for bool {
 impl Eq for ByondValue {}
 
 impl From<CByondValue> for ByondValue {
-	#[inline]
 	fn from(value: CByondValue) -> Self {
 		Self(value)
 	}

@@ -39,7 +39,6 @@ impl ByondApi {
 	}
 
 	/// Get the version of the ByondApi library.
-	#[inline]
 	#[must_use]
 	pub fn get_version(&self) -> (u32, u32) {
 		self.version
@@ -49,7 +48,6 @@ impl ByondApi {
 impl std::ops::Deref for ByondApi {
 	type Target = byond_rawbind::ByondApi;
 
-	#[inline]
 	fn deref(&self) -> &Self::Target {
 		&self.internal
 	}

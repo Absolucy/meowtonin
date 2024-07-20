@@ -3,7 +3,6 @@ use crate::{byond, ByondResult, ByondValue};
 use std::{ffi::CStr, mem::MaybeUninit};
 
 impl ByondValue {
-	#[inline]
 	pub fn new_string<Str>(string: Str) -> Self
 	where
 		Str: Into<Vec<u8>>,
@@ -54,7 +53,6 @@ impl ByondValue {
 	}
 }
 
-#[inline]
 fn buffer_to_string(buffer: &[u8]) -> ByondResult<String> {
 	let cstr = CStr::from_bytes_until_nul(buffer)?;
 	if cfg!(feature = "lossy-utf8") {

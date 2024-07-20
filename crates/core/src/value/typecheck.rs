@@ -11,7 +11,6 @@ impl ByondValue {
 	///
 	/// # Returns
 	/// `true` if the value is null, `false` otherwise.
-	#[inline]
 	pub fn is_null(&self) -> bool {
 		unsafe { byond().ByondValue_IsNull(&self.0) }
 	}
@@ -20,7 +19,6 @@ impl ByondValue {
 	///
 	/// # Returns
 	/// `true` if the value is a number, `false` otherwise.
-	#[inline]
 	pub fn is_number(&self) -> bool {
 		unsafe { byond().ByondValue_IsNum(&self.0) }
 	}
@@ -29,7 +27,6 @@ impl ByondValue {
 	///
 	/// # Returns
 	/// `true` if the value is a string, `false` otherwise.
-	#[inline]
 	pub fn is_string(&self) -> bool {
 		unsafe { byond().ByondValue_IsStr(&self.0) }
 	}
@@ -38,7 +35,6 @@ impl ByondValue {
 	///
 	/// # Returns
 	/// `true` if the value is a list, `false` otherwise.
-	#[inline]
 	pub fn is_list(&self) -> bool {
 		unsafe { byond().ByondValue_IsList(&self.0) }
 	}
@@ -47,12 +43,10 @@ impl ByondValue {
 	///
 	/// # Returns
 	/// `true` if the value is logically true, `false` otherwise.
-	#[inline]
 	pub fn is_true(&self) -> bool {
 		unsafe { byond().ByondValue_IsTrue(&self.0) }
 	}
 
-	#[inline]
 	pub fn is_ref(&self) -> bool {
 		self.get_type() == ByondValueType::POINTER
 	}
@@ -131,14 +125,12 @@ impl ByondValueType {
 }
 
 impl Display for ByondValueType {
-	#[inline]
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(f, "{}", self.name())
 	}
 }
 
 impl AsRef<InternalByondValueType> for ByondValueType {
-	#[inline]
 	fn as_ref(&self) -> &InternalByondValueType {
 		&self.0
 	}
@@ -147,35 +139,30 @@ impl AsRef<InternalByondValueType> for ByondValueType {
 impl Deref for ByondValueType {
 	type Target = InternalByondValueType;
 
-	#[inline]
 	fn deref(&self) -> &Self::Target {
 		&self.0
 	}
 }
 
 impl PartialEq<InternalByondValueType> for ByondValueType {
-	#[inline]
 	fn eq(&self, other: &InternalByondValueType) -> bool {
 		self.0 == *other
 	}
 }
 
 impl PartialEq<ByondValueType> for InternalByondValueType {
-	#[inline]
 	fn eq(&self, other: &ByondValueType) -> bool {
 		*self == other.0
 	}
 }
 
 impl From<InternalByondValueType> for ByondValueType {
-	#[inline]
 	fn from(value: InternalByondValueType) -> Self {
 		Self(value)
 	}
 }
 
 impl From<ByondValueType> for InternalByondValueType {
-	#[inline]
 	fn from(value: ByondValueType) -> Self {
 		value.0
 	}

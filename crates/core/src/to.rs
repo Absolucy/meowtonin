@@ -11,21 +11,18 @@ pub trait ToByond {
 }
 
 impl ToByond for ByondValue {
-	#[inline]
 	fn to_byond(&self) -> ByondResult<ByondValue> {
 		Ok(self.clone())
 	}
 }
 
 impl ToByond for &ByondValue {
-	#[inline]
 	fn to_byond(&self) -> ByondResult<ByondValue> {
 		Ok((*self).clone())
 	}
 }
 
 impl ToByond for () {
-	#[inline]
 	fn to_byond(&self) -> ByondResult<ByondValue> {
 		Ok(ByondValue::default())
 	}

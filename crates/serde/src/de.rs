@@ -163,7 +163,6 @@ impl<'de, 'a> Deserializer<'de> for &'a ByondDeserializer {
 			.and_then(|value| visitor.visit_byte_buf(value))
 	}
 
-	#[inline]
 	fn deserialize_byte_buf<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
@@ -182,7 +181,6 @@ impl<'de, 'a> Deserializer<'de> for &'a ByondDeserializer {
 		}
 	}
 
-	#[inline]
 	fn deserialize_ignored_any<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
@@ -190,7 +188,6 @@ impl<'de, 'a> Deserializer<'de> for &'a ByondDeserializer {
 		visitor.visit_unit()
 	}
 
-	#[inline]
 	fn deserialize_unit<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
@@ -198,7 +195,6 @@ impl<'de, 'a> Deserializer<'de> for &'a ByondDeserializer {
 		visitor.visit_unit()
 	}
 
-	#[inline]
 	fn deserialize_unit_struct<V>(
 		self,
 		_name: &'static str,
@@ -210,7 +206,6 @@ impl<'de, 'a> Deserializer<'de> for &'a ByondDeserializer {
 		visitor.visit_unit()
 	}
 
-	#[inline]
 	fn deserialize_newtype_struct<V>(
 		self,
 		_name: &'static str,
@@ -231,7 +226,6 @@ impl<'de, 'a> Deserializer<'de> for &'a ByondDeserializer {
 		visitor.visit_seq(ByondSeqAccess { iter: vec })
 	}
 
-	#[inline]
 	fn deserialize_tuple<V>(self, _len: usize, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
@@ -239,7 +233,6 @@ impl<'de, 'a> Deserializer<'de> for &'a ByondDeserializer {
 		self.deserialize_seq(visitor)
 	}
 
-	#[inline]
 	fn deserialize_tuple_struct<V>(
 		self,
 		_name: &'static str,
@@ -264,7 +257,6 @@ impl<'de, 'a> Deserializer<'de> for &'a ByondDeserializer {
 		})
 	}
 
-	#[inline]
 	fn deserialize_struct<V>(
 		self,
 		_name: &'static str,
@@ -277,7 +269,6 @@ impl<'de, 'a> Deserializer<'de> for &'a ByondDeserializer {
 		self.deserialize_map(visitor)
 	}
 
-	#[inline]
 	fn deserialize_enum<V>(
 		self,
 		_name: &'static str,
@@ -364,7 +355,6 @@ impl<'de, 'a> EnumAccess<'de> for ByondEnumAccess<'a> {
 	type Error = DeserializeError;
 	type Variant = Self;
 
-	#[inline]
 	fn variant_seed<V>(self, seed: V) -> Result<(V::Value, Self::Variant), Self::Error>
 	where
 		V: DeserializeSeed<'de>,
@@ -377,12 +367,10 @@ impl<'de, 'a> EnumAccess<'de> for ByondEnumAccess<'a> {
 impl<'de, 'a> VariantAccess<'de> for ByondEnumAccess<'a> {
 	type Error = DeserializeError;
 
-	#[inline]
 	fn unit_variant(self) -> Result<(), Self::Error> {
 		Ok(())
 	}
 
-	#[inline]
 	fn newtype_variant_seed<T>(self, seed: T) -> Result<T::Value, Self::Error>
 	where
 		T: DeserializeSeed<'de>,
@@ -390,7 +378,6 @@ impl<'de, 'a> VariantAccess<'de> for ByondEnumAccess<'a> {
 		seed.deserialize(self.deserializer)
 	}
 
-	#[inline]
 	fn tuple_variant<V>(self, _len: usize, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,

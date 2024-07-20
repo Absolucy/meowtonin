@@ -13,14 +13,12 @@ pub trait FromByond: Sized {
 }
 
 impl FromByond for ByondValue {
-	#[inline]
 	fn from_byond(value: &ByondValue) -> ByondResult<Self> {
 		Ok(value.clone())
 	}
 }
 
 impl FromByond for () {
-	#[inline]
 	fn from_byond(_value: &ByondValue) -> ByondResult<Self> {
 		Ok(())
 	}

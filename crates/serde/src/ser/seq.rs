@@ -31,7 +31,6 @@ impl<'a> SerializeSeq for ByondSeqSerializer<'a> {
 		Ok(())
 	}
 
-	#[inline]
 	fn end(self) -> Result<Self::Ok, Self::Error> {
 		Ok(self.list)
 	}
@@ -50,7 +49,6 @@ impl<'a> SerializeTuple for ByondSeqSerializer<'a> {
 			.map_err(SerializeError::from)
 	}
 
-	#[inline]
 	fn end(self) -> Result<Self::Ok, Self::Error> {
 		Ok(self.list)
 	}
@@ -69,7 +67,6 @@ impl<'a> SerializeTupleStruct for ByondSeqSerializer<'a> {
 			.map_err(SerializeError::from)
 	}
 
-	#[inline]
 	fn end(self) -> Result<Self::Ok, Self::Error> {
 		Ok(self.list)
 	}
