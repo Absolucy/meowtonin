@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: 0BSD
-// SPDX-License-Identifier: 0BSD
 pub mod de;
 pub mod error;
 pub mod ser;
