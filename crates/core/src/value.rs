@@ -183,12 +183,14 @@ impl PartialEq for ByondValue {
 }
 
 impl PartialEq<bool> for ByondValue {
+	#[inline]
 	fn eq(&self, other: &bool) -> bool {
 		self.is_true() == *other
 	}
 }
 
 impl PartialEq<ByondValue> for bool {
+	#[inline]
 	fn eq(&self, other: &ByondValue) -> bool {
 		*self == other.is_true()
 	}
