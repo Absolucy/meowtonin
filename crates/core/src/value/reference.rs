@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{byond, ByondResult, ByondValue, ByondValueType};
-use std::mem::MaybeUninit;
+use crate::{byond, sys::CByondValue, ByondResult, ByondValue, ByondValueType};
+use std::{
+	mem::MaybeUninit,
+	ops::{Deref, DerefMut},
+};
 
 impl ByondValue {
 	/// Creates a new reference with the given value type and reference ID.
@@ -49,10 +52,12 @@ impl ByondValue {
 		unsafe { byond().ByondValue_IncRef(&self.0) };
 	}
 
+	/// Increments this value's ref count and returns it as an [RcByondValue],
+	/// which will decrement the ref count when dropped.
 	#[inline]
-	pub fn persist(self) -> Self {
+	pub fn referenced(self) -> RcByondValue {
 		self.inc_ref();
-		self
+		RcByondValue(self)
 	}
 
 	/// De-increments the reference count of the value.
@@ -71,5 +76,83 @@ impl ByondValue {
 		} else {
 			None
 		}
+	}
+}
+
+/// A [ByondValue] that increments its ref upon creation,
+/// and decrements the ref when dropped.
+#[derive(PartialEq, Eq, Hash)]
+#[repr(transparent)]
+pub struct RcByondValue(ByondValue);
+
+impl Deref for RcByondValue {
+	type Target = ByondValue;
+
+	#[inline]
+	fn deref(&self) -> &Self::Target {
+		&self.0
+	}
+}
+
+impl DerefMut for RcByondValue {
+	#[inline]
+	fn deref_mut(&mut self) -> &mut Self::Target {
+		&mut self.0
+	}
+}
+
+impl AsRef<ByondValue> for RcByondValue {
+	#[inline]
+	fn as_ref(&self) -> &ByondValue {
+		&self.0
+	}
+}
+
+impl AsMut<ByondValue> for RcByondValue {
+	#[inline]
+	fn as_mut(&mut self) -> &mut ByondValue {
+		&mut self.0
+	}
+}
+
+impl PartialEq<ByondValue> for RcByondValue {
+	#[inline]
+	fn eq(&self, other: &ByondValue) -> bool {
+		self.0.eq(other)
+	}
+}
+
+impl PartialEq<RcByondValue> for ByondValue {
+	#[inline]
+	fn eq(&self, other: &RcByondValue) -> bool {
+		self.eq(&other.0)
+	}
+}
+
+impl From<ByondValue> for RcByondValue {
+	#[inline]
+	fn from(value: ByondValue) -> Self {
+		value.referenced()
+	}
+}
+
+impl From<CByondValue> for RcByondValue {
+	#[inline]
+	fn from(value: CByondValue) -> Self {
+		ByondValue::from(value).referenced()
+	}
+}
+
+impl Drop for RcByondValue {
+	#[inline]
+	fn drop(&mut self) {
+		self.0.dec_ref();
+	}
+}
+
+impl Clone for RcByondValue {
+	#[inline]
+	fn clone(&self) -> Self {
+		self.0.clone().referenced()
 	}
 }
