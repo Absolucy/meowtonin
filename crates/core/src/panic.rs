@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: 0BSD
 use crate::ByondValue;
 use backtrace::Backtrace;
-use once_cell::sync::Lazy;
 use parking_lot::RwLock;
 use serde::Serialize;
 use std::{
@@ -9,10 +8,11 @@ use std::{
 	cell::RefCell,
 	panic::PanicInfo,
 	path::{Path, PathBuf},
-	sync::Once,
+	sync::{LazyLock, Once},
 };
 
-static PANIC_OUTPUT_FOLDER: Lazy<RwLock<PathBuf>> = Lazy::new(|| RwLock::new(PathBuf::from(".")));
+static PANIC_OUTPUT_FOLDER: LazyLock<RwLock<PathBuf>> =
+	LazyLock::new(|| RwLock::new(PathBuf::from(".")));
 
 /// Sets the folder where panic output files will be written.
 pub fn set_panic_output_folder(path: impl AsRef<Path>) {

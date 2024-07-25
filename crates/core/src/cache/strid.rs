@@ -2,15 +2,15 @@
 use crate::{byond, sys::u4c};
 use ahash::AHasher;
 use nohash_hasher::{BuildNoHashHasher, IntMap};
-use once_cell::sync::Lazy;
 use parking_lot::RwLock;
 use std::{
 	ffi::CString,
 	hash::{Hash, Hasher},
+	sync::LazyLock,
 };
 
 const DEFAULT_CACHE_CAPACITY: usize = 512;
-pub(crate) static STRID_CACHE: Lazy<RwLock<IntMap<u64, u4c>>> = Lazy::new(|| {
+pub(crate) static STRID_CACHE: LazyLock<RwLock<IntMap<u64, u4c>>> = LazyLock::new(|| {
 	RwLock::new(IntMap::with_capacity_and_hasher(
 		DEFAULT_CACHE_CAPACITY,
 		BuildNoHashHasher::default(),
