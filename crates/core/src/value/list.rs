@@ -112,7 +112,7 @@ impl ByondValue {
 		if !self.is_list() {
 			return Err(ByondError::NotAList);
 		}
-		self.call("Add", [[value]])?; // byond moment
+		self.call::<_, _, _, ()>("Add", [[value]])?; // byond moment
 		Ok(())
 	}
 
@@ -126,7 +126,7 @@ impl ByondValue {
 			return Ok(None);
 		}
 		let value = self.read_list_index(&len)?;
-		self.call("Remove", [&value])?;
+		self.call::<_, _, _, ()>("Remove", [&value])?;
 		Ok(Some(value))
 	}
 
