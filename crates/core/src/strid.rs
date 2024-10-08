@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{byond, sys::u4c};
+use crate::{byond, sys::u4c, ByondValue, ByondValueType};
 use ahash::AHasher;
 use nohash_hasher::{BuildNoHashHasher, IntMap};
 use parking_lot::RwLock;
@@ -23,6 +23,7 @@ fn string_hash(string: impl AsRef<str>) -> u64 {
 	hasher.finish()
 }
 
+/// Looks up the ID of a given string, caching the result.
 pub fn lookup_string_id(string: impl AsRef<str>) -> u4c {
 	let string = string.as_ref();
 	let hash = string_hash(string);
@@ -39,4 +40,20 @@ pub fn lookup_string_id(string: impl AsRef<str>) -> u4c {
 	}
 	STRID_CACHE.write().insert(hash, id);
 	id
+}
+
+/// Returns the bytes of the string with the given string ID.
+/// Returns None if the string ID is invalid.
+pub fn get_string_bytes_from_id(id: u4c) -> Option<Vec<u8>> {
+	unsafe { ByondValue::new_ref_unchecked(ByondValueType::STRING, id) }
+		.get_string_bytes()
+		.ok()
+}
+
+/// Returns the string with the given string ID.
+/// Returns None if the string ID is invalid.
+pub fn get_string_from_id(id: u4c) -> Option<String> {
+	unsafe { ByondValue::new_ref_unchecked(ByondValueType::STRING, id) }
+		.get_string()
+		.ok()
 }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{byond, cache::lookup_string_id, ByondResult, ByondValue, FromByond, ToByond};
+use crate::{byond, strid::lookup_string_id, ByondResult, ByondValue, FromByond, ToByond};
 use std::mem::MaybeUninit;
 
 /// Calls a global proc.
