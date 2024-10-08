@@ -73,3 +73,13 @@ pub unsafe fn parse_args(argc: sys::u4c, argv: *mut ByondValue) -> Vec<ByondValu
 	}
 	unsafe { std::slice::from_raw_parts_mut(argv, argc as usize).to_vec() }
 }
+
+/// Returns the current major version and build version of BYOND.
+pub fn byond_version() -> (u32, u32) {
+	byond().get_version()
+}
+
+/// Returns the version number the current .dmb was built with
+pub fn dmb_version() -> u32 {
+	unsafe { byond().Byond_GetDMBVersion() }
+}
