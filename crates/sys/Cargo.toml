@@ -14,7 +14,7 @@ cfg-if = "1"
 libloading = { workspace = true }
 
 [build-dependencies]
-bindgen = "0.69"
+bindgen = "0.70"
 doxygen-rs = "0.4"
 
 [features]
