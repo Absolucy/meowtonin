@@ -197,18 +197,11 @@ impl Hash for ByondValue {
 	fn hash<H: Hasher>(&self, state: &mut H) {
 		let value_type = self.get_type();
 		value_type.0.hash(state);
-		match value_type {
-			ByondValueType::NULL => {}
-			ByondValueType::CLIENT => {
-				if let Ok(ckey) = self.read_var::<_, String>("ckey") {
-					ckey.hash(state);
-				}
-			}
-			ByondValueType::NUMBER => self.get_number().unwrap_or(0.0).to_le_bytes().hash(state),
-			_ => {
-				if let Ok(value) = self.get_string() {
-					value.hash(state);
-				}
+		unsafe {
+			match value_type {
+				ByondValueType::NULL => (),
+				ByondValueType::NUMBER => self.0.data.num.to_bits().hash(state),
+				_ => self.0.data.ref_.hash(state),
 			}
 		}
 	}
