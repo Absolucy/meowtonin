@@ -29,7 +29,7 @@ windows = { version = "0.58", features = ["Win32_Foundation", "Win32_System", "W
 
 [features]
 default = ["lossy-utf8"]
-# Enables debug error logging in release builds
+# Enables debug panic logging in release builds
 rel-debugging = []
 # Uses lossy string conversion instead of strict UTF-8 converison.
 lossy-utf8 = []
