@@ -10,11 +10,9 @@ license.workspace = true
 [dependencies]
 ahash = { version = "0.8", default-features = false, features = ["no-rng"] }
 backtrace = "0.3"
-byondapi-sys = { path = "../sys" }
+meowtonin-byondapi-sys = { path = "../sys" }
 bytemuck = { version = "1", features = ["extern_crate_std"] }
-cfg-if = "1"
 inventory = "0.3"
-libloading = { workspace = true }
 log = "0.4"
 meowtonin-impl = { path = "../impl" }
 nohash-hasher = "0.2"

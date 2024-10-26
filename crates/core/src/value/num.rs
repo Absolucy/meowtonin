@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{byond, ByondError, ByondResult, ByondValue, ByondValueType};
+use crate::{
+	sys::{ByondValue_GetNum, ByondValue_SetNum},
+	ByondError, ByondResult, ByondValue, ByondValueType,
+};
 use std::{borrow::Cow, mem::MaybeUninit};
 
 impl ByondValue {
@@ -9,7 +12,7 @@ impl ByondValue {
 	{
 		unsafe {
 			let mut value = MaybeUninit::uninit();
-			byond().ByondValue_SetNum(value.as_mut_ptr(), num.into());
+			ByondValue_SetNum(value.as_mut_ptr(), num.into());
 			Self(value.assume_init())
 		}
 	}
@@ -18,13 +21,13 @@ impl ByondValue {
 	where
 		Num: Into<f32>,
 	{
-		unsafe { byond().ByondValue_SetNum(&mut self.0, num.into()) }
+		unsafe { ByondValue_SetNum(&mut self.0, num.into()) }
 	}
 
 	pub fn get_number(&self) -> ByondResult<f32> {
 		let val = self.get_type();
 		match val {
-			ByondValueType::NUMBER => Ok(unsafe { byond().ByondValue_GetNum(&self.0) }),
+			ByondValueType::NUMBER => Ok(unsafe { ByondValue_GetNum(&self.0) }),
 			_ => Err(ByondError::InvalidConversion {
 				expected: Cow::Borrowed("number"),
 				got: val.name(),

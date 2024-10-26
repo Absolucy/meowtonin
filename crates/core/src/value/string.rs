@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{byond, ByondResult, ByondValue};
+use crate::{
+	sys::{ByondValue_SetStr, Byond_ToString},
+	ByondResult, ByondValue,
+};
 use std::{ffi::CStr, mem::MaybeUninit};
 
 impl ByondValue {
@@ -11,7 +14,7 @@ impl ByondValue {
 		string.push(0);
 		unsafe {
 			let mut value = MaybeUninit::uninit();
-			byond().ByondValue_SetStr(value.as_mut_ptr(), string.as_ptr().cast());
+			ByondValue_SetStr(value.as_mut_ptr(), string.as_ptr().cast());
 			Self(value.assume_init())
 		}
 	}
@@ -22,21 +25,21 @@ impl ByondValue {
 	{
 		let mut string = string.into();
 		string.push(0);
-		unsafe { byond().ByondValue_SetStr(&mut self.0, string.as_ptr().cast()) }
+		unsafe { ByondValue_SetStr(&mut self.0, string.as_ptr().cast()) }
 	}
 
 	pub fn get_string_bytes(&self) -> ByondResult<Vec<u8>> {
 		unsafe {
 			let mut buffer = Vec::<u8>::new();
 			let mut needed_len = 0;
-			if byond().Byond_ToString(&self.0, buffer.as_mut_ptr().cast(), &mut needed_len) {
+			if Byond_ToString(&self.0, buffer.as_mut_ptr().cast(), &mut needed_len) {
 				// Safety: if this returns true, then the buffer was large enough, and thus
 				// needed_len <= capacity.
 				buffer.set_len(needed_len);
 				return Ok(buffer);
 			}
 			buffer.reserve(needed_len.saturating_sub(buffer.len()));
-			map_byond_error!(byond().Byond_ToString(
+			map_byond_error!(Byond_ToString(
 				&self.0,
 				buffer.as_mut_ptr().cast(),
 				&mut needed_len

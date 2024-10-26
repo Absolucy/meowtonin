@@ -1,6 +1,5 @@
 [package]
-name = "byondapi-sys"
-publish = false
+name = "meowtonin-byondapi-sys"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
@@ -11,7 +10,6 @@ license.workspace = true
 [dependencies]
 bytemuck = { version = "1", optional = true }
 cfg-if = "1"
-libloading = { workspace = true }
 
 [build-dependencies]
 bindgen = "0.70"

@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{byond, strid::lookup_string_id, ByondResult, ByondValue, FromByond, ToByond};
+use crate::{
+	strid::lookup_string_id, sys::Byond_CallProcByStrId, ByondResult, ByondValue, FromByond,
+	ToByond,
+};
 use std::mem::MaybeUninit;
 
 impl ByondValue {
@@ -20,7 +23,7 @@ impl ByondValue {
 			.collect::<ByondResult<Vec<_>>>()?;
 		unsafe {
 			let mut result = MaybeUninit::uninit();
-			map_byond_error!(byond().Byond_CallProcByStrId(
+			map_byond_error!(Byond_CallProcByStrId(
 				&self.0,
 				name_id,
 				args.as_ptr().cast(),

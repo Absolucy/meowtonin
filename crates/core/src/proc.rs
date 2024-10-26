@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{byond, strid::lookup_string_id, ByondResult, ByondValue, FromByond, ToByond};
+use crate::{
+	strid::lookup_string_id, sys::Byond_CallGlobalProcByStrId, ByondResult, ByondValue, FromByond,
+	ToByond,
+};
 use std::mem::MaybeUninit;
 
 /// Calls a global proc.
@@ -19,7 +22,7 @@ where
 		.collect::<ByondResult<Vec<_>>>()?;
 	unsafe {
 		let mut result = MaybeUninit::uninit();
-		map_byond_error!(byond().Byond_CallGlobalProcByStrId(
+		map_byond_error!(Byond_CallGlobalProcByStrId(
 			name_id,
 			args.as_ptr().cast(),
 			args.len() as _,

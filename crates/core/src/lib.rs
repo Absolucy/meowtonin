@@ -9,11 +9,8 @@
 #![allow(unused_unsafe, clippy::missing_safety_doc)]
 
 #[macro_use]
-extern crate cfg_if;
-#[macro_use]
 extern crate log;
 
-pub mod byond;
 #[macro_use]
 pub mod error;
 pub mod from;
@@ -28,11 +25,10 @@ pub mod value;
 pub mod xyz;
 
 pub mod sys {
-	pub use byondapi_sys::*;
+	pub use meowtonin_byondapi_sys::*;
 }
 
 pub use crate::{
-	byond::byond,
 	error::{ByondError, ByondResult},
 	from::FromByond,
 	proc::call_global,
@@ -76,10 +72,8 @@ pub unsafe fn parse_args(argc: sys::u4c, argv: *mut ByondValue) -> Vec<ByondValu
 
 /// Returns the current major version and build version of BYOND.
 pub fn byond_version() -> (u32, u32) {
-	byond().get_version()
-}
+	use std::sync::OnceLock;
 
-/// Returns the version number the current .dmb was built with
-pub fn dmb_version() -> u32 {
-	unsafe { byond().Byond_GetDMBVersion() }
+	static VERSION: OnceLock<(u32, u32)> = OnceLock::new();
+	*VERSION.get_or_init(|| unsafe { sys::get_byond_version() })
 }

@@ -86,6 +86,8 @@
 *.toml     text diff=toml
 Cargo.lock text
 
+*.lib      binary
+
 ## GITATTRIBUTES FOR WEB PROJECTS
 #
 # These settings are for any web project.

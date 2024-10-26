@@ -1,0 +1,36 @@
+BYONDAPI_1.0 {
+    global:
+        Byond_AddGetStrId;
+        Byond_Block;
+        Byond_CallGlobalProc;
+        Byond_CallGlobalProcByStrId;
+        Byond_CallProc;
+        Byond_CallProcByStrId;
+        Byond_CreateList;
+        Byond_GetDMBVersion;
+        Byond_GetStrId;
+        Byond_GetVersion;
+        Byond_LastError;
+        Byond_Length;
+        Byond_LocateIn;
+        Byond_LocateXYZ;
+        Byond_New;
+        Byond_NewArglist;
+        Byond_ReadList;
+        Byond_ReadListAssoc;
+        Byond_ReadListIndex;
+        Byond_ReadPointer;
+        Byond_ReadVar;
+        Byond_ReadVarByStrId;
+        Byond_Refcount;
+        Byond_TestRef;
+        Byond_ThreadSync;
+        Byond_ToString;
+        Byond_WriteList;
+        Byond_WriteListIndex;
+        Byond_WritePointer;
+        Byond_WriteVar;
+        Byond_WriteVarByStrId;
+        Byond_XYZ;
+    local: *;
+};

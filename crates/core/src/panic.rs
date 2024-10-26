@@ -6,7 +6,7 @@ use serde::Serialize;
 use std::{
 	borrow::Cow,
 	cell::RefCell,
-	panic::PanicInfo,
+	panic::PanicHookInfo,
 	path::{Path, PathBuf},
 	sync::{LazyLock, Once},
 };
@@ -94,7 +94,7 @@ const BLACKLIST: &[&str] = &[
 	"LocalDB",
 ];
 
-fn panic_hook(panic_info: &PanicInfo) {
+fn panic_hook(panic_info: &PanicHookInfo) {
 	let message = panic_info
 		.payload()
 		.downcast_ref::<&'static str>()

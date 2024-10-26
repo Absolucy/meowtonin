@@ -1,12 +1,18 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{byond, ByondError, ByondResult, ByondValue, FromByond, ToByond};
+use crate::{
+	sys::{
+		Byond_CreateList, Byond_ReadList, Byond_ReadListAssoc, Byond_ReadListIndex,
+		Byond_WriteList, Byond_WriteListIndex,
+	},
+	ByondError, ByondResult, ByondValue, FromByond, ToByond,
+};
 use std::mem::MaybeUninit;
 
 impl ByondValue {
 	pub fn new_list() -> ByondResult<Self> {
 		unsafe {
 			let mut value = MaybeUninit::uninit();
-			map_byond_error!(byond().Byond_CreateList(value.as_mut_ptr()))?;
+			map_byond_error!(Byond_CreateList(value.as_mut_ptr()))?;
 			Ok(Self(value.assume_init()))
 		}
 	}
@@ -18,14 +24,14 @@ impl ByondValue {
 		unsafe {
 			let mut buffer = Vec::<ByondValue>::new();
 			let mut needed_len = 0;
-			if byond().Byond_ReadList(&self.0, buffer.as_mut_ptr().cast(), &mut needed_len) {
+			if Byond_ReadList(&self.0, buffer.as_mut_ptr().cast(), &mut needed_len) {
 				// Safety: if this returns true, then the buffer was large enough, and thus
 				// needed_len <= capacity.
 				buffer.set_len(needed_len);
 				return Ok(buffer);
 			}
 			buffer.reserve(needed_len.saturating_sub(buffer.len()));
-			map_byond_error!(byond().Byond_ReadList(
+			map_byond_error!(Byond_ReadList(
 				&self.0,
 				buffer.as_mut_ptr().cast(),
 				&mut needed_len
@@ -44,7 +50,7 @@ impl ByondValue {
 		unsafe {
 			let mut buffer = Vec::<ByondValue>::new();
 			let mut needed_len = 0;
-			if byond().Byond_ReadListAssoc(&self.0, buffer.as_mut_ptr().cast(), &mut needed_len) {
+			if Byond_ReadListAssoc(&self.0, buffer.as_mut_ptr().cast(), &mut needed_len) {
 				// Safety: if this returns true, then the buffer was large enough, and thus
 				// needed_len <= capacity.
 				buffer.set_len(needed_len);
@@ -52,7 +58,7 @@ impl ByondValue {
 				return Ok(stupid_assoc_cast(buffer));
 			}
 			buffer.reserve(needed_len.saturating_sub(buffer.len()));
-			map_byond_error!(byond().Byond_ReadListAssoc(
+			map_byond_error!(Byond_ReadListAssoc(
 				&self.0,
 				buffer.as_mut_ptr().cast(),
 				&mut needed_len
@@ -70,7 +76,7 @@ impl ByondValue {
 		List: IntoIterator<Item = Self>,
 	{
 		let contents = contents.into_iter().collect::<Vec<_>>();
-		map_byond_error!(byond().Byond_WriteList(
+		map_byond_error!(Byond_WriteList(
 			&self.0,
 			contents.as_ptr().cast(),
 			contents.len() as _
@@ -88,7 +94,7 @@ impl ByondValue {
 		unsafe {
 			let mut result = MaybeUninit::uninit();
 			let idx = idx.to_byond()?;
-			map_byond_error!(byond().Byond_ReadListIndex(&self.0, &idx.0, result.as_mut_ptr()))?;
+			map_byond_error!(Byond_ReadListIndex(&self.0, &idx.0, result.as_mut_ptr()))?;
 			let result = Self(result.assume_init());
 			Value::from_byond(&result)
 		}
@@ -104,7 +110,7 @@ impl ByondValue {
 		}
 		let idx = idx.to_byond()?;
 		let value = value.to_byond()?;
-		map_byond_error!(byond().Byond_WriteListIndex(&self.0, &idx.0, &value.0))
+		map_byond_error!(Byond_WriteListIndex(&self.0, &idx.0, &value.0))
 	}
 
 	/// Pushes a value into a list

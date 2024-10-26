@@ -6,7 +6,13 @@ pub mod reference;
 pub mod string;
 pub mod typecheck;
 
-use crate::{byond, sys::CByondValue, ByondError, ByondResult, ByondValueType, FromByond, ToByond};
+use crate::{
+	sys::{
+		ByondValue_Clear, ByondValue_Equals, ByondValue_Type, Byond_Length, Byond_New,
+		Byond_ReadPointer, Byond_ReadVar, Byond_WritePointer, Byond_WriteVar, CByondValue,
+	},
+	ByondError, ByondResult, ByondValueType, FromByond, ToByond,
+};
 use std::{
 	ffi::CString,
 	fmt,
@@ -55,7 +61,7 @@ impl ByondValue {
 			let mut result = MaybeUninit::uninit();
 			let path = path.into().to_byond()?;
 			let args = args.as_ref();
-			map_byond_error!(byond().Byond_New(
+			map_byond_error!(Byond_New(
 				&path.0,
 				args.as_ptr().cast(),
 				args.len() as _,
@@ -79,7 +85,7 @@ impl ByondValue {
 	{
 		unsafe {
 			let mut result = MaybeUninit::uninit();
-			map_byond_error!(byond().Byond_Length(&self.0, result.as_mut_ptr()))
+			map_byond_error!(Byond_Length(&self.0, result.as_mut_ptr()))
 				.and_then(|_| Type::from_byond(&Self(result.assume_init())))
 		}
 	}
@@ -88,7 +94,7 @@ impl ByondValue {
 	pub fn get_type(&self) -> ByondValueType {
 		// Safety: This operation only fails if our CByondValue is invalid, which cannot
 		// happen.
-		ByondValueType(unsafe { byond().ByondValue_Type(&self.0) })
+		ByondValueType(unsafe { ByondValue_Type(&self.0) })
 	}
 
 	/// Returns the typepath of the value as a string, if it is a reference.
@@ -109,7 +115,7 @@ impl ByondValue {
 		let c_string = CString::new(name.as_ref()).map_err(|_| ByondError::NonUtf8String)?;
 		unsafe {
 			let mut result = MaybeUninit::uninit();
-			map_byond_error!(byond().Byond_ReadVar(
+			map_byond_error!(Byond_ReadVar(
 				&self.0,
 				c_string.as_c_str().as_ptr(),
 				result.as_mut_ptr()
@@ -127,7 +133,11 @@ impl ByondValue {
 	{
 		let value = value.to_byond()?;
 		let c_string = CString::new(name.as_ref()).map_err(|_| ByondError::NonUtf8String)?;
-		map_byond_error!(byond().Byond_WriteVar(&self.0, c_string.as_c_str().as_ptr(), &value.0))
+		map_byond_error!(Byond_WriteVar(
+			&self.0,
+			c_string.as_c_str().as_ptr(),
+			&value.0
+		))
 	}
 
 	pub fn read_pointer<Return>(&self) -> ByondResult<Return>
@@ -139,7 +149,7 @@ impl ByondValue {
 		}
 		unsafe {
 			let mut result = MaybeUninit::uninit();
-			map_byond_error!(byond().Byond_ReadPointer(&self.0, result.as_mut_ptr()))?;
+			map_byond_error!(Byond_ReadPointer(&self.0, result.as_mut_ptr()))?;
 			let result = Self(result.assume_init());
 			Return::from_byond(&result)
 		}
@@ -153,7 +163,7 @@ impl ByondValue {
 			return Err(ByondError::NotReferencable);
 		}
 		let value = value.to_byond()?;
-		unsafe { map_byond_error!(byond().Byond_WritePointer(&self.0, &value.0)) }
+		unsafe { map_byond_error!(Byond_WritePointer(&self.0, &value.0)) }
 	}
 }
 
@@ -161,7 +171,7 @@ impl Default for ByondValue {
 	fn default() -> Self {
 		unsafe {
 			let mut value = MaybeUninit::uninit();
-			byond().ByondValue_Clear(value.as_mut_ptr());
+			ByondValue_Clear(value.as_mut_ptr());
 			Self(value.assume_init())
 		}
 	}
@@ -169,7 +179,7 @@ impl Default for ByondValue {
 
 impl PartialEq for ByondValue {
 	fn eq(&self, other: &Self) -> bool {
-		unsafe { byond().ByondValue_Equals(&self.0, &other.0) }
+		unsafe { ByondValue_Equals(&self.0, &other.0) }
 	}
 }
 

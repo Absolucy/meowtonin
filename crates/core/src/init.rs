@@ -27,3 +27,14 @@ inventory::submit! {
 		).unwrap();
 	})
 }
+
+#[doc(hidden)]
+pub fn do_init() {
+	// Clear string ID cache, just in case anything's changed.
+	crate::strid::STRID_CACHE.write().clear();
+
+	// Run any custom initialization functions.
+	for func in inventory::iter::<InitFunc> {
+		func.0();
+	}
+}
