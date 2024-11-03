@@ -9,7 +9,7 @@ license.workspace = true
 documentation = "https://docs.rs/meowtonin-serde"
 
 [dependencies]
-meowtonin = { path = "../core" }
+meowtonin = { path = "../core", version = "0.1" }
 serde = "1"
 thiserror = "1"
 

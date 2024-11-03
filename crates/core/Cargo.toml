@@ -11,11 +11,11 @@ documentation = "https://docs.rs/meowtonin"
 [dependencies]
 ahash = { version = "0.8", default-features = false, features = ["no-rng"] }
 backtrace = "0.3"
-meowtonin-byondapi-sys = { path = "../sys" }
 bytemuck = { version = "1", features = ["extern_crate_std"] }
 inventory = "0.3"
 log = "0.4"
-meowtonin-impl = { path = "../impl" }
+meowtonin-byondapi-sys = { path = "../sys", version = "0.1" }
+meowtonin-impl = { path = "../impl", version = "0.1" }
 nohash-hasher = "0.2"
 parking_lot = "0.12"
 serde = { version = "1", features = ["derive"] }
