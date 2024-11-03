@@ -11,3 +11,6 @@ license.workspace = true
 meowtonin = { path = "../core" }
 serde = "1"
 thiserror = "1"
+
+[package.metadata.docs.rs]
+targets = ["i686-pc-windows-msvc", "i686-unknown-linux-gnu"]
