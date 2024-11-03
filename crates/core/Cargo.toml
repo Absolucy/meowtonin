@@ -1,12 +1,13 @@
 [package]
 name = "meowtonin"
+description = "Fully featured Rust wrapper around byondapi."
+documentation = "https://docs.rs/meowtonin"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 repository.workspace = true
 license.workspace = true
-documentation = "https://docs.rs/meowtonin"
 
 [dependencies]
 ahash = { version = "0.8", default-features = false, features = ["no-rng"] }

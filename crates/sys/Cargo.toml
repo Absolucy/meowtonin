@@ -1,12 +1,13 @@
 [package]
 name = "meowtonin-byondapi-sys"
+description = "byondapi bindings used by meowtonin"
+documentation = "https://docs.rs/meowtonin-byondapi-sys"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 repository.workspace = true
 license.workspace = true
-documentation = "https://docs.rs/meowtonin-byondapi-sys"
 
 [dependencies]
 bytemuck = { version = "1", optional = true }

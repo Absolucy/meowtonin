@@ -1,12 +1,13 @@
 [package]
 name = "meowtonin-impl"
+description = "Proc macros for meowtonin, a fully featured Rust wrapper around byondapi."
+documentation = "https://docs.rs/meowtonin-impl"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 repository.workspace = true
 license.workspace = true
-documentation = "https://docs.rs/meowtonin-impl"
 
 [lib]
 proc-macro = true
