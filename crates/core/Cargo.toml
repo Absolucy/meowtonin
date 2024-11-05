@@ -15,8 +15,8 @@ backtrace = "0.3"
 bytemuck = { version = "1", features = ["extern_crate_std"] }
 inventory = "0.3"
 log = "0.4"
-meowtonin-byondapi-sys = { path = "../sys", version = "0.1" }
-meowtonin-impl = { path = "../impl", version = "0.1" }
+meowtonin-byondapi-sys = { path = "../sys", version = "0.2" }
+meowtonin-impl = { path = "../impl", version = "0.2" }
 nohash-hasher = "0.2"
 parking_lot = "0.12"
 serde = { version = "1", features = ["derive"] }

@@ -10,7 +10,7 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-meowtonin = { path = "../core", version = "0.1" }
+meowtonin = { path = "../core", version = "0.2" }
 serde = "1"
 thiserror = "1"
 
