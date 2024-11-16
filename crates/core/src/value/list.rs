@@ -6,6 +6,7 @@ use crate::{
 	},
 	ByondError, ByondResult, ByondValue, FromByond, ToByond,
 };
+use ahash::AHashSet;
 use std::mem::MaybeUninit;
 
 impl ByondValue {
@@ -69,6 +70,19 @@ impl ByondValue {
 			// Safety: with assoc lists, len should always be a multiple of 2.
 			Ok(stupid_assoc_cast(buffer))
 		}
+	}
+
+	/// Returns if this is likely an associative list or not.
+	/// This checks through two methods: if any of the values are non-null, or
+	/// if any keys are duplicated, then it's an probably an assoc list.
+	///
+	/// Do not rely on this being 100% accurate.
+	pub fn is_likely_assoc(&self) -> ByondResult<bool> {
+		let list = self.read_assoc_list()?;
+		let mut found_keys = AHashSet::<ByondValue>::with_capacity(list.len());
+		Ok(list
+			.into_iter()
+			.any(|[key, value]| !value.is_null() || !found_keys.insert(key)))
 	}
 
 	pub fn write_list<List>(&mut self, contents: List) -> ByondResult<()>

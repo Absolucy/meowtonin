@@ -10,7 +10,7 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-ahash = { version = "0.8", default-features = false, features = ["no-rng"] }
+ahash = "0.8"
 backtrace = "0.3"
 bytemuck = { version = "1", features = ["extern_crate_std"] }
 inventory = "0.3"
