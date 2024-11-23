@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: 0BSD
 use crate::{
 	sys::{ByondValue_GetNum, ByondValue_SetNum},
-	ByondError, ByondResult, ByondValue, ByondValueType,
+	ByondError, ByondResult, ByondValue,
 };
 use std::{borrow::Cow, mem::MaybeUninit};
 
@@ -25,13 +25,13 @@ impl ByondValue {
 	}
 
 	pub fn get_number(&self) -> ByondResult<f32> {
-		let val = self.get_type();
-		match val {
-			ByondValueType::NUMBER => Ok(unsafe { ByondValue_GetNum(&self.0) }),
-			_ => Err(ByondError::InvalidConversion {
+		if self.is_number() {
+			Ok(unsafe { ByondValue_GetNum(&self.0) })
+		} else {
+			Err(ByondError::InvalidConversion {
 				expected: Cow::Borrowed("number"),
-				got: val.name(),
-			}),
+				got: self.get_type().name(),
+			})
 		}
 	}
 }
