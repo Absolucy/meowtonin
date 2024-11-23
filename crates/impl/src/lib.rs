@@ -63,7 +63,7 @@ pub fn byond_fn(_attr: TokenStream, item: TokenStream) -> TokenStream {
 			#[no_mangle]
 			#[inline(never)]
 			pub unsafe extern "C" fn #func_name(__argc: ::meowtonin::sys::u4c, __argv: *mut ::meowtonin::ByondValue) -> ::meowtonin::ByondValue {
-				::meowtonin::panic::setup_panic_hook();
+				::meowtonin::panic_old::setup_panic_hook();
 				let mut __args = unsafe { ::meowtonin::parse_args(__argc, __argv) };
 				if __args.len() < #length {
 					__args.extend((0..#length - __args.len()).map(|_| ::meowtonin::ByondValue::default()))
@@ -82,7 +82,7 @@ pub fn byond_fn(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
 				let __ret = match ::std::panic::catch_unwind(|| #wrapper_ident(&__args)) {
 					Ok(value) => value,
-					Err(_err) => return ::meowtonin::panic::get_last_panic(),
+					Err(_err) => return ::meowtonin::panic_old::get_last_panic(),
 				};
 
 				match __ret {

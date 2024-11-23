@@ -7,6 +7,7 @@
 	clippy::style
 )]
 #![allow(unused_unsafe, clippy::missing_safety_doc)]
+#![cfg_attr(debug_assertions, allow(dead_code))]
 
 #[macro_use]
 extern crate log;
@@ -17,6 +18,8 @@ pub mod from;
 pub mod init;
 pub mod misc;
 pub mod panic;
+#[doc(hidden)]
+pub mod panic_old;
 pub mod proc;
 pub mod strid;
 pub mod sync;

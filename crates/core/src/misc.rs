@@ -58,3 +58,8 @@ pub fn locate(
 		Ok(ByondValue(result.assume_init()))
 	}
 }
+
+pub fn stack_trace() {
+	crate::proc::call_global::<_, _, _, ()>("byondapi_stack_trace", ["le panic"])
+		.expect("failed to call byondapi_stack_trace");
+}
