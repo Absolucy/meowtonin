@@ -8,8 +8,8 @@ pub mod typecheck;
 
 use crate::{
 	sys::{
-		ByondValue_Clear, ByondValue_Equals, ByondValue_Type, Byond_Length, Byond_New,
-		Byond_ReadPointer, Byond_ReadVar, Byond_WritePointer, Byond_WriteVar, CByondValue,
+		ByondValue_Equals, ByondValue_Type, Byond_Length, Byond_New, Byond_ReadPointer,
+		Byond_ReadVar, Byond_WritePointer, Byond_WriteVar, CByondValue,
 	},
 	ByondError, ByondResult, ByondValueType, FromByond, ToByond,
 };
@@ -169,11 +169,7 @@ impl ByondValue {
 
 impl Default for ByondValue {
 	fn default() -> Self {
-		unsafe {
-			let mut value = MaybeUninit::uninit();
-			ByondValue_Clear(value.as_mut_ptr());
-			Self(value.assume_init())
-		}
+		unsafe { Self(MaybeUninit::zeroed().assume_init()) }
 	}
 }
 
@@ -251,4 +247,44 @@ impl fmt::Display for ByondValue {
 			}
 		}
 	}
+}
+
+#[doc(hidden)]
+pub fn test_byondvalue_clear_is_zero() {
+	// Verify assumptions about the type
+	assert!(
+		!std::mem::needs_drop::<ByondValue>(),
+		"ByondValue must not need dropping"
+	);
+	assert!(
+		std::mem::size_of::<ByondValue>() > 0,
+		"ByondValue must not be zero-sized"
+	);
+
+	let value_zeroed = unsafe { ByondValue(MaybeUninit::zeroed().assume_init()) };
+	let value_cleared = unsafe {
+		let mut value = MaybeUninit::uninit();
+		crate::sys::ByondValue_Clear(value.as_mut_ptr());
+		ByondValue(value.assume_init())
+	};
+
+	let value_zeroed = unsafe {
+		std::slice::from_raw_parts(
+			&value_zeroed as *const _ as *const u8,
+			std::mem::size_of::<ByondValue>(),
+		)
+	};
+
+	let value_cleared = unsafe {
+		std::slice::from_raw_parts(
+			&value_cleared as *const _ as *const u8,
+			std::mem::size_of::<ByondValue>(),
+		)
+	};
+
+	// Compare the memory representations
+	assert_eq!(
+		value_zeroed, value_cleared,
+		"Memory representations differ: \nzeroed: {value_zeroed:?}\ncleared: {value_cleared:?}",
+	);
 }
