@@ -38,7 +38,7 @@ pub enum ByondError {
 	NotAList,
 	/// Thrown by us when we know this type does not have a refnumber
 	#[error("Cannot get a ref from this value")]
-	NotReferencable,
+	NotReferenceable,
 	#[error(transparent)]
 	Boxed(Box<dyn std::error::Error + Send + 'static>),
 }

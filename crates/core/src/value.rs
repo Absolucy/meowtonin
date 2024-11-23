@@ -8,8 +8,8 @@ pub mod typecheck;
 
 use crate::{
 	sys::{
-		ByondValue_Equals, ByondValue_Type, Byond_Length, Byond_New, Byond_ReadPointer,
-		Byond_ReadVar, Byond_WritePointer, Byond_WriteVar, CByondValue,
+		ByondValue_Equals, Byond_Length, Byond_New, Byond_ReadPointer, Byond_ReadVar,
+		Byond_WritePointer, Byond_WriteVar, CByondValue,
 	},
 	ByondError, ByondResult, ByondValueType, FromByond, ToByond,
 };
@@ -92,9 +92,7 @@ impl ByondValue {
 
 	/// Gets the internal type of the value.
 	pub fn get_type(&self) -> ByondValueType {
-		// Safety: This operation only fails if our CByondValue is invalid, which cannot
-		// happen.
-		ByondValueType(unsafe { ByondValue_Type(&self.0) })
+		ByondValueType(self.0.type_)
 	}
 
 	/// Returns the typepath of the value as a string, if it is a reference.
@@ -108,9 +106,8 @@ impl ByondValue {
 		Name: AsRef<str>,
 		Return: FromByond,
 	{
-		if self.is_number() || self.is_string() || self.is_null() || self.is_list() || self.is_ref()
-		{
-			return Err(ByondError::NotReferencable);
+		if !self.is_ref() {
+			return Err(ByondError::NotReferenceable);
 		}
 		let c_string = CString::new(name.as_ref()).map_err(|_| ByondError::NonUtf8String)?;
 		unsafe {
@@ -131,6 +128,9 @@ impl ByondValue {
 		Name: AsRef<str>,
 		Value: ToByond,
 	{
+		if !self.is_ref() {
+			return Err(ByondError::NotReferenceable);
+		}
 		let value = value.to_byond()?;
 		let c_string = CString::new(name.as_ref()).map_err(|_| ByondError::NonUtf8String)?;
 		map_byond_error!(Byond_WriteVar(
@@ -144,8 +144,8 @@ impl ByondValue {
 	where
 		Return: FromByond,
 	{
-		if !self.is_ref() {
-			return Err(ByondError::NotReferencable);
+		if self.get_type() != ByondValueType::POINTER {
+			return Err(ByondError::NotReferenceable);
 		}
 		unsafe {
 			let mut result = MaybeUninit::uninit();
@@ -159,8 +159,8 @@ impl ByondValue {
 	where
 		Value: ToByond,
 	{
-		if !self.is_ref() {
-			return Err(ByondError::NotReferencable);
+		if self.get_type() != ByondValueType::POINTER {
+			return Err(ByondError::NotReferenceable);
 		}
 		let value = value.to_byond()?;
 		unsafe { map_byond_error!(Byond_WritePointer(&self.0, &value.0)) }
@@ -225,12 +225,6 @@ impl fmt::Display for ByondValue {
 			ByondValueType::LIST => {
 				let length = self.length::<usize>().unwrap_or(0);
 				write!(f, "list[len={length}]")
-			}
-			ByondValueType::POINTER => {
-				let ref_id = self.ref_id().unwrap_or(0);
-				let ref_count = self.ref_count().unwrap_or(0);
-				let path = self.typepath().unwrap_or_else(|_| String::from("???"));
-				write!(f, "ref[id={ref_id:#04x}, count={ref_count}, type={path}]")
 			}
 			ByondValueType::MOB_TYPEPATH
 			| ByondValueType::OBJ_TYPEPATH

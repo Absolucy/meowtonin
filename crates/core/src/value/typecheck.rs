@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: 0BSD
 use crate::{
 	sys::{
-		ByondValueType as InternalByondValueType, ByondValue_IsList, ByondValue_IsNull,
-		ByondValue_IsNum, ByondValue_IsStr, ByondValue_IsTrue,
+		ByondValueType as InternalByondValueType, ByondValue_GetRef, ByondValue_IsList,
+		ByondValue_IsNull, ByondValue_IsNum, ByondValue_IsStr, ByondValue_IsTrue,
 	},
 	ByondValue,
 };
@@ -53,8 +53,13 @@ impl ByondValue {
 		unsafe { ByondValue_IsTrue(&self.0) }
 	}
 
+	/// Evaluates whether the [`ByondValue`] is a reference (object) type or
+	/// not. Does not check validity.
+	///
+	/// # Returns
+	/// `true` if the value is a reference, `false` otherwise.
 	pub fn is_ref(&self) -> bool {
-		self.get_type() == ByondValueType::POINTER
+		unsafe { ByondValue_GetRef(&self.0) != 0 }
 	}
 }
 

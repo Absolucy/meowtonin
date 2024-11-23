@@ -22,14 +22,24 @@ impl<'de, 'a> Deserializer<'de> for &'a ByondDeserializer {
 			ByondValueType::NULL => visitor.visit_unit(),
 			ByondValueType::STRING => self.deserialize_string(visitor),
 			ByondValueType::NUMBER => self.deserialize_f32(visitor),
-			ByondValueType::LIST => {
+			ByondValueType::POINTER => Err(DeserializeError::Unexpected(
+				"serializable value (null, str, num, list, string-ish)".into(),
+				"pointer".into(),
+			)),
+			_ if self.value.is_list() => {
 				if self.value.is_likely_assoc()? {
 					self.deserialize_map(visitor)
 				} else {
 					self.deserialize_seq(visitor)
 				}
 			}
-			_ => Err(DeserializeError::Unexpected("any type".into(), val.name())),
+			_ => match self.value.get_string() {
+				Ok(string) if !string.trim().is_empty() => visitor.visit_string(string),
+				_ => Err(DeserializeError::Unexpected(
+					"serializable value (null, str, num, list, string-ish)".into(),
+					val.name(),
+				)),
+			},
 		}
 	}
 
