@@ -6,7 +6,6 @@ use crate::{
 	},
 	ByondError, ByondResult, ByondValue, FromByond, ToByond,
 };
-use ahash::AHashSet;
 use std::mem::MaybeUninit;
 
 impl ByondValue {
@@ -79,10 +78,7 @@ impl ByondValue {
 	/// Do not rely on this being 100% accurate.
 	pub fn is_likely_assoc(&self) -> ByondResult<bool> {
 		let list = self.read_assoc_list()?;
-		let mut found_keys = AHashSet::<ByondValue>::with_capacity(list.len());
-		Ok(list
-			.into_iter()
-			.any(|[key, value]| !value.is_null() || !found_keys.insert(key)))
+		Ok(crate::misc::is_likely_assoc(&list))
 	}
 
 	pub fn write_list<List>(&mut self, contents: List) -> ByondResult<()>

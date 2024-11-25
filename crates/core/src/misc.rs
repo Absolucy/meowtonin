@@ -59,6 +59,17 @@ pub fn locate(
 	}
 }
 
+/// Returns if this is likely an associative list or not.
+/// This checks through two methods: if any of the values are non-null, or
+/// if any keys are duplicated, then it's an probably an assoc list.
+///
+/// Do not rely on this being 100% accurate.
+pub fn is_likely_assoc(list: &[[ByondValue; 2]]) -> bool {
+	let mut found_keys = ahash::AHashSet::<&ByondValue>::with_capacity(list.len());
+	list.iter()
+		.any(|[key, value]| !value.is_null() || !found_keys.insert(key))
+}
+
 pub fn stack_trace() {
 	crate::proc::call_global::<_, _, _, ()>("byondapi_stack_trace", ["le panic"])
 		.expect("failed to call byondapi_stack_trace");
