@@ -22,24 +22,11 @@ impl ByondValue {
 			return Err(ByondError::NotAList);
 		}
 		unsafe {
-			let mut buffer = Vec::<ByondValue>::new();
-			let mut needed_len = 0;
-			if Byond_ReadList(&self.0, buffer.as_mut_ptr().cast(), &mut needed_len) {
-				// Safety: if this returns true, then the buffer was large enough, and thus
-				// needed_len <= capacity.
-				buffer.set_len(needed_len);
-				return Ok(buffer);
-			}
-			buffer.reserve(needed_len.saturating_sub(buffer.len()));
-			map_byond_error!(Byond_ReadList(
-				&self.0,
-				buffer.as_mut_ptr().cast(),
-				&mut needed_len
-			))?;
-			// Safety: needed_len is always <= capacity here,
-			// unless BYOND did a really bad fucky wucky.
-			buffer.set_len(needed_len);
-			Ok(buffer)
+			crate::misc::with_buffer::<_, ByondValue, _, _>(
+				None,
+				|ptr, len| Byond_ReadList(&self.0, ptr.cast(), len),
+				|buffer| buffer,
+			)
 		}
 	}
 
@@ -48,26 +35,11 @@ impl ByondValue {
 			return Err(ByondError::NotAList);
 		}
 		unsafe {
-			let mut buffer = Vec::<ByondValue>::new();
-			let mut needed_len = 0;
-			if Byond_ReadListAssoc(&self.0, buffer.as_mut_ptr().cast(), &mut needed_len) {
-				// Safety: if this returns true, then the buffer was large enough, and thus
-				// needed_len <= capacity.
-				buffer.set_len(needed_len);
-				// Safety: with assoc lists, len should always be a multiple of 2.
-				return Ok(stupid_assoc_cast(buffer));
-			}
-			buffer.reserve(needed_len.saturating_sub(buffer.len()));
-			map_byond_error!(Byond_ReadListAssoc(
-				&self.0,
-				buffer.as_mut_ptr().cast(),
-				&mut needed_len
-			))?;
-			// Safety: needed_len is always <= capacity here,
-			// unless BYOND did a really bad fucky wucky.
-			buffer.set_len(needed_len);
-			// Safety: with assoc lists, len should always be a multiple of 2.
-			Ok(stupid_assoc_cast(buffer))
+			crate::misc::with_buffer::<_, ByondValue, _, _>(
+				None,
+				|ptr, len| Byond_ReadListAssoc(&self.0, ptr.cast(), len),
+				|buffer| stupid_assoc_cast(buffer),
+			)
 		}
 	}
 

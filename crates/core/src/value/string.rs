@@ -30,24 +30,11 @@ impl ByondValue {
 
 	pub fn get_string_bytes(&self) -> ByondResult<Vec<u8>> {
 		unsafe {
-			let mut buffer = Vec::<u8>::new();
-			let mut needed_len = 0;
-			if Byond_ToString(&self.0, buffer.as_mut_ptr().cast(), &mut needed_len) {
-				// Safety: if this returns true, then the buffer was large enough, and thus
-				// needed_len <= capacity.
-				buffer.set_len(needed_len);
-				return Ok(buffer);
-			}
-			buffer.reserve(needed_len.saturating_sub(buffer.len()));
-			map_byond_error!(Byond_ToString(
-				&self.0,
-				buffer.as_mut_ptr().cast(),
-				&mut needed_len
-			))?;
-			// Safety: needed_len is always <= capacity here,
-			// unless BYOND did a really bad fucky wucky.
-			buffer.set_len(needed_len);
-			Ok(buffer)
+			crate::misc::with_buffer::<_, u8, _, _>(
+				None,
+				|ptr, len| Byond_ToString(&self.0, ptr.cast(), len),
+				|buffer| buffer,
+			)
 		}
 	}
 
