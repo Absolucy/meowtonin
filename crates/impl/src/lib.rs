@@ -90,7 +90,10 @@ fn generate_export_fn(
 					.map(|_| ::meowtonin::ByondValue::default()))
 			}
 
-			match ::std::panic::catch_unwind(|| #wrapper_ident(&__args)) {
+			match ::std::panic::catch_unwind(move || {
+				let __args = __args;
+				#wrapper_ident(&__args)
+			}) {
 				Ok(Ok(value)) => value,
 				Ok(Err(err)) => {
 					let error = err.to_string();
