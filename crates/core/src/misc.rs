@@ -50,11 +50,6 @@ pub fn is_likely_assoc(list: &[[ByondValue; 2]]) -> bool {
 		.any(|[key, value]| !value.is_null() || !found_keys.insert(key))
 }
 
-pub fn stack_trace() {
-	crate::proc::call_global::<_, _, _, ()>("byondapi_stack_trace", ["le panic"])
-		.expect("failed to call byondapi_stack_trace");
-}
-
 pub(crate) unsafe fn with_buffer<T, B, F, W>(
 	initial_capacity: Option<usize>,
 	writer: W,

@@ -75,6 +75,7 @@ fn generate_export_fn(
 	wrapper_ident: &syn::Ident,
 	length: usize,
 ) -> TokenStream2 {
+	let func_name_str = func_name.to_string();
 	quote! {
 		#[no_mangle]
 		#[inline(never)]
@@ -82,21 +83,25 @@ fn generate_export_fn(
 			__argc: ::meowtonin::sys::u4c,
 			__argv: *mut ::meowtonin::ByondValue
 		) -> ::meowtonin::ByondValue {
-			::meowtonin::panic_old::setup_panic_hook();
+			::meowtonin::panic::setup_panic_hook();
 			let mut __args = unsafe { ::meowtonin::parse_args(__argc, __argv) };
 			if __args.len() < #length {
 				__args.extend((0..#length - __args.len())
 					.map(|_| ::meowtonin::ByondValue::default()))
 			}
 
-			let __ret = match ::std::panic::catch_unwind(|| #wrapper_ident(&__args)) {
-				Ok(value) => value,
-				Err(_err) => return ::meowtonin::panic_old::get_last_panic(),
-			};
-
-			match __ret {
-				Ok(value) => value,
-				Err(err) => ::meowtonin::ByondValue::new_string(err.to_string()),
+			match ::std::panic::catch_unwind(|| #wrapper_ident(&__args)) {
+				Ok(Ok(value)) => value,
+				Ok(Err(err)) => {
+					let error = err.to_string();
+					let source = #func_name_str.to_string();
+					let _ = ::meowtonin::call_global::<_, _, _, ()>("meowtonin_stack_trace", [error, source]);
+					::meowtonin::ByondValue::null()
+				},
+				Err(_err) => {
+					::meowtonin::panic::stack_trace_if_panic();
+					::meowtonin::ByondValue::null()
+				}
 			}
 		}
 	}

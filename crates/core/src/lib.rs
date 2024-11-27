@@ -10,16 +10,13 @@
 #![cfg_attr(debug_assertions, allow(dead_code))]
 
 #[macro_use]
-extern crate log;
-
-#[macro_use]
 pub mod error;
 pub mod from;
 pub mod init;
 pub mod misc;
 pub mod panic;
-#[doc(hidden)]
-pub mod panic_old;
+//#[doc(hidden)]
+//pub mod panic_old;
 pub mod proc;
 pub mod strid;
 pub mod sync;
