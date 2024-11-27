@@ -147,7 +147,7 @@ pub fn byond_fn(_attr: TokenStream, item: TokenStream) -> TokenStream {
 	let export_fn = generate_export_fn(func_name, &wrapper_ident, func.sig.inputs.len());
 
 	// Combine everything into the final output
-	let gen = quote! {
+	quote! {
 		#func
 
 		#[doc(hidden)]
@@ -157,7 +157,6 @@ pub fn byond_fn(_attr: TokenStream, item: TokenStream) -> TokenStream {
 			#wrapper_fn
 			#export_fn
 		}
-	};
-
-	gen.into()
+	}
+	.into()
 }
