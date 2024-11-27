@@ -38,7 +38,6 @@ static INTERNAL_PATTERNS: LazyLock<AhoCorasick> = LazyLock::new(|| {
 		"function::impls",
 		"setup_panic_hook",
 		"Ordinal",
-		"SteamAvailableCheck",
 	])
 	.expect("failed to build internal pattern matcher")
 });
@@ -55,6 +54,19 @@ static PATH_PATTERNS: LazyLock<AhoCorasick> = LazyLock::new(|| {
 	.expect("failed to build internal path matcher")
 });
 
+static MODULE_PATTERNS: LazyLock<AhoCorasick> = LazyLock::new(|| {
+	AhoCorasick::builder()
+		.ascii_case_insensitive(true)
+		.build([
+			"user32.dll",
+			"byondcore.dll",
+			"ntdll.dll",
+			"kernel32.dll",
+			"libbyond.so",
+		])
+		.expect("failed to build internal module matcher")
+});
+
 fn is_relevant_symbol(symbol: &BacktraceSymbol) -> bool {
 	match symbol.name() {
 		Some(name) => {
@@ -67,6 +79,13 @@ fn is_relevant_symbol(symbol: &BacktraceSymbol) -> bool {
 					.is_some_and(|file| PATH_PATTERNS.is_match(file.as_ref()))
 		}
 		None => false,
+	}
+}
+
+fn is_relevant_module(module: Option<&SmolStr>) -> bool {
+	match module {
+		Some(module) => !MODULE_PATTERNS.is_match(module),
+		None => true,
 	}
 }
 
@@ -150,7 +169,9 @@ fn encode_panic(panic_info: &PanicHookInfo) -> Panic {
 				.and_then(resolve::resolve_module_name);
 			frame.symbols().iter().map(move |sym| (sym, module.clone()))
 		})
-		.filter(|(symbol, _)| is_relevant_symbol(symbol))
+		.filter(|(symbol, module)| {
+			is_relevant_module(module.as_ref()) && is_relevant_symbol(symbol)
+		})
 		.filter_map(|(symbol, module)| {
 			Some(PanicFrame {
 				name: symbol.name()?.to_string(),
