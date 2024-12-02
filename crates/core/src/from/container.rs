@@ -57,7 +57,7 @@ where
 	}
 }
 
-impl<'a, Value> FromByond for Cow<'a, Value>
+impl<Value> FromByond for Cow<'_, Value>
 where
 	Value: ToOwned,
 	Value::Owned: FromByond,

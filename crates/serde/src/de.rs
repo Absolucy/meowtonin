@@ -10,7 +10,7 @@ pub(crate) struct ByondDeserializer {
 	pub(crate) value: ByondValue,
 }
 
-impl<'de, 'a> Deserializer<'de> for &'a ByondDeserializer {
+impl<'de> Deserializer<'de> for &ByondDeserializer {
 	type Error = DeserializeError;
 
 	fn deserialize_any<V>(self, visitor: V) -> Result<V::Value, Self::Error>
@@ -367,7 +367,7 @@ struct ByondEnumAccess<'a> {
 	deserializer: &'a ByondDeserializer,
 }
 
-impl<'de, 'a> EnumAccess<'de> for ByondEnumAccess<'a> {
+impl<'de> EnumAccess<'de> for ByondEnumAccess<'_> {
 	type Error = DeserializeError;
 	type Variant = Self;
 
@@ -380,7 +380,7 @@ impl<'de, 'a> EnumAccess<'de> for ByondEnumAccess<'a> {
 	}
 }
 
-impl<'de, 'a> VariantAccess<'de> for ByondEnumAccess<'a> {
+impl<'de> VariantAccess<'de> for ByondEnumAccess<'_> {
 	type Error = DeserializeError;
 
 	fn unit_variant(self) -> Result<(), Self::Error> {

@@ -36,7 +36,7 @@ impl ToByond for &str {
 	}
 }
 
-impl<'a> ToByond for Cow<'a, str> {
+impl ToByond for Cow<'_, str> {
 	fn to_byond(&self) -> ByondResult<ByondValue> {
 		Ok(ByondValue::new_string(self.as_ref()))
 	}

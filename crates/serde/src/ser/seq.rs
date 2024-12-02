@@ -18,7 +18,7 @@ impl<'a> ByondSeqSerializer<'a> {
 	}
 }
 
-impl<'a> SerializeSeq for ByondSeqSerializer<'a> {
+impl SerializeSeq for ByondSeqSerializer<'_> {
 	type Ok = ByondValue;
 	type Error = SerializeError;
 
@@ -36,7 +36,7 @@ impl<'a> SerializeSeq for ByondSeqSerializer<'a> {
 	}
 }
 
-impl<'a> SerializeTuple for ByondSeqSerializer<'a> {
+impl SerializeTuple for ByondSeqSerializer<'_> {
 	type Ok = ByondValue;
 	type Error = SerializeError;
 
@@ -54,7 +54,7 @@ impl<'a> SerializeTuple for ByondSeqSerializer<'a> {
 	}
 }
 
-impl<'a> SerializeTupleStruct for ByondSeqSerializer<'a> {
+impl SerializeTupleStruct for ByondSeqSerializer<'_> {
 	type Ok = ByondValue;
 	type Error = SerializeError;
 

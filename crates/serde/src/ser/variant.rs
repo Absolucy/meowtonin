@@ -23,7 +23,7 @@ impl<'a> ByondVariantSerializer<'a> {
 	}
 }
 
-impl<'a> SerializeTupleVariant for ByondVariantSerializer<'a> {
+impl SerializeTupleVariant for ByondVariantSerializer<'_> {
 	type Ok = ByondValue;
 	type Error = SerializeError;
 

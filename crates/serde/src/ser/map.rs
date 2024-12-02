@@ -25,7 +25,7 @@ impl<'a> ByondMapSerializer<'a> {
 	}
 }
 
-impl<'a> SerializeMap for ByondMapSerializer<'a> {
+impl SerializeMap for ByondMapSerializer<'_> {
 	type Ok = ByondValue;
 	type Error = SerializeError;
 
@@ -53,7 +53,7 @@ impl<'a> SerializeMap for ByondMapSerializer<'a> {
 	}
 }
 
-impl<'a> SerializeStruct for ByondMapSerializer<'a> {
+impl SerializeStruct for ByondMapSerializer<'_> {
 	type Ok = ByondValue;
 	type Error = SerializeError;
 
@@ -73,7 +73,7 @@ impl<'a> SerializeStruct for ByondMapSerializer<'a> {
 	}
 }
 
-impl<'a> SerializeStructVariant for ByondMapSerializer<'a> {
+impl SerializeStructVariant for ByondMapSerializer<'_> {
 	type Ok = ByondValue;
 	type Error = SerializeError;
 
