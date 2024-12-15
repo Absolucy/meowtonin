@@ -40,14 +40,18 @@ pub fn locate(
 }
 
 /// Returns if this is likely an associative list or not.
-/// This checks through two methods: if any of the values are non-null, or
-/// if any non-null keys are duplicated, then it's an probably an assoc list.
-///
 /// Do not rely on this being 100% accurate.
 pub fn is_likely_assoc(list: &[[ByondValue; 2]]) -> bool {
 	let mut found_keys = ahash::AHashSet::<&ByondValue>::with_capacity(list.len());
-	list.iter()
-		.any(|[key, value]| !value.is_null() || (!key.is_null() && !found_keys.insert(key)))
+	for [key, value] in list {
+		if !value.is_null() {
+			return true;
+		}
+		if key.is_number() || found_keys.insert(key) {
+			return false;
+		}
+	}
+	false
 }
 
 pub(crate) unsafe fn with_buffer<T, B, F, W>(
