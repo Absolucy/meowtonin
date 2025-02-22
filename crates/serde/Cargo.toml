@@ -12,7 +12,7 @@ license.workspace = true
 [dependencies]
 meowtonin = { path = "../core", version = "0.2" }
 serde = "1"
-thiserror = "1"
+thiserror = "2"
 
 [package.metadata.docs.rs]
 targets = ["i686-pc-windows-msvc", "i686-unknown-linux-gnu"]

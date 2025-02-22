@@ -8,7 +8,7 @@ use windows::Win32::{
 
 pub(super) fn resolve_module_name(base_address: *mut c_void) -> Option<SmolStr> {
 	let mut buffer = [0_u16; MAX_PATH as usize];
-	let length = unsafe { GetModuleFileNameW(HMODULE(base_address), &mut buffer) };
+	let length = unsafe { GetModuleFileNameW(Some(HMODULE(base_address)), &mut buffer) };
 	if length == 0 {
 		return None;
 	}

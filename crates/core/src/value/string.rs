@@ -1,8 +1,5 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{
-	sys::{ByondValue_SetStr, Byond_ToString},
-	ByondResult, ByondValue,
-};
+use crate::{byond, ByondResult, ByondValue};
 use std::{ffi::CStr, mem::MaybeUninit};
 
 impl ByondValue {
@@ -14,7 +11,7 @@ impl ByondValue {
 		string.push(0);
 		unsafe {
 			let mut value = MaybeUninit::uninit();
-			ByondValue_SetStr(value.as_mut_ptr(), string.as_ptr().cast());
+			byond().ByondValue_SetStr(value.as_mut_ptr(), string.as_ptr().cast());
 			Self(value.assume_init())
 		}
 	}
@@ -25,14 +22,14 @@ impl ByondValue {
 	{
 		let mut string = string.into();
 		string.push(0);
-		unsafe { ByondValue_SetStr(&mut self.0, string.as_ptr().cast()) }
+		unsafe { byond().ByondValue_SetStr(&mut self.0, string.as_ptr().cast()) }
 	}
 
 	pub fn get_string_bytes(&self) -> ByondResult<Vec<u8>> {
 		unsafe {
 			crate::misc::with_buffer::<_, u8, _, _>(
 				None,
-				|ptr, len| Byond_ToString(&self.0, ptr.cast(), len),
+				|ptr, len| byond().Byond_ToString(&self.0, ptr.cast(), len),
 				|buffer| buffer,
 			)
 		}
