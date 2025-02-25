@@ -26,10 +26,9 @@ serde_json = "1"
 simplelog = "0.12"
 thiserror = "2"
 smol_str = { version = "0.3", features = ["serde"] }
-libloading = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
-windows = { version = "0.60", features = ["Win32_Foundation", "Win32_System", "Win32_System_Console", "Win32_System_LibraryLoader"] }
+windows = { version = "0.58", features = ["Win32_Foundation", "Win32_System", "Win32_System_Console", "Win32_System_LibraryLoader"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 libc = "0.2"

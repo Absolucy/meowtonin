@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{byond, sys::CByondValue, ByondValue};
+use crate::{
+	sys::{Byond_ThreadSync, CByondValue},
+	ByondValue,
+};
 use std::os::raw::c_void;
 
 struct CallbackData<F: FnOnce() -> ByondValue + Send> {
@@ -20,5 +23,5 @@ where
 	let data = Box::new(CallbackData { callback });
 	let data_ptr = Box::into_raw(data) as *mut c_void;
 
-	unsafe { byond().Byond_ThreadSync(Some(trampoline::<F>), data_ptr, block) }.into()
+	unsafe { Byond_ThreadSync(Some(trampoline::<F>), data_ptr, block) }.into()
 }

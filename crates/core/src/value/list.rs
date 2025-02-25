@@ -1,12 +1,18 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{byond, ByondError, ByondResult, ByondValue, FromByond, ToByond};
+use crate::{
+	sys::{
+		Byond_CreateList, Byond_ReadList, Byond_ReadListAssoc, Byond_ReadListIndex,
+		Byond_WriteList, Byond_WriteListIndex,
+	},
+	ByondError, ByondResult, ByondValue, FromByond, ToByond,
+};
 use std::mem::MaybeUninit;
 
 impl ByondValue {
 	pub fn new_list() -> ByondResult<Self> {
 		unsafe {
 			let mut value = MaybeUninit::uninit();
-			map_byond_error!(byond().Byond_CreateList(value.as_mut_ptr()))?;
+			map_byond_error!(Byond_CreateList(value.as_mut_ptr()))?;
 			Ok(Self(value.assume_init()))
 		}
 	}
@@ -18,7 +24,7 @@ impl ByondValue {
 		unsafe {
 			crate::misc::with_buffer::<_, ByondValue, _, _>(
 				None,
-				|ptr, len| byond().Byond_ReadList(&self.0, ptr.cast(), len),
+				|ptr, len| Byond_ReadList(&self.0, ptr.cast(), len),
 				|buffer| buffer,
 			)
 		}
@@ -31,7 +37,7 @@ impl ByondValue {
 		unsafe {
 			crate::misc::with_buffer::<_, ByondValue, _, _>(
 				None,
-				|ptr, len| byond().Byond_ReadListAssoc(&self.0, ptr.cast(), len),
+				|ptr, len| Byond_ReadListAssoc(&self.0, ptr.cast(), len),
 				|buffer| stupid_assoc_cast(buffer),
 			)
 		}
@@ -52,7 +58,7 @@ impl ByondValue {
 		List: IntoIterator<Item = Self>,
 	{
 		let contents = contents.into_iter().collect::<Vec<_>>();
-		map_byond_error!(byond().Byond_WriteList(
+		map_byond_error!(Byond_WriteList(
 			&self.0,
 			contents.as_ptr().cast(),
 			contents.len() as _
@@ -70,7 +76,7 @@ impl ByondValue {
 		unsafe {
 			let mut result = MaybeUninit::uninit();
 			let idx = idx.to_byond()?;
-			map_byond_error!(byond().Byond_ReadListIndex(&self.0, &idx.0, result.as_mut_ptr()))?;
+			map_byond_error!(Byond_ReadListIndex(&self.0, &idx.0, result.as_mut_ptr()))?;
 			let result = Self(result.assume_init());
 			Value::from_byond(&result)
 		}
@@ -86,7 +92,7 @@ impl ByondValue {
 		}
 		let idx = idx.to_byond()?;
 		let value = value.to_byond()?;
-		map_byond_error!(byond().Byond_WriteListIndex(&self.0, &idx.0, &value.0))
+		map_byond_error!(Byond_WriteListIndex(&self.0, &idx.0, &value.0))
 	}
 
 	/// Pushes a value into a list

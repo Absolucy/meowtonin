@@ -1,6 +1,7 @@
 {
 	"recommendations": [
 		"barbosshack.crates-io",
+		"eamodio.gitlens",
 		"editorconfig.editorconfig",
 		"jscearcy.rust-doc-viewer",
 		"marclipovsky.string-manipulation",
