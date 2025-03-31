@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: 0BSD
-use crate::sys::Byond_LastError;
+use crate::byond;
 use std::{
 	borrow::Cow,
 	convert::Infallible,
@@ -96,7 +96,7 @@ pub struct ByondApiError(pub CString);
 impl ByondApiError {
 	pub fn get_last() -> Option<Self> {
 		// Safety: It's always safe to call Byond_LastError
-		let ptr = unsafe { Byond_LastError() };
+		let ptr = unsafe { byond().Byond_LastError() };
 		if !ptr.is_null() {
 			// Safety: We just have to trust that Byond gave us a valid cstring...
 			let cstr = unsafe { CStr::from_ptr(ptr) };

@@ -12,9 +12,10 @@ license.workspace = true
 [dependencies]
 bytemuck = { version = "1", optional = true }
 cfg-if = "1"
+libloading = { workspace = true }
 
 [build-dependencies]
-bindgen = "0.70"
+bindgen = "0.71"
 doxygen-rs = "0.4"
 
 [features]

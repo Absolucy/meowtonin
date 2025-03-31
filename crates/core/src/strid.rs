@@ -1,8 +1,5 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{
-	sys::{u4c, Byond_AddGetStrId},
-	ByondValue, ByondValueType,
-};
+use crate::{byond, sys::u4c, ByondValue, ByondValueType};
 use ahash::AHasher;
 use nohash_hasher::{BuildNoHashHasher, IntMap};
 use parking_lot::RwLock;
@@ -37,7 +34,7 @@ pub fn lookup_string_id(string: impl AsRef<str>) -> u4c {
 		Ok(string) => string,
 		Err(_) => panic!("attempted to get id of invalid string"),
 	};
-	let id = unsafe { Byond_AddGetStrId(string.as_ptr().cast()) };
+	let id = unsafe { byond().Byond_AddGetStrId(string.as_ptr().cast()) };
 	if id == u4c::MAX {
 		panic!("attempted to get/create id of invalid string");
 	}

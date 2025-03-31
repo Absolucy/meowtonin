@@ -1,11 +1,5 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{
-	sys::{
-		ByondValueType as InternalByondValueType, ByondValue_GetRef, ByondValue_IsList,
-		ByondValue_IsNull, ByondValue_IsNum, ByondValue_IsStr, ByondValue_IsTrue,
-	},
-	ByondValue,
-};
+use crate::{byond, sys::ByondValueType as InternalByondValueType, ByondValue};
 use std::{
 	borrow::Cow,
 	fmt::{self, Display},
@@ -18,7 +12,7 @@ impl ByondValue {
 	/// # Returns
 	/// `true` if the value is null, `false` otherwise.
 	pub fn is_null(&self) -> bool {
-		unsafe { ByondValue_IsNull(&self.0) }
+		unsafe { byond().ByondValue_IsNull(&self.0) }
 	}
 
 	/// Checks if the [`ByondValue`] is a number.
@@ -26,7 +20,7 @@ impl ByondValue {
 	/// # Returns
 	/// `true` if the value is a number, `false` otherwise.
 	pub fn is_number(&self) -> bool {
-		unsafe { ByondValue_IsNum(&self.0) }
+		unsafe { byond().ByondValue_IsNum(&self.0) }
 	}
 
 	/// Checks if the [`ByondValue`] is a string.
@@ -34,7 +28,7 @@ impl ByondValue {
 	/// # Returns
 	/// `true` if the value is a string, `false` otherwise.
 	pub fn is_string(&self) -> bool {
-		unsafe { ByondValue_IsStr(&self.0) }
+		unsafe { byond().ByondValue_IsStr(&self.0) }
 	}
 
 	/// Determines if the [`ByondValue`] represents a list.
@@ -42,7 +36,7 @@ impl ByondValue {
 	/// # Returns
 	/// `true` if the value is a list, `false` otherwise.
 	pub fn is_list(&self) -> bool {
-		unsafe { ByondValue_IsList(&self.0) }
+		unsafe { byond().ByondValue_IsList(&self.0) }
 	}
 
 	/// Evaluates whether the [`ByondValue`] is considered "true" or not.
@@ -50,7 +44,7 @@ impl ByondValue {
 	/// # Returns
 	/// `true` if the value is logically true, `false` otherwise.
 	pub fn is_true(&self) -> bool {
-		unsafe { ByondValue_IsTrue(&self.0) }
+		unsafe { byond().ByondValue_IsTrue(&self.0) }
 	}
 
 	/// Evaluates whether the [`ByondValue`] is a reference (object) type or
@@ -59,7 +53,7 @@ impl ByondValue {
 	/// # Returns
 	/// `true` if the value is a reference, `false` otherwise.
 	pub fn is_ref(&self) -> bool {
-		unsafe { ByondValue_GetRef(&self.0) != 0 }
+		unsafe { byond().ByondValue_GetRef(&self.0) != 0 }
 	}
 }
 
