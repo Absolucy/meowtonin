@@ -20,12 +20,15 @@ use std::{
 pub struct ByondValue(pub CByondValue);
 
 impl ByondValue {
-	pub fn into_inner(self) -> CByondValue {
+	/// A reference to the "global" object.
+	const GLOBAL: ByondValue = unsafe { Self::new_ref_unchecked(ByondValueType::WORLD, 1) };
+
+	pub const fn into_inner(self) -> CByondValue {
 		self.0
 	}
 
-	pub fn null() -> Self {
-		Self::default()
+	pub const fn null() -> Self {
+		Self(unsafe { MaybeUninit::zeroed().assume_init() })
 	}
 
 	/// Shorthand for [ToByond::to_byond].
@@ -65,12 +68,6 @@ impl ByondValue {
 		}
 	}
 
-	/// Returns a reference to the "global" object.
-	pub fn global() -> Self {
-		// SAFETY: cross your fingers and pray
-		unsafe { Self::new_ref_unchecked(ByondValueType::WORLD, 1) }
-	}
-
 	/// Returns the length of the value.
 	/// Equivalent to calling `length(self)` in DM.
 	pub fn length<Type>(&self) -> ByondResult<Type>
@@ -85,7 +82,7 @@ impl ByondValue {
 	}
 
 	/// Gets the internal type of the value.
-	pub fn get_type(&self) -> ByondValueType {
+	pub const fn get_type(&self) -> ByondValueType {
 		ByondValueType(self.0.type_)
 	}
 
@@ -159,7 +156,7 @@ impl ByondValue {
 
 impl Default for ByondValue {
 	fn default() -> Self {
-		unsafe { Self(MaybeUninit::zeroed().assume_init()) }
+		unsafe { Self::null() }
 	}
 }
 

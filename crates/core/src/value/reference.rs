@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: 0BSD
+use meowtonin_byondapi_sys::ByondValueData;
+
+// SPDX-License-Identifier: 0BSD
 use crate::{byond, sys::CByondValue, ByondResult, ByondValue, ByondValueType};
-use std::{
-	mem::MaybeUninit,
-	ops::{Deref, DerefMut},
-};
+use std::ops::{Deref, DerefMut};
 
 impl ByondValue {
 	/// Creates a new reference with the given value type and reference ID.
@@ -15,12 +15,14 @@ impl ByondValue {
 	/// Creates a new reference with the given value type and reference ID.
 	/// This is unsafe because it does not check if the provided reference is
 	/// valid, you should normally use [Self::new_ref] instead.
-	pub unsafe fn new_ref_unchecked(value_type: ByondValueType, ref_id: u32) -> Self {
-		unsafe {
-			let mut value = MaybeUninit::uninit();
-			byond().ByondValue_SetRef(value.as_mut_ptr(), value_type.0, ref_id);
-			Self(value.assume_init())
-		}
+	pub const unsafe fn new_ref_unchecked(value_type: ByondValueType, ref_id: u32) -> Self {
+		Self(CByondValue {
+			type_: value_type.0,
+			junk1: 0,
+			junk2: 0,
+			junk3: 0,
+			data: ByondValueData { ref_: ref_id },
+		})
 	}
 
 	/// Returns the reference count of the value.

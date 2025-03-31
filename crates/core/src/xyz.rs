@@ -11,17 +11,17 @@ impl ByondXYZ {
 		Self(CByondXYZ { x, y, z, junk: 0 })
 	}
 
-	#[inline(always)]
+	#[inline]
 	pub const fn x(&self) -> i16 {
 		self.0.x
 	}
 
-	#[inline(always)]
+	#[inline]
 	pub const fn y(&self) -> i16 {
 		self.0.y
 	}
 
-	#[inline(always)]
+	#[inline]
 	pub const fn z(&self) -> i16 {
 		self.0.z
 	}
@@ -65,35 +65,35 @@ impl std::hash::Hash for ByondXYZ {
 }
 
 impl From<ByondXYZ> for CByondXYZ {
-	#[inline(always)]
+	#[inline]
 	fn from(value: ByondXYZ) -> Self {
 		value.0
 	}
 }
 
 impl From<CByondXYZ> for ByondXYZ {
-	#[inline(always)]
+	#[inline]
 	fn from(value: CByondXYZ) -> Self {
 		Self(value)
 	}
 }
 
 impl From<ByondXYZ> for (i16, i16, i16) {
-	#[inline(always)]
+	#[inline]
 	fn from(value: ByondXYZ) -> Self {
 		(value.x(), value.y(), value.z())
 	}
 }
 
 impl From<(i16, i16, i16)> for ByondXYZ {
-	#[inline(always)]
+	#[inline]
 	fn from((x, y, z): (i16, i16, i16)) -> Self {
 		Self::new(x, y, z)
 	}
 }
 
 impl From<(u16, u16, u16)> for ByondXYZ {
-	#[inline(always)]
+	#[inline]
 	fn from((x, y, z): (u16, u16, u16)) -> Self {
 		Self::new(x as i16, y as i16, z as i16)
 	}
