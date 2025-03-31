@@ -52,8 +52,14 @@ fn generate_wrapper_fn(
 	return_conversion: &TokenStream2,
 	body: &syn::Block,
 ) -> TokenStream2 {
+	let args_ident = if !parse_args.is_empty() {
+		quote! { mut __byond_args: &[::meowtonin::ByondValue] }
+	} else {
+		quote! {}
+	};
+
 	quote! {
-		fn #wrapper_ident(mut __byond_args: &[::meowtonin::ByondValue])
+		fn #wrapper_ident(#args_ident)
 			-> ::std::result::Result<::meowtonin::ByondValue, ::std::boxed::Box<dyn ::std::error::Error>>
 		{
 			#(#parse_args)*
@@ -76,6 +82,30 @@ fn generate_export_fn(
 	length: usize,
 ) -> TokenStream2 {
 	let func_name_str = func_name.to_string();
+
+	let let_args = if length > 0 {
+		quote! {
+			let mut __args = unsafe { ::meowtonin::parse_args(__argc, __argv) };
+			if __args.len() < #length {
+				__args.extend((0..#length - __args.len())
+					.map(|_| ::meowtonin::ByondValue::default()))
+			}
+		}
+	} else {
+		quote! {}
+	};
+
+	let do_call = if length > 0 {
+		quote! {
+			let __args = __args;
+			#wrapper_ident(&__args)
+		}
+	} else {
+		quote! {
+			#wrapper_ident()
+		}
+	};
+
 	quote! {
 		#[no_mangle]
 		#[inline(never)]
@@ -84,15 +114,10 @@ fn generate_export_fn(
 			__argv: *mut ::meowtonin::ByondValue
 		) -> ::meowtonin::ByondValue {
 			::meowtonin::panic::setup_panic_hook();
-			let mut __args = unsafe { ::meowtonin::parse_args(__argc, __argv) };
-			if __args.len() < #length {
-				__args.extend((0..#length - __args.len())
-					.map(|_| ::meowtonin::ByondValue::default()))
-			}
+			#let_args
 
 			match ::std::panic::catch_unwind(move || {
-				let __args = __args;
-				#wrapper_ident(&__args)
+				#do_call
 			}) {
 				Ok(Ok(value)) => value,
 				Ok(Err(err)) => {
