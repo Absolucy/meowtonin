@@ -71,6 +71,16 @@ impl ByondValue {
 			None
 		}
 	}
+
+	#[doc(hidden)]
+	pub fn setup_ref_counting(&self) {
+		if crate::sync::is_main_thread() && !crate::sync::is_in_thread_sync() {
+			unsafe {
+				byond().ByondValue_IncRef(&self.0);
+				byond().ByondValue_DecTempRef(&self.0);
+			}
+		}
+	}
 }
 
 /// A [ByondValue] that increments its ref upon creation,

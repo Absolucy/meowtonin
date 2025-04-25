@@ -113,7 +113,7 @@ fn generate_export_fn(
 			__argc: ::meowtonin::sys::u4c,
 			__argv: *mut ::meowtonin::ByondValue
 		) -> ::meowtonin::ByondValue {
-			::meowtonin::panic::setup_panic_hook();
+			::meowtonin::setup_once();
 			#let_args
 
 			match ::std::panic::catch_unwind(move || {

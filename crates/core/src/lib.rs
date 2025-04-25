@@ -40,6 +40,7 @@ pub use crate::{
 };
 pub use inventory;
 pub use meowtonin_impl::byond_fn;
+use std::sync::Once;
 
 /// A simple macro to create a [`ByondValue`] from any Rust value that
 /// implements [`ToByond`].
@@ -80,4 +81,14 @@ pub fn byond_version() -> (u32, u32) {
 /// Returns the version number the current .dmb was built with
 pub fn dmb_version() -> u32 {
 	unsafe { byond().Byond_GetDMBVersion() }
+}
+
+#[doc(hidden)]
+pub fn setup_once() {
+	static SETUP: Once = Once::new();
+
+	SETUP.call_once(|| {
+		let _ = sync::is_main_thread(); // initialize main thread OnceCell
+		std::panic::set_hook(Box::new(panic::panic_hook))
+	});
 }

@@ -9,13 +9,13 @@ use smol_str::SmolStr;
 use std::{
 	borrow::Cow,
 	cell::RefCell,
-	ffi::c_void,
+	ffi::{c_char, c_void, CString},
 	panic::PanicHookInfo,
 	path::{Path, PathBuf},
-	sync::{LazyLock, Once},
+	sync::LazyLock,
 };
 
-use crate::ByondValue;
+use crate::{byond, ByondValue};
 
 static INTERNAL_PATTERNS: LazyLock<AhoCorasick> = LazyLock::new(|| {
 	AhoCorasick::new([
@@ -198,7 +198,7 @@ thread_local! {
 	static LAST_PANIC: RefCell<Option<Panic>> = const { RefCell::new(None) };
 }
 
-fn panic_hook(panic_info: &PanicHookInfo) {
+pub(crate) fn panic_hook(panic_info: &PanicHookInfo) {
 	let panic_info = encode_panic(panic_info);
 
 	if cfg!(any(debug_assertions, feature = "rel-debugging")) {
@@ -258,9 +258,28 @@ pub fn stack_trace_if_panic() -> bool {
 	}
 }
 
-#[doc(hidden)]
-pub fn setup_panic_hook() {
-	static SET_HOOK: Once = Once::new();
+thread_local! {
+	static CRASH_REASON: RefCell<CString> = RefCell::new(CString::default());
+}
 
-	SET_HOOK.call_once(|| std::panic::set_hook(Box::new(panic_hook)));
+fn byond_crash_inner(reason: *const c_char) -> ! {
+	unsafe {
+		byond().Byond_CRASH(reason); // this does a longjmp - any subsequent code will be UNREACHABLE
+		std::hint::unreachable_unchecked()
+	}
+}
+
+#[doc(hidden)]
+pub fn byond_crash(reason: String) -> ! {
+	let reason = CString::new(reason.into_bytes()).unwrap_or_else(|error| {
+		let safe_len = error.nul_position();
+		let mut reason = error.into_vec();
+		reason.truncate(safe_len);
+		CString::new(reason).unwrap_or_default()
+	});
+	let reason_ptr = CRASH_REASON.with_borrow_mut(move |return_string| {
+		*return_string = reason;
+		return_string.as_ptr()
+	});
+	byond_crash_inner(reason_ptr)
 }
