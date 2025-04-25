@@ -29,7 +29,7 @@ impl ByondValue {
 	pub fn ref_count(&self) -> ByondResult<usize> {
 		let mut result = 0;
 		map_byond_error!(byond().Byond_Refcount(&self.0, &mut result))?;
-		Ok(result)
+		Ok(result as usize)
 	}
 
 	/// Gets the reference ID of the value, provided it is a reference.

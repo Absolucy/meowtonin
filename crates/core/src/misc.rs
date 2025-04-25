@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: 0BSD
+use meowtonin_byondapi_sys::u4c;
+
+// SPDX-License-Identifier: 0BSD
 use crate::{byond, ByondError, ByondResult, ByondValue, ByondXYZ};
 use std::mem::MaybeUninit;
 
@@ -59,29 +62,29 @@ pub(crate) unsafe fn with_buffer<T, B, F, W>(
 where
 	B: Default,
 	F: FnOnce(Vec<B>) -> T,
-	W: Fn(*mut std::ffi::c_void, &mut usize) -> bool,
+	W: Fn(*mut std::ffi::c_void, &mut u4c) -> bool,
 {
 	let mut buffer: Vec<B> = match initial_capacity {
 		Some(cap) => Vec::with_capacity(cap),
 		None => Vec::new(),
 	};
-	let mut needed_len = buffer.capacity();
+	let mut needed_len = buffer.capacity() as u4c;
 
 	if writer(buffer.as_mut_ptr().cast(), &mut needed_len) {
 		// Safety: if this returns true, then the buffer was large enough, and thus
 		// needed_len <= capacity.
-		buffer.set_len(needed_len);
+		buffer.set_len(needed_len as usize);
 		return Ok(transform(buffer));
 	}
 
 	// Reallocate and try again
-	buffer.reserve(needed_len.saturating_sub(buffer.len()));
+	buffer.reserve((needed_len as usize).saturating_sub(buffer.len()));
 	if !writer(buffer.as_mut_ptr().cast(), &mut needed_len) {
 		return Err(ByondError::get_last_byond_error());
 	}
 
 	// Safety: needed_len is always <= capacity here,
 	// unless BYOND did a really bad fucky wucky.
-	buffer.set_len(needed_len);
+	buffer.set_len(needed_len as usize);
 	Ok(transform(buffer))
 }
