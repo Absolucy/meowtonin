@@ -9,7 +9,7 @@ use smol_str::SmolStr;
 use std::{
 	borrow::Cow,
 	cell::RefCell,
-	ffi::{c_char, c_void, CString},
+	ffi::{c_void, CString},
 	panic::PanicHookInfo,
 	path::{Path, PathBuf},
 	sync::LazyLock,
@@ -262,16 +262,9 @@ thread_local! {
 	static CRASH_REASON: RefCell<CString> = RefCell::new(CString::default());
 }
 
-fn byond_crash_inner(reason: *const c_char) -> ! {
-	unsafe {
-		byond().Byond_CRASH(reason); // this does a longjmp - any subsequent code will be UNREACHABLE
-		std::hint::unreachable_unchecked()
-	}
-}
-
 #[doc(hidden)]
 pub fn byond_crash(reason: String) -> ! {
-	let reason = CString::new(reason.into_bytes()).unwrap_or_else(|error| {
+	let reason = CString::new(reason).unwrap_or_else(|error| {
 		let safe_len = error.nul_position();
 		let mut reason = error.into_vec();
 		reason.truncate(safe_len);
@@ -281,5 +274,8 @@ pub fn byond_crash(reason: String) -> ! {
 		*return_string = reason;
 		return_string.as_ptr()
 	});
-	byond_crash_inner(reason_ptr)
+	unsafe {
+		byond().Byond_CRASH(reason_ptr); // this does a longjmp - any subsequent code will be UNREACHABLE
+		std::hint::unreachable_unchecked()
+	}
 }
