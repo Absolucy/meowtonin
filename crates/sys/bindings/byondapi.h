@@ -143,7 +143,9 @@ union u4cOrPointer {
 	to hold onto a reference for a while longer.
  */
 
+#ifdef __cplusplus
 extern "C" {
+#endif
 
 /**
  * Gets the last error from a failed call
@@ -717,8 +719,8 @@ DUNGPUB bool Byond_TestRef(CByondValue *src);
  */
 DUNGPUB void Byond_CRASH(char const *message);
 
+#ifdef __cplusplus
 };	// extern "C"
-
-
+#endif
 
 #endif	// BYONDAPI_H
