@@ -24,7 +24,7 @@ pub use byond_rawbind::ByondApi as RawByondApi;
 #[cfg_attr(target_pointer_width = "64", repr(align(128)))]
 pub struct ByondApi {
 	internal: byond_rawbind::ByondApi,
-	version: (u32, u32),
+	version: ByondVersion,
 }
 
 unsafe impl Sync for ByondApi {}
@@ -44,7 +44,7 @@ impl ByondApi {
 
 	/// Get the version of the ByondApi library.
 	#[must_use]
-	pub fn get_version(&self) -> (u32, u32) {
+	pub fn get_version(&self) -> ByondVersion {
 		self.version
 	}
 }
@@ -58,6 +58,7 @@ impl std::ops::Deref for ByondApi {
 }
 
 // Stabilized types
+pub use self::version::ByondVersion;
 pub use byond_rawbind::{
 	s1c, s2c, s4c, s8c, u1c, u2c, u4c, u4cOrPointer, u8c, ByondValueData, ByondValueType,
 	CByondValue, CByondXYZ,

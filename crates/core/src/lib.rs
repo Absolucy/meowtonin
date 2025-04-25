@@ -34,6 +34,7 @@ pub use crate::{
 	error::{ByondError, ByondResult},
 	from::FromByond,
 	proc::call_global,
+	sys::ByondVersion,
 	to::ToByond,
 	value::{typecheck::ByondValueType, ByondValue},
 	xyz::ByondXYZ,
@@ -74,12 +75,12 @@ pub unsafe fn parse_args(argc: sys::u4c, argv: *mut ByondValue) -> Vec<ByondValu
 }
 
 /// Returns the current major version and build version of BYOND.
-pub fn byond_version() -> (u32, u32) {
+pub fn byond_version() -> ByondVersion {
 	byond().get_version()
 }
 
 /// Returns the version number the current .dmb was built with
-pub fn dmb_version() -> u32 {
+pub fn dmb_version() -> sys::u4c {
 	unsafe { byond().Byond_GetDMBVersion() }
 }
 
