@@ -141,10 +141,10 @@ pub fn byond_fn(_attr: TokenStream, item: TokenStream) -> TokenStream {
 	let func = parse_macro_input!(item as ItemFn);
 
 	let func_name = &func.sig.ident;
-	let wrapper_name = format!("__byond_{}_inner", func_name);
+	let wrapper_name = format!("__byond_{func_name}_inner");
 	let wrapper_ident = syn::Ident::new(&wrapper_name, func_name.span());
 
-	let mod_name = format!("__byond_export_{}", func_name);
+	let mod_name = format!("__byond_export_{func_name}");
 	let mod_ident = syn::Ident::new(&mod_name, func_name.span());
 
 	// Generate argument parsing code for each parameter

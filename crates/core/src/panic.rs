@@ -181,7 +181,7 @@ fn encode_panic(panic_info: &PanicHookInfo) -> Panic {
 				line: symbol.lineno(),
 				address: symbol.addr().map(|addr| {
 					const POINTER_HEX_WIDTH: usize = std::mem::size_of::<*mut c_void>() * 2;
-					format!("{:0width$p}", addr, width = POINTER_HEX_WIDTH)
+					format!("{addr:0POINTER_HEX_WIDTH$p}")
 				}),
 				module,
 			})

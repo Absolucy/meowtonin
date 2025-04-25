@@ -7,7 +7,11 @@
 )]
 mod version;
 
-#[allow(dead_code, rustdoc::broken_intra_doc_links)]
+#[allow(
+	dead_code,
+	rustdoc::broken_intra_doc_links,
+	clippy::suspicious_doc_comments
+)]
 pub mod byond_rawbind {
 	include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 }
