@@ -67,18 +67,34 @@ where
 	};
 	let mut needed_len = buffer.capacity() as u4c;
 
-	if writer(buffer.as_mut_ptr().cast(), &mut needed_len) {
-		// Safety: if this returns true, then the buffer was large enough, and thus
-		// needed_len <= capacity.
-		buffer.set_len(needed_len as usize);
-		return Ok(transform(buffer));
+	if !writer(buffer.as_mut_ptr().cast(), &mut needed_len) {
+		// buffer doesn't have enough space, let's allocate more.
+		buffer.reserve((needed_len as usize).saturating_sub(buffer.len()));
+		// maximum of 16 iterations - which should never happen, but well, whenever a
+		// coder says "this should never happen", it almost guarantees that somehow,
+		// said thing will happen.
+		let mut iters_left = 16_u8;
+		loop {
+			if writer(buffer.as_mut_ptr().cast(), &mut needed_len) {
+				// if writer returns true, then the buffer has successfully filled completely.
+				break;
+			}
+			iters_left -= 1;
+			if iters_left == 0 {
+				// We've somehow managed to hit 16 iterations without having sufficient length,
+				// return the last BYOND error.
+				return Err(ByondError::get_last_byond_error());
+			}
+			// Reallocate and try again
+			buffer.reserve((needed_len as usize).saturating_sub(buffer.len()));
+		}
 	}
 
-	// Reallocate and try again
-	buffer.reserve((needed_len as usize).saturating_sub(buffer.len()));
-	if !writer(buffer.as_mut_ptr().cast(), &mut needed_len) {
-		return Err(ByondError::get_last_byond_error());
-	}
+	debug_assert!(
+		needed_len as usize <= buffer.capacity(),
+		"buffer capacity was allocated incorrectly (needed len = {needed_len} > capacity = {})",
+		buffer.capacity()
+	);
 
 	// Safety: needed_len is always <= capacity here,
 	// unless BYOND did a really bad fucky wucky.
