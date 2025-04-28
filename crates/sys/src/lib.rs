@@ -5,13 +5,13 @@
 	non_snake_case,
 	clippy::missing_safety_doc
 )]
-mod version;
 #[allow(
 	dead_code,
 	rustdoc::broken_intra_doc_links,
 	clippy::suspicious_doc_comments
 )]
 pub mod bindings;
+mod version;
 
 #[cfg(doc)]
 pub use bindings::ByondApi as RawByondApi;
@@ -54,9 +54,9 @@ impl std::ops::Deref for ByondApi {
 	}
 }
 
+pub use crate::version::ByondVersion;
 // Stabilized types
-pub use self::version::ByondVersion;
-pub use bindings::{
+pub use crate::bindings::{
 	s1c, s2c, s4c, s8c, u1c, u2c, u4c, u4cOrPointer, u8c, ByondValueData, ByondValueType,
 	CByondValue, CByondXYZ,
 };
@@ -74,5 +74,26 @@ cfg_if::cfg_if! {
 
 		unsafe impl bytemuck::Zeroable for CByondXYZ {}
 		unsafe impl bytemuck::Pod for CByondXYZ {}
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	#[test]
+	fn ensure_typedefs_match() {
+		use crate::bindings::{s1c, s2c, s4c, s8c, u1c, u2c, u4c, u8c};
+		use std::mem::size_of;
+
+		assert_eq!(size_of::<u1c>(), size_of::<u8>(), "u1c != u8");
+		assert_eq!(size_of::<s1c>(), size_of::<i8>(), "s1c != i8");
+
+		assert_eq!(size_of::<u2c>(), size_of::<u16>(), "u2c != u16");
+		assert_eq!(size_of::<s2c>(), size_of::<i16>(), "s2c != i16");
+
+		assert_eq!(size_of::<u4c>(), size_of::<u32>(), "u4c != u32");
+		assert_eq!(size_of::<s4c>(), size_of::<i32>(), "s4c != i32");
+
+		assert_eq!(size_of::<u8c>(), size_of::<u64>(), "u8c != u64");
+		assert_eq!(size_of::<s8c>(), size_of::<i64>(), "s8c != i64");
 	}
 }

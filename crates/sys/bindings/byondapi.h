@@ -49,15 +49,25 @@
 
 
 /*types*/
-#include <stdint.h>
-typedef uint8_t  u1c;
-typedef int8_t   s1c;
-typedef uint16_t u2c;
-typedef int16_t  s2c;
-typedef uint32_t u4c;
-typedef int32_t  s4c;
-typedef uint64_t u8c;
-typedef int64_t  s8c;
+typedef unsigned char  u1c;
+typedef signed   char  s1c;
+typedef unsigned short u2c;
+typedef signed   short s2c;
+#ifdef DM_64BIT
+typedef unsigned int   u4c;
+typedef signed   int   s4c;
+#else
+typedef unsigned long  u4c;
+typedef signed   long  s4c;
+#endif
+
+#if defined(_MSC_VER) || defined(__BORLANDC__)
+  typedef __int64 s8c;
+  typedef unsigned __int64 u8c;
+#else
+  typedef long long int s8c;
+  typedef unsigned long long int u8c;
+#endif
 
 union u4cOrPointer {
 	u4c num;
@@ -133,9 +143,7 @@ union u4cOrPointer {
 	to hold onto a reference for a while longer.
  */
 
-#ifdef __cplusplus
 extern "C" {
-#endif
 
 /**
  * Gets the last error from a failed call
@@ -709,8 +717,8 @@ DUNGPUB bool Byond_TestRef(CByondValue *src);
  */
 DUNGPUB void Byond_CRASH(char const *message);
 
-#ifdef __cplusplus
 };	// extern "C"
-#endif
+
+
 
 #endif	// BYONDAPI_H

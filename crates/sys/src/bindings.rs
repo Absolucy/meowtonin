@@ -6,14 +6,14 @@ pub const s2cMAX: u32 = 32767;
 pub const s2cMIN: i32 = -32767;
 pub const s4cMAX: u32 = 2147483647;
 pub const s4cMIN: i32 = -2147483647;
-pub type u1c = u8;
-pub type s1c = i8;
-pub type u2c = u16;
-pub type s2c = i16;
-pub type u4c = u32;
-pub type s4c = i32;
-pub type u8c = u64;
-pub type s8c = i64;
+pub type u1c = ::std::os::raw::c_uchar;
+pub type s1c = ::std::os::raw::c_schar;
+pub type u2c = ::std::os::raw::c_ushort;
+pub type s2c = ::std::os::raw::c_short;
+pub type u4c = ::std::os::raw::c_ulong;
+pub type s4c = ::std::os::raw::c_long;
+pub type s8c = ::std::os::raw::c_longlong;
+pub type u8c = ::std::os::raw::c_ulonglong;
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union u4cOrPointer {
