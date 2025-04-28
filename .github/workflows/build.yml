@@ -9,7 +9,6 @@ jobs:
         name: Lint and Compile
         runs-on: ${{ matrix.target.runner }}
         strategy:
-            fail-fast: true
             matrix:
                 target:
                     - name: Windows (32-bit)
