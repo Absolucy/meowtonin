@@ -10,6 +10,7 @@
 	rustdoc::broken_intra_doc_links,
 	clippy::suspicious_doc_comments
 )]
+#[rustfmt::skip]
 pub mod bindings;
 mod version;
 
