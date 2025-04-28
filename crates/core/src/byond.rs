@@ -29,7 +29,7 @@ fn init_lib() -> ByondApi {
 		.expect("failed to initialize byondapi")
 }
 
-/// Gets the global [`ByondApi`] instance, initializing it if necessary.
+/// Gets the global [ByondApi] instance, initializing it if necessary.
 #[inline(always)]
 #[must_use]
 pub fn byond() -> &'static ByondApi {

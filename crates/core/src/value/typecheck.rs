@@ -7,7 +7,7 @@ use std::{
 };
 
 impl ByondValue {
-	/// Determines if the [`ByondValue`] is a null value.
+	/// Determines if the [ByondValue] is a null value.
 	///
 	/// # Returns
 	/// `true` if the value is null, `false` otherwise.
@@ -15,7 +15,7 @@ impl ByondValue {
 		unsafe { byond().ByondValue_IsNull(&self.0) }
 	}
 
-	/// Checks if the [`ByondValue`] is a number.
+	/// Checks if the [ByondValue] is a number.
 	///
 	/// # Returns
 	/// `true` if the value is a number, `false` otherwise.
@@ -23,7 +23,7 @@ impl ByondValue {
 		unsafe { byond().ByondValue_IsNum(&self.0) }
 	}
 
-	/// Checks if the [`ByondValue`] is a string.
+	/// Checks if the [ByondValue] is a string.
 	///
 	/// # Returns
 	/// `true` if the value is a string, `false` otherwise.
@@ -31,7 +31,7 @@ impl ByondValue {
 		unsafe { byond().ByondValue_IsStr(&self.0) }
 	}
 
-	/// Determines if the [`ByondValue`] represents a list.
+	/// Determines if the [ByondValue] represents a list.
 	///
 	/// # Returns
 	/// `true` if the value is a list, `false` otherwise.
@@ -39,7 +39,7 @@ impl ByondValue {
 		unsafe { byond().ByondValue_IsList(&self.0) }
 	}
 
-	/// Evaluates whether the [`ByondValue`] is considered "true" or not.
+	/// Evaluates whether the [ByondValue] is considered "true" or not.
 	///
 	/// # Returns
 	/// `true` if the value is logically true, `false` otherwise.
@@ -47,7 +47,7 @@ impl ByondValue {
 		unsafe { byond().ByondValue_IsTrue(&self.0) }
 	}
 
-	/// Evaluates whether the [`ByondValue`] is a reference (object) type or
+	/// Evaluates whether the [ByondValue] is a reference (object) type or
 	/// not. Does not check validity.
 	///
 	/// # Returns
@@ -130,15 +130,15 @@ impl ByondValueType {
 
 	/// Returns if this type is reference counted or not.
 	///
-	/// If you're checking to see if you should call [ByondValue::inc_ref],
-	/// [ByondValue::dec_ref], or [ByondValue::dec_temp_ref], use
-	/// [Self::should_ref_count] instead.
+	/// If you're checking to see if you should call [`ByondValue::inc_ref()`],
+	/// [`ByondValue::dec_ref()`], or [`ByondValue::dec_temp_ref()`], use
+	/// [`should_ref_count()`](Self::should_ref_count) instead.
 	///
 	/// # Returns
 	/// `true` if the value is reference counted, `false` otherwise.
 	///
-	/// Currently, this only returns `false` for [Self::NULL] and
-	/// [Self::NUMBER].
+	/// Currently, this only returns `false` for [`NULL`](Self::NULL) and
+	///  [`NUMBER`](Self::NUMBER).
 	#[inline]
 	pub const fn is_ref_counted(&self) -> bool {
 		!matches!(*self, Self::NULL | Self::NUMBER)
@@ -146,15 +146,16 @@ impl ByondValueType {
 
 	/// Returns if this type SHOULD be reference counted.
 	///
-	/// The difference between this and [Self::is_ref_counted] is that this also
-	/// checks to see if this type SHOULDN'T be refcounted, even if it is
-	/// technically a reference.
+	/// The difference between this and
+	/// [`is_ref_counted()`](Self::is_ref_counted) is that this also checks to
+	/// see if this type SHOULDN'T be refcounted, even if it is technically a
+	/// reference.
 	///
 	/// # Returns
 	/// `true` if the value should be reference counted, `false` otherwise.
 	///
-	/// Currently, this only returns `false` for [Self::NULL],
-	/// [Self::NUMBER], and [Self::WORLD].
+	/// Currently, this only returns `false` for [`NULL`](Self::NULL),
+	/// [`NUMBER`](Self::NUMBER), and [`WORLD`](Self::WORLD).
 	#[inline]
 	pub const fn should_ref_count(self) -> bool {
 		// we have to compare the inner values for the world check to keep this const.

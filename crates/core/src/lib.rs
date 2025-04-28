@@ -42,8 +42,8 @@ pub use inventory;
 pub use meowtonin_impl::byond_fn;
 use std::sync::Once;
 
-/// A simple macro to create a [`ByondValue`] from any Rust value that
-/// implements [`ToByond`].
+/// A simple macro to create a [`ByondValue`](crate::value::ByondValue) from any
+/// Rust value that implements [`ToByond`](crate::to::ToByond).
 #[macro_export]
 macro_rules! byondval {
 	(const $value:expr) => {{

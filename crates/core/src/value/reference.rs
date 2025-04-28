@@ -15,7 +15,7 @@ impl ByondValue {
 
 	/// Creates a new reference with the given value type and reference ID.
 	/// This is unsafe because it does not check if the provided reference is
-	/// valid, you should normally use [Self::new_ref] instead.
+	/// valid, you should normally use [`new_ref()`](Self::new_ref) instead.
 	pub const unsafe fn new_ref_unchecked(value_type: ByondValueType, ref_id: u32) -> Self {
 		Self(CByondValue {
 			type_: value_type.0,
@@ -34,8 +34,8 @@ impl ByondValue {
 	}
 
 	/// Gets the reference ID of the value, provided it is a reference.
-	/// This can later be used with [Self::new_ref] alongside the value type to
-	/// get the value back.
+	/// This can later be used with [`new_ref()`](Self::new_ref) alongside the
+	/// value type to get the value back.
 	pub fn ref_id(&self) -> Option<u32> {
 		let result = unsafe { byond().ByondValue_GetRef(&self.0) };
 		if result == 0 {

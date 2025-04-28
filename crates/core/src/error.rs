@@ -11,9 +11,10 @@ pub type ByondResult<T> = std::result::Result<T, ByondError>;
 
 #[derive(Debug, thiserror::Error)]
 pub enum ByondError {
-	/// This error is thrown when you try to convert a [`crate::ByondValue`]
-	/// into a type which it does not represent, or the value failed to convert
-	/// to a [`crate::ByondValue`].
+	/// This error is thrown when you try to convert a
+	/// [`ByondValue`](crate::ByondValue) into a type which it does not
+	/// represent, or the value failed to convert
+	/// to a [`ByondValue`](crate::ByondValue).
 	#[error("Cannot convert value to target type: expected {}, got {}", .expected, .got)]
 	InvalidConversion {
 		expected: Cow<'static, str>,
@@ -23,7 +24,8 @@ pub enum ByondError {
 	/// in BYOND's string tree (thus is not a valid proc)
 	#[error("Attempted to call invalid proc")]
 	InvalidProc,
-	/// Thrown when trying to get a [`String`] from a [`crate::ByondValue`].
+	/// Thrown when trying to get a [String] from a
+	/// [`ByondValue`](crate::ByondValue).
 	#[error("BYOND string was invalid UTF-8")]
 	NonUtf8String,
 	/// When the BYOND API doesn't tell us what the error is.
