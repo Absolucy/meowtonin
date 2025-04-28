@@ -1,0 +1,36 @@
+name: "Test Suite"
+on:
+    push:
+    pull_request:
+env:
+    CARGO_TERM_COLOR: always
+jobs:
+    lint-and-compile:
+        name: Lint and Compile
+        runs-on: ${{ matrix.target.runner }}
+        matrix:
+            target:
+                - name: Windows (32-bit)
+                  runner: windows-latest
+                  target: i686-pc-windows-msvc
+                - name: Linux (32-bit)
+                  runner: ubuntu-latest
+                  target: i686-unknown-linux-gnu
+        concurrency:
+            group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.target.name }}
+            cancel-in-progress: true
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@v4
+            - name: Install Rust Toolchain
+              uses: actions-rust-lang/setup-rust-toolchain@v1
+              with:
+                  toolchain: nightly # nightly because we use some unstable rustfmt options
+                  target: ${{ matrix.target.target }}
+                  components: clippy, rustfmt
+            - name: Lint with clippy
+              run: cargo clippy --workspace --target ${{ matrix.target.target }}
+            - name: Check formatting
+              uses: actions-rust-lang/rustfmt@v1
+            - name: Compile
+              run: cargo build --workspace --target ${{ matrix.target.target }}

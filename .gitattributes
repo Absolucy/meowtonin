@@ -6,6 +6,9 @@
 crates/sys/src/bindings.rs linguist-generated
 crates/sys/bindings/*      linguist-vendored
 
+*.dm       text
+*.dme      text
+
 #
 # The above will handle all files NOT found below
 #
