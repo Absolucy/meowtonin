@@ -141,6 +141,7 @@ impl ByondValueType {
 	}
 
 	/// Returns if this type SHOULD be reference counted.
+	///
 	/// The difference between this and [Self::is_ref_counted] is that this also
 	/// checks to see if this type SHOULDN'T be refcounted, even if it is
 	/// technically a reference.
