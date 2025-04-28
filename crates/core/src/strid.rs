@@ -5,8 +5,8 @@ use crate::{
 	ByondValue, ByondValueType,
 };
 use ahash::AHasher;
-use nohash_hasher::{BuildNoHashHasher, IntMap};
-use parking_lot::RwLock;
+use nohash_hasher::BuildNoHashHasher;
+use papaya::HashMap;
 use std::{
 	ffi::CString,
 	hash::{Hash, Hasher},
@@ -14,12 +14,10 @@ use std::{
 };
 
 const DEFAULT_CACHE_CAPACITY: usize = 512;
-pub(crate) static STRID_CACHE: LazyLock<RwLock<IntMap<u64, u4c>>> = LazyLock::new(|| {
-	RwLock::new(IntMap::with_capacity_and_hasher(
-		DEFAULT_CACHE_CAPACITY,
-		BuildNoHashHasher::default(),
-	))
-});
+pub(crate) static STRID_CACHE: LazyLock<HashMap<u64, u4c, BuildNoHashHasher<u64>>> =
+	LazyLock::new(|| {
+		HashMap::with_capacity_and_hasher(DEFAULT_CACHE_CAPACITY, BuildNoHashHasher::default())
+	});
 
 fn string_hash(string: impl AsRef<str>) -> u64 {
 	let mut hasher = AHasher::default();
@@ -31,7 +29,8 @@ fn string_hash(string: impl AsRef<str>) -> u64 {
 pub fn lookup_string_id(string: impl AsRef<str>) -> u4c {
 	let string = string.as_ref();
 	let hash = string_hash(string);
-	if let Some(id) = STRID_CACHE.read().get(&hash) {
+	let cache = STRID_CACHE.pin();
+	if let Some(id) = cache.get(&hash) {
 		return *id;
 	}
 	let string = match CString::new(string) {
@@ -42,7 +41,7 @@ pub fn lookup_string_id(string: impl AsRef<str>) -> u4c {
 	if id == NONE as u32 {
 		panic!("attempted to get/create id of invalid string");
 	}
-	STRID_CACHE.write().insert(hash, id);
+	cache.insert(hash, id);
 	id
 }
 
