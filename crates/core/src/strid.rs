@@ -13,7 +13,7 @@ use std::{
 };
 
 const DEFAULT_CACHE_CAPACITY: usize = 512;
-pub(crate) static STRID_CACHE: LazyLock<HashMap<u64, u4c, BuildNoHashHasher<u64>>> =
+pub(crate) static STRID_CACHE: LazyLock<HashMap<u64, Option<u4c>, BuildNoHashHasher<u64>>> =
 	LazyLock::new(|| {
 		HashMap::with_capacity_and_hasher(DEFAULT_CACHE_CAPACITY, BuildNoHashHasher::default())
 	});
@@ -24,25 +24,22 @@ fn string_hash(string: impl AsRef<str>) -> u64 {
 	hasher.finish()
 }
 
-fn add_get_str_id(string: &str) -> u4c {
+fn get_str_id(string: &str) -> Option<u4c> {
 	let string = match CString::new(string) {
 		Ok(string) => string,
-		Err(_) => panic!("attempted to get id of invalid string"),
+		Err(_) => return None,
 	};
-	let id = unsafe { byond().Byond_AddGetStrId(string.as_ptr().cast()) };
-	if id == NONE as u32 {
-		panic!("attempted to get/create id of invalid string");
-	}
-	id
+	let id = unsafe { byond().Byond_GetStrId(string.as_ptr().cast()) };
+	if id == NONE as u32 { None } else { Some(id) }
 }
 
 /// Looks up the ID of a given string, caching the result.
-pub fn lookup_string_id(string: impl AsRef<str>) -> u4c {
+pub fn lookup_string_id(string: impl AsRef<str>) -> Option<u4c> {
 	let string = string.as_ref();
 	let hash = string_hash(string);
 	*STRID_CACHE
 		.pin()
-		.get_or_insert_with(hash, || add_get_str_id(string))
+		.get_or_insert_with(hash, || get_str_id(string))
 }
 
 /// Returns the bytes of the string with the given string ID, or `None` if the

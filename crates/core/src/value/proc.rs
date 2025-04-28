@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{ByondResult, ByondValue, FromByond, ToByond, byond, strid::lookup_string_id};
+use crate::{
+	ByondError, ByondResult, ByondValue, FromByond, ToByond, byond, strid::lookup_string_id,
+};
 use std::mem::MaybeUninit;
 
 impl ByondValue {
@@ -13,7 +15,7 @@ impl ByondValue {
 		ArgList: IntoIterator<Item = Arg>,
 		Return: FromByond,
 	{
-		let name_id = lookup_string_id(name);
+		let name_id = lookup_string_id(name).ok_or(ByondError::InvalidProc)?;
 		let args = args
 			.into_iter()
 			.map(|arg| arg.to_byond())
