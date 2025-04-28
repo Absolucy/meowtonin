@@ -8,14 +8,16 @@ jobs:
     lint-and-compile:
         name: Lint and Compile
         runs-on: ${{ matrix.target.runner }}
-        matrix:
-            target:
-                - name: Windows (32-bit)
-                  runner: windows-latest
-                  target: i686-pc-windows-msvc
-                - name: Linux (32-bit)
-                  runner: ubuntu-latest
-                  target: i686-unknown-linux-gnu
+        strategy:
+            fail-fast: true
+            matrix:
+                target:
+                    - name: Windows (32-bit)
+                      runner: windows-latest
+                      target: i686-pc-windows-msvc
+                    - name: Linux (32-bit)
+                      runner: ubuntu-latest
+                      target: i686-unknown-linux-gnu
         concurrency:
             group: ${{ github.workflow }}-${{ github.ref }}-${{ matrix.target.name }}
             cancel-in-progress: true
