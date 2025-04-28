@@ -130,6 +130,10 @@ impl ByondValueType {
 
 	/// Returns if this type is reference counted or not.
 	///
+	/// If you want to check if you SHOULD care about reference counting on a
+	/// value (even if it is technically a reference), use
+	/// [Self::should_ref_count] instead.
+	///
 	/// # Returns
 	/// `true` if the value is reference counted, `false` otherwise.
 	///
