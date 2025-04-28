@@ -20,7 +20,7 @@ impl<'a> ByondMapSerializer<'a> {
 			serializer,
 			map: ByondValue::new_list()?,
 			variant,
-			key: ByondValue::null(),
+			key: ByondValue::NULL,
 		})
 	}
 }

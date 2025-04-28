@@ -58,7 +58,7 @@ pub use crate::version::ByondVersion;
 // Stabilized types
 pub use crate::bindings::{
 	s1c, s2c, s4c, s8c, u1c, u2c, u4c, u4cOrPointer, u8c, ByondValueData, ByondValueType,
-	CByondValue, CByondXYZ,
+	CByondPixLoc, CByondValue, CByondXYZ,
 };
 
 pub const NONE: u2c = u2c::MAX;

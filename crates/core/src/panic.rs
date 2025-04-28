@@ -240,14 +240,14 @@ pub fn stack_trace_if_panic() -> bool {
 				.unwrap_or_default();
 			let message = match last_panic.message {
 				Some(message) => ByondValue::new_string(message.as_ref()),
-				None => ByondValue::null(),
+				None => ByondValue::NULL,
 			};
 			let (file, line) = match last_panic.location {
 				Some(loc) => (
 					ByondValue::new_string(loc.file),
 					ByondValue::new_num(loc.line as f32),
 				),
-				None => (ByondValue::null(), ByondValue::new_num(0.0)),
+				None => (ByondValue::NULL, ByondValue::new_num(0.0)),
 			};
 			let _ = crate::call_global::<_, _, _, ()>("meowtonin_stack_trace", [
 				message, file, line, panic_json,

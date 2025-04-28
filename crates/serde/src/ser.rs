@@ -78,7 +78,7 @@ impl<'a> Serializer for &'a mut ByondSerializer {
 	}
 
 	fn serialize_none(self) -> Result<Self::Ok, Self::Error> {
-		Ok(ByondValue::null())
+		Ok(ByondValue::NULL)
 	}
 
 	fn serialize_some<T>(self, value: &T) -> Result<Self::Ok, Self::Error>
@@ -89,7 +89,7 @@ impl<'a> Serializer for &'a mut ByondSerializer {
 	}
 
 	fn serialize_unit(self) -> Result<Self::Ok, Self::Error> {
-		Ok(ByondValue::null())
+		Ok(ByondValue::NULL)
 	}
 
 	fn serialize_unit_struct(self, _name: &'static str) -> Result<Self::Ok, Self::Error> {

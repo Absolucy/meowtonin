@@ -1,8 +1,9 @@
-// SPDX-License-Identifier: 0BSD
-use meowtonin_byondapi_sys::ByondValueData;
-
-// SPDX-License-Identifier: 0BSD
-use crate::{byond, sys::CByondValue, ByondResult, ByondValue, ByondValueType};
+// SPDX-License-Identifier: 0BSD// SPDX-License-Identifier: 0BSD
+use crate::{
+	byond,
+	sys::{ByondValueData, CByondValue},
+	ByondResult, ByondValue, ByondValueType,
+};
 use std::ops::{Deref, DerefMut};
 
 impl ByondValue {

@@ -6,7 +6,10 @@ pub mod reference;
 pub mod string;
 pub mod typecheck;
 
-use crate::{byond, sys::CByondValue, ByondError, ByondResult, ByondValueType, FromByond, ToByond};
+use crate::{
+	byond, pixloc::ByondPixLoc, sys::CByondValue, ByondError, ByondResult, ByondValueType,
+	FromByond, ToByond,
+};
 use std::{
 	ffi::CString,
 	fmt,
@@ -20,15 +23,24 @@ use std::{
 pub struct ByondValue(pub CByondValue);
 
 impl ByondValue {
-	/// A reference to the "global" object.
-	const GLOBAL: ByondValue = unsafe { Self::new_ref_unchecked(ByondValueType::WORLD, 1) };
+	/// A null value.
+	pub const NULL: Self = unsafe { Self::new_ref_unchecked(ByondValueType::NULL, 0) };
 
+	/// A reference to the "global" object, equivalent to DM's `global.vars`.
+	pub const GLOBAL: Self = unsafe { Self::new_ref_unchecked(ByondValueType::WORLD, 1) };
+
+	/// A reference to the "world" object, equivalent to DM's `world`.
+	pub const WORLD: Self = unsafe { Self::new_ref_unchecked(ByondValueType::WORLD, 0) };
+
+	/// Returns the inner [CByondValue].
 	pub const fn into_inner(self) -> CByondValue {
 		self.0
 	}
 
+	/// Returns a null [ByondValue].
+	#[deprecated(note = "ByondValue::NULL is preferred over ByondValue::null()")]
 	pub const fn null() -> Self {
-		Self(unsafe { MaybeUninit::zeroed().assume_init() })
+		Self::NULL
 	}
 
 	/// Shorthand for [ToByond::to_byond].
@@ -152,11 +164,26 @@ impl ByondValue {
 		let value = value.to_byond()?;
 		unsafe { map_byond_error!(byond().Byond_WritePointer(&self.0, &value.0)) }
 	}
+
+	/// Gets the pixloc coordinates of an atom.
+	///
+	/// Returns None if the value doesn't have pixloc coordinates, such as if
+	/// value is not an atom.
+	///
+	/// If the atom is off-map, this will return [ByondPixLoc::ZERO].
+	pub fn pixloc(&self) -> Option<ByondPixLoc> {
+		let mut pixloc = MaybeUninit::uninit();
+		if unsafe { byond().Byond_PixLoc(&self.0, pixloc.as_mut_ptr()) } {
+			Some(ByondPixLoc(unsafe { pixloc.assume_init() }))
+		} else {
+			None
+		}
+	}
 }
 
 impl Default for ByondValue {
 	fn default() -> Self {
-		unsafe { Self::null() }
+		unsafe { Self::NULL }
 	}
 }
 

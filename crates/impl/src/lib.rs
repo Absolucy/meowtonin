@@ -22,7 +22,7 @@ fn generate_arg_parser(input: &FnArg, idx: usize) -> TokenStream2 {
 fn generate_return_conversion(ret_type: &ReturnType) -> (TokenStream2, TokenStream2) {
 	match ret_type {
 		ReturnType::Default => (quote!(()), quote! {
-			Ok(::meowtonin::ByondValue::null())
+			Ok(::meowtonin::ByondValue::NULL)
 		}),
 		ReturnType::Type(_, ty) => {
 			let ty_name = quote!(#ty).to_string();
@@ -88,7 +88,7 @@ fn generate_export_fn(
 			let mut __args = unsafe { ::meowtonin::parse_args(__argc, __argv) };
 			if __args.len() < #length {
 				__args.extend((0..#length - __args.len())
-					.map(|_| ::meowtonin::ByondValue::default()))
+					.map(|_| ::meowtonin::ByondValue::NULL))
 			}
 		}
 	} else {
@@ -124,11 +124,11 @@ fn generate_export_fn(
 					let error = err.to_string();
 					let source = #func_name_str.to_string();
 					let _ = ::meowtonin::call_global::<_, _, _, ()>("meowtonin_stack_trace", [error, source]);
-					::meowtonin::ByondValue::null()
+					::meowtonin::ByondValue::NULL
 				},
 				Err(_err) => {
 					::meowtonin::panic::stack_trace_if_panic();
-					::meowtonin::ByondValue::null()
+					::meowtonin::ByondValue::NULL
 				}
 			}
 		}

@@ -16,8 +16,7 @@ pub mod from;
 pub mod init;
 pub mod misc;
 pub mod panic;
-//#[doc(hidden)]
-//pub mod panic_old;
+pub mod pixloc;
 pub mod proc;
 pub mod strid;
 pub mod sync;
