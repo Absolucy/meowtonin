@@ -93,7 +93,10 @@ impl ByondValue {
 
 	#[doc(hidden)]
 	pub fn setup_ref_counting(&self) {
-		if crate::sync::is_main_thread() && !crate::sync::is_in_thread_sync() {
+		if self.get_type().should_ref_count()
+			&& crate::sync::is_main_thread()
+			&& !crate::sync::is_in_thread_sync()
+		{
 			unsafe {
 				self.inc_ref();
 				self.dec_temp_ref();
@@ -160,7 +163,9 @@ impl From<CByondValue> for RcByondValue {
 
 impl Drop for RcByondValue {
 	fn drop(&mut self) {
-		unsafe { self.0.dec_ref() };
+		if self.get_type().should_ref_count() {
+			unsafe { self.0.dec_ref() };
+		}
 	}
 }
 

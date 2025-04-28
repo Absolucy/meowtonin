@@ -97,6 +97,7 @@ impl ByondValue {
 	}
 
 	/// Gets the internal type of the value.
+	#[inline]
 	pub const fn get_type(&self) -> ByondValueType {
 		ByondValueType(self.0.type_)
 	}

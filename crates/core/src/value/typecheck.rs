@@ -127,6 +127,35 @@ impl ByondValueType {
 			_ => Cow::Owned(format!("unknown type {:X}", self.0)),
 		}
 	}
+
+	/// Returns if this type is reference counted or not.
+	///
+	/// # Returns
+	/// `true` if the value is reference counted, `false` otherwise.
+	///
+	/// Currently, this only returns `false`` for [Self::NULL] and
+	/// [Self::NUMBER].
+	#[inline]
+	pub const fn is_ref_counted(&self) -> bool {
+		!matches!(*self, Self::NULL | Self::NUMBER)
+	}
+
+	/// Returns if this type SHOULD be reference counted.
+	/// The difference between this and [Self::is_ref_counted] is that this also
+	/// checks to see if this type SHOULDN'T be refcounted, even if it is
+	/// technically a reference.
+	///
+	/// # Returns
+	/// `true` if the value should be reference counted, `false` otherwise.
+	///
+	/// Currently, this only returns `false` for [Self::NULL],
+	/// [Self::NUMBER], and [Self::WORLD].
+	#[inline]
+	pub const fn should_ref_count(self) -> bool {
+		// we have to compare the inner values for the world check to keep this const.
+		// it's dumb, I know.
+		self.is_ref_counted() && self.0 != Self::WORLD.0
+	}
 }
 
 impl Display for ByondValueType {
