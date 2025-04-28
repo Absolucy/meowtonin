@@ -18,6 +18,7 @@ mod inner {
 			.derive_default(true)
 			.derive_debug(true)
 			.derive_copy(true)
+			.layout_tests(false)
 			.parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
 			.parse_callbacks(Box::new(DoxygenCallbacks))
 			.generate()

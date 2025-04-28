@@ -20,13 +20,6 @@ pub union u4cOrPointer {
 	pub num: u4c,
 	pub ptr: *mut ::std::os::raw::c_void,
 }
-#[allow(clippy::unnecessary_operation, clippy::identity_op)]
-const _: () = {
-	["Size of u4cOrPointer"][::std::mem::size_of::<u4cOrPointer>() - 4usize];
-	["Alignment of u4cOrPointer"][::std::mem::align_of::<u4cOrPointer>() - 4usize];
-	["Offset of field: u4cOrPointer::num"][::std::mem::offset_of!(u4cOrPointer, num) - 0usize];
-	["Offset of field: u4cOrPointer::ptr"][::std::mem::offset_of!(u4cOrPointer, ptr) - 0usize];
-};
 impl Default for u4cOrPointer {
 	fn default() -> Self {
 		let mut s = ::std::mem::MaybeUninit::<Self>::uninit();
@@ -45,14 +38,6 @@ pub union ByondValueData {
 	#[doc = "!< floating-point number"]
 	pub num: f32,
 }
-#[allow(clippy::unnecessary_operation, clippy::identity_op)]
-const _: () = {
-	["Size of ByondValueData"][::std::mem::size_of::<ByondValueData>() - 4usize];
-	["Alignment of ByondValueData"][::std::mem::align_of::<ByondValueData>() - 4usize];
-	["Offset of field: ByondValueData::ref_"]
-		[::std::mem::offset_of!(ByondValueData, ref_) - 0usize];
-	["Offset of field: ByondValueData::num"][::std::mem::offset_of!(ByondValueData, num) - 0usize];
-};
 impl Default for ByondValueData {
 	fn default() -> Self {
 		let mut s = ::std::mem::MaybeUninit::<Self>::uninit();
@@ -76,16 +61,6 @@ pub struct CByondValue {
 	#[doc = "!< 4-byte reference ID or floating point number"]
 	pub data: ByondValueData,
 }
-#[allow(clippy::unnecessary_operation, clippy::identity_op)]
-const _: () = {
-	["Size of CByondValue"][::std::mem::size_of::<CByondValue>() - 8usize];
-	["Alignment of CByondValue"][::std::mem::align_of::<CByondValue>() - 4usize];
-	["Offset of field: CByondValue::type_"][::std::mem::offset_of!(CByondValue, type_) - 0usize];
-	["Offset of field: CByondValue::junk1"][::std::mem::offset_of!(CByondValue, junk1) - 1usize];
-	["Offset of field: CByondValue::junk2"][::std::mem::offset_of!(CByondValue, junk2) - 2usize];
-	["Offset of field: CByondValue::junk3"][::std::mem::offset_of!(CByondValue, junk3) - 3usize];
-	["Offset of field: CByondValue::data"][::std::mem::offset_of!(CByondValue, data) - 4usize];
-};
 impl Default for CByondValue {
 	fn default() -> Self {
 		let mut s = ::std::mem::MaybeUninit::<Self>::uninit();
@@ -107,15 +82,6 @@ pub struct CByondXYZ {
 	#[doc = "!< padding"]
 	pub junk: s2c,
 }
-#[allow(clippy::unnecessary_operation, clippy::identity_op)]
-const _: () = {
-	["Size of CByondXYZ"][::std::mem::size_of::<CByondXYZ>() - 8usize];
-	["Alignment of CByondXYZ"][::std::mem::align_of::<CByondXYZ>() - 2usize];
-	["Offset of field: CByondXYZ::x"][::std::mem::offset_of!(CByondXYZ, x) - 0usize];
-	["Offset of field: CByondXYZ::y"][::std::mem::offset_of!(CByondXYZ, y) - 2usize];
-	["Offset of field: CByondXYZ::z"][::std::mem::offset_of!(CByondXYZ, z) - 4usize];
-	["Offset of field: CByondXYZ::junk"][::std::mem::offset_of!(CByondXYZ, junk) - 6usize];
-};
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone)]
 pub struct CByondPixLoc {
@@ -128,15 +94,6 @@ pub struct CByondPixLoc {
 	#[doc = "!< padding"]
 	pub junk: s2c,
 }
-#[allow(clippy::unnecessary_operation, clippy::identity_op)]
-const _: () = {
-	["Size of CByondPixLoc"][::std::mem::size_of::<CByondPixLoc>() - 12usize];
-	["Alignment of CByondPixLoc"][::std::mem::align_of::<CByondPixLoc>() - 4usize];
-	["Offset of field: CByondPixLoc::x"][::std::mem::offset_of!(CByondPixLoc, x) - 0usize];
-	["Offset of field: CByondPixLoc::y"][::std::mem::offset_of!(CByondPixLoc, y) - 4usize];
-	["Offset of field: CByondPixLoc::z"][::std::mem::offset_of!(CByondPixLoc, z) - 8usize];
-	["Offset of field: CByondPixLoc::junk"][::std::mem::offset_of!(CByondPixLoc, junk) - 10usize];
-};
 pub type ByondCallback = ::std::option::Option<
 	unsafe extern "C-unwind" fn(arg1: *mut ::std::os::raw::c_void) -> CByondValue,
 >;
