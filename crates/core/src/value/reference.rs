@@ -46,20 +46,38 @@ impl ByondValue {
 	}
 
 	/// Increments the reference count of the value.
-	pub fn inc_ref(&self) {
-		unsafe { byond().ByondValue_IncRef(&self.0) };
+	///
+	/// This function is marked as unsafe because in most cases, you should not
+	/// be manually handling refcounting.
+	pub unsafe fn inc_ref(&self) {
+		byond().ByondValue_IncRef(&self.0);
 	}
 
 	/// Increments this value's ref count and returns it as an [RcByondValue],
 	/// which will decrement the ref count when dropped.
 	pub fn referenced(self) -> RcByondValue {
-		self.inc_ref();
+		unsafe { self.inc_ref() };
 		RcByondValue(self)
 	}
 
 	/// De-increments the reference count of the value.
-	pub fn dec_ref(&self) {
-		unsafe { byond().ByondValue_DecRef(&self.0) };
+	///
+	/// This function is marked as unsafe because in most cases, you should not
+	/// be manually handling refcounting.
+	pub unsafe fn dec_ref(&self) {
+		byond().ByondValue_DecRef(&self.0);
+	}
+
+	/// Marks a temporary reference as no longer in use.
+	///
+	/// Temporary references are automatically created for values created on the
+	/// main thread (and not from within [crate::sync::thread_sync]), which
+	/// expire at the end of the tick.
+	///
+	/// This function is marked as unsafe because in most cases, you should not
+	/// be manually handling refcounting.
+	pub unsafe fn dec_temp_ref(&self) {
+		byond().ByondValue_DecTempRef(&self.0);
 	}
 
 	/// Tests if the given value is a valid reference.
@@ -77,8 +95,8 @@ impl ByondValue {
 	pub fn setup_ref_counting(&self) {
 		if crate::sync::is_main_thread() && !crate::sync::is_in_thread_sync() {
 			unsafe {
-				byond().ByondValue_IncRef(&self.0);
-				byond().ByondValue_DecTempRef(&self.0);
+				self.inc_ref();
+				self.dec_temp_ref();
 			}
 		}
 	}
@@ -142,7 +160,7 @@ impl From<CByondValue> for RcByondValue {
 
 impl Drop for RcByondValue {
 	fn drop(&mut self) {
-		self.0.dec_ref();
+		unsafe { self.0.dec_ref() };
 	}
 }
 
