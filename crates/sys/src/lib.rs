@@ -5,11 +5,8 @@
 	non_snake_case,
 	clippy::missing_safety_doc
 )]
-#[allow(
-	dead_code,
-	rustdoc::broken_intra_doc_links,
-	clippy::suspicious_doc_comments
-)]
+
+#[allow(warnings, clippy::all)]
 #[rustfmt::skip]
 pub mod bindings;
 mod version;
@@ -35,8 +32,8 @@ impl ByondApi {
 		Lib: Into<libloading::Library>,
 	{
 		let lib = library.into();
-		let version = version::get_byond_version(&lib);
-		let internal = bindings::ByondApi::from_library(lib)?;
+		let version = unsafe { version::get_byond_version(&lib) };
+		let internal = unsafe { bindings::ByondApi::from_library(lib) }?;
 		Ok(ByondApi { internal, version })
 	}
 
@@ -58,8 +55,8 @@ impl std::ops::Deref for ByondApi {
 pub use crate::version::ByondVersion;
 // Stabilized types
 pub use crate::bindings::{
-	s1c, s2c, s4c, s8c, u1c, u2c, u4c, u4cOrPointer, u8c, ByondValueData, ByondValueType,
-	CByondPixLoc, CByondValue, CByondXYZ,
+	ByondValueData, ByondValueType, CByondPixLoc, CByondValue, CByondXYZ, s1c, s2c, s4c, s8c, u1c,
+	u2c, u4c, u4cOrPointer, u8c,
 };
 
 pub const NONE: u2c = u2c::MAX;

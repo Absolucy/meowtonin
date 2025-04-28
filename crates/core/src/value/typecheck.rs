@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{byond, sys::ByondValueType as InternalByondValueType, ByondValue};
+use crate::{ByondValue, byond, sys::ByondValueType as InternalByondValueType};
 use std::{
 	borrow::Cow,
 	fmt::{self, Display},

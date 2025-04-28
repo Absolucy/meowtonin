@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{byond, ByondError, ByondResult, ByondValue, FromByond, ToByond};
+use crate::{ByondError, ByondResult, ByondValue, FromByond, ToByond, byond};
 use std::mem::MaybeUninit;
 
 impl ByondValue {
@@ -201,9 +201,10 @@ unsafe fn stupid_assoc_cast(list: Vec<ByondValue>) -> Vec<[ByondValue; 2]> {
 		std::mem::size_of::<CByondValue>() * 2,
 		std::mem::size_of::<[ByondValue; 2]>()
 	);
-	std::hint::assert_unchecked(list.len() % 2 == 0);
+	unsafe { std::hint::assert_unchecked(list.len() % 2 == 0) };
 	let stupid: Vec<CByondValue> = list.into_iter().map(|x| x.0).collect();
-	let assoc_list: Vec<[CByondValue; 2]> = bytemuck::try_cast_vec(stupid).unwrap_unchecked();
+	let assoc_list: Vec<[CByondValue; 2]> =
+		unsafe { bytemuck::try_cast_vec(stupid).unwrap_unchecked() };
 	assoc_list
 		.into_iter()
 		.map(|[a, b]| [ByondValue(a), ByondValue(b)])

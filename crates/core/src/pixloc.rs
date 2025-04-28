@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: 0BSD
-use crate::sys::{s2c, CByondPixLoc};
+use crate::sys::{CByondPixLoc, s2c};
 use std::hash::Hash;
 
 #[derive(Copy, Clone)]

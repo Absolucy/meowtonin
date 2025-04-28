@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: 0BSD
 use super::ByondSerializer;
 use crate::error::SerializeError;
-use meowtonin::{byondval, ByondResult, ByondValue, ToByond};
+use meowtonin::{ByondResult, ByondValue, ToByond, byondval};
 use serde::ser::{Serialize, SerializeMap, SerializeStruct, SerializeStructVariant};
 
 pub(crate) struct ByondMapSerializer<'a> {

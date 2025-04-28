@@ -5,14 +5,14 @@ use std::cmp::Ordering;
 type Byond_GetVersion = unsafe extern "C" fn(version: *mut u4c, build: *mut u4c);
 
 pub(crate) unsafe fn get_byond_version(library: &libloading::Library) -> ByondVersion {
-	let byond_get_version = library
-		.get::<Byond_GetVersion>(c"Byond_GetVersion".to_bytes())
-		.expect("Failed to find Byond_GetVersion");
+	let byond_get_version =
+		unsafe { library.get::<Byond_GetVersion>(c"Byond_GetVersion".to_bytes()) }
+			.expect("Failed to find Byond_GetVersion");
 
 	let mut version = 0;
 	let mut build = 0;
 
-	byond_get_version(&mut version, &mut build);
+	unsafe { byond_get_version(&mut version, &mut build) };
 
 	ByondVersion { version, build }
 }

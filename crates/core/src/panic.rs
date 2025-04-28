@@ -9,13 +9,13 @@ use smol_str::SmolStr;
 use std::{
 	borrow::Cow,
 	cell::RefCell,
-	ffi::{c_void, CString},
+	ffi::{CString, c_void},
 	panic::PanicHookInfo,
 	path::{Path, PathBuf},
 	sync::LazyLock,
 };
 
-use crate::{byond, ByondValue};
+use crate::{ByondValue, byond};
 
 static INTERNAL_PATTERNS: LazyLock<AhoCorasick> = LazyLock::new(|| {
 	AhoCorasick::new([

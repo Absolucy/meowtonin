@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: 0BSD
 use crate::{
-	byond,
-	sys::{u4c, NONE},
-	ByondValue, ByondValueType,
+	ByondValue, ByondValueType, byond,
+	sys::{NONE, u4c},
 };
 use ahash::AHasher;
 use nohash_hasher::BuildNoHashHasher;

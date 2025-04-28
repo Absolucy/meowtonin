@@ -2,7 +2,7 @@
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
-use syn::{parse_macro_input, FnArg, ItemFn, PatType, ReturnType};
+use syn::{FnArg, ItemFn, PatType, ReturnType, parse_macro_input};
 
 /// Generates argument parsing code for a function parameter
 fn generate_arg_parser(input: &FnArg, idx: usize) -> TokenStream2 {

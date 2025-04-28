@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{byond, sys::CByondValue, ByondValue};
+use crate::{ByondValue, byond, sys::CByondValue};
 use std::{cell::Cell, os::raw::c_void, sync::OnceLock, thread::ThreadId};
 
 struct CallbackData<F: FnOnce() -> ByondValue + Send> {

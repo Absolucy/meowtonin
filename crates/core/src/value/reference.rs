@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: 0BSD
 use crate::{
-	byond,
+	ByondResult, ByondValue, ByondValueType, byond,
 	sys::{ByondValueData, CByondValue},
-	ByondResult, ByondValue, ByondValueType,
 };
 use std::ops::{Deref, DerefMut};
 
@@ -40,11 +39,7 @@ impl ByondValue {
 	/// value type to get the value back.
 	pub fn ref_id(&self) -> Option<u32> {
 		let result = unsafe { byond().ByondValue_GetRef(&self.0) };
-		if result == 0 {
-			None
-		} else {
-			Some(result)
-		}
+		if result == 0 { None } else { Some(result) }
 	}
 
 	/// Increments the reference count of the value.
@@ -52,7 +47,7 @@ impl ByondValue {
 	/// This function is marked as unsafe because in most cases, you should not
 	/// be manually handling refcounting.
 	pub unsafe fn inc_ref(&self) {
-		byond().ByondValue_IncRef(&self.0);
+		unsafe { byond().ByondValue_IncRef(&self.0) }
 	}
 
 	/// Increments this value's ref count and returns it as an [RcByondValue],
@@ -67,7 +62,7 @@ impl ByondValue {
 	/// This function is marked as unsafe because in most cases, you should not
 	/// be manually handling refcounting.
 	pub unsafe fn dec_ref(&self) {
-		byond().ByondValue_DecRef(&self.0);
+		unsafe { byond().ByondValue_DecRef(&self.0) }
 	}
 
 	/// Marks a temporary reference as no longer in use.
@@ -79,7 +74,7 @@ impl ByondValue {
 	/// This function is marked as unsafe because in most cases, you should not
 	/// be manually handling refcounting.
 	pub unsafe fn dec_temp_ref(&self) {
-		byond().ByondValue_DecTempRef(&self.0);
+		unsafe { byond().ByondValue_DecTempRef(&self.0) }
 	}
 
 	/// Tests if the given value is a valid reference.

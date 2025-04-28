@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{byond, sys::u4c, ByondError, ByondResult, ByondValue, ByondXYZ};
+use crate::{ByondError, ByondResult, ByondValue, ByondXYZ, byond, sys::u4c};
 use std::mem::MaybeUninit;
 
 pub fn block(corner_a: ByondXYZ, corner_b: ByondXYZ) -> ByondResult<Vec<ByondValue>> {
@@ -99,6 +99,6 @@ where
 
 	// Safety: needed_len is always <= capacity here,
 	// unless BYOND did a really bad fucky wucky.
-	buffer.set_len(needed_len as usize);
+	unsafe { buffer.set_len(needed_len as usize) };
 	Ok(transform(buffer))
 }

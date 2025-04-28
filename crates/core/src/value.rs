@@ -7,8 +7,8 @@ pub mod string;
 pub mod typecheck;
 
 use crate::{
-	byond, pixloc::ByondPixLoc, sys::CByondValue, ByondError, ByondResult, ByondValueType,
-	FromByond, ToByond,
+	ByondError, ByondResult, ByondValueType, FromByond, ToByond, byond, pixloc::ByondPixLoc,
+	sys::CByondValue,
 };
 use std::{
 	ffi::CString,

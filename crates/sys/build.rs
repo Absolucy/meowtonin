@@ -2,7 +2,7 @@
 
 #[cfg(feature = "generate-bindings")]
 mod inner {
-	use bindgen::{callbacks::ParseCallbacks, Abi};
+	use bindgen::{Abi, callbacks::ParseCallbacks};
 
 	pub fn run() {
 		println!("cargo:rerun-if-changed=bindings/byondapi.h");
