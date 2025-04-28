@@ -133,7 +133,7 @@ impl ByondValueType {
 	/// # Returns
 	/// `true` if the value is reference counted, `false` otherwise.
 	///
-	/// Currently, this only returns `false`` for [Self::NULL] and
+	/// Currently, this only returns `false` for [Self::NULL] and
 	/// [Self::NUMBER].
 	#[inline]
 	pub const fn is_ref_counted(&self) -> bool {
