@@ -14,6 +14,7 @@ impl ByondValue {
 	}
 
 	/// Creates a new reference with the given value type and reference ID.
+	///
 	/// This is unsafe because it does not check if the provided reference is
 	/// valid, you should normally use [`new_ref()`](Self::new_ref) instead.
 	pub const unsafe fn new_ref_unchecked(value_type: ByondValueType, ref_id: u32) -> Self {
