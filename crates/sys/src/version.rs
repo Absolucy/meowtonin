@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: 0BSD
-use super::byond_rawbind::u4c;
+use super::bindings::u4c;
 use std::cmp::Ordering;
 
 type Byond_GetVersion = unsafe extern "C" fn(version: *mut u4c, build: *mut u4c);

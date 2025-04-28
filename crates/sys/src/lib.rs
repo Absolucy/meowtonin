@@ -6,24 +6,21 @@
 	clippy::missing_safety_doc
 )]
 mod version;
-
 #[allow(
 	dead_code,
 	rustdoc::broken_intra_doc_links,
 	clippy::suspicious_doc_comments
 )]
-pub mod byond_rawbind {
-	include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
-}
+pub mod bindings;
 
 #[cfg(doc)]
-pub use byond_rawbind::ByondApi as RawByondApi;
+pub use bindings::ByondApi as RawByondApi;
 
 // According to acrimon, in theory slightly faster...
 #[cfg_attr(target_pointer_width = "32", repr(align(64)))]
 #[cfg_attr(target_pointer_width = "64", repr(align(128)))]
 pub struct ByondApi {
-	internal: byond_rawbind::ByondApi,
+	internal: bindings::ByondApi,
 	version: ByondVersion,
 }
 
@@ -38,7 +35,7 @@ impl ByondApi {
 	{
 		let lib = library.into();
 		let version = version::get_byond_version(&lib);
-		let internal = byond_rawbind::ByondApi::from_library(lib)?;
+		let internal = bindings::ByondApi::from_library(lib)?;
 		Ok(ByondApi { internal, version })
 	}
 
@@ -50,7 +47,7 @@ impl ByondApi {
 }
 
 impl std::ops::Deref for ByondApi {
-	type Target = byond_rawbind::ByondApi;
+	type Target = bindings::ByondApi;
 
 	fn deref(&self) -> &Self::Target {
 		&self.internal
@@ -59,7 +56,7 @@ impl std::ops::Deref for ByondApi {
 
 // Stabilized types
 pub use self::version::ByondVersion;
-pub use byond_rawbind::{
+pub use bindings::{
 	s1c, s2c, s4c, s8c, u1c, u2c, u4c, u4cOrPointer, u8c, ByondValueData, ByondValueType,
 	CByondValue, CByondXYZ,
 };

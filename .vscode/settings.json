@@ -4,7 +4,6 @@
 	"rust-analyzer.inlayHints.lifetimeElisionHints.enable": "skip_trivial",
 	"rust-analyzer.lru.capacity": 512,
 	"rust-analyzer.restartServerOnConfigChange": true,
-	"rust-analyzer.typing.autoClosingAngleBrackets.enable": true,
 	"rust-analyzer.rustfmt.extraArgs": ["+nightly"],
 	"psi-header.config": {
 		"license": "0BSD",
@@ -14,7 +13,8 @@
 		"isActive": true,
 		"include": ["rust"],
 		"autoHeader": "autoSave",
-		"enforceHeader": true
+		"enforceHeader": true,
+		"excludeGlob": ["./crates/sys/src/bindings.rs"]
 	},
 	"psi-header.lang-config": [
 		{
