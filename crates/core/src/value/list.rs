@@ -38,6 +38,7 @@ impl ByondValue {
 	}
 
 	/// Returns if this is likely an associative list or not.
+	///
 	/// This checks through two methods: if any of the values are non-null, or
 	/// if any keys are duplicated, then it's an probably an assoc list.
 	///
@@ -112,10 +113,12 @@ impl ByondValue {
 		Ok(Some(value))
 	}
 
-	/// Iterates through the assoc values of the list if this value is a list,
-	/// if the value isn't a list then it returns an error. Non assoc lists will
-	/// have the second field of the tuple be null (key, value) for proper assoc
-	/// lists
+	/// Iterates through the assoc values of the list if this value is a list.
+	///
+	/// If the value isn't a list then it returns an error.
+	///
+	/// Non assoc lists will have the second field of the tuple be null (key,
+	/// value) for proper assoc lists.
 	pub fn iter(&self) -> ByondResult<impl Iterator<Item = (ByondValue, ByondValue)> + '_> {
 		if !self.is_list() {
 			return Err(ByondError::NotAList);

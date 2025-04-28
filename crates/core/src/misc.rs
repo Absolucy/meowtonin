@@ -37,6 +37,7 @@ pub fn locate(
 }
 
 /// Returns if this is likely an associative list or not.
+///
 /// Do not rely on this being 100% accurate.
 pub fn is_likely_assoc(list: &[[ByondValue; 2]]) -> bool {
 	let mut found_keys = ahash::AHashSet::<&ByondValue>::with_capacity(list.len());

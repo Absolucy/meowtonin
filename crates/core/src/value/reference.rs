@@ -35,6 +35,7 @@ impl ByondValue {
 	}
 
 	/// Gets the reference ID of the value, provided it is a reference.
+	///
 	/// This can later be used with [`new_ref()`](Self::new_ref) alongside the
 	/// value type to get the value back.
 	pub fn ref_id(&self) -> Option<u32> {
@@ -82,6 +83,7 @@ impl ByondValue {
 	}
 
 	/// Tests if the given value is a valid reference.
+	///
 	/// This will return `None` if the value is not a valid reference,
 	/// or give back the original input if it is.
 	pub fn test_ref(mut self) -> Option<Self> {

@@ -46,16 +46,16 @@ pub fn lookup_string_id(string: impl AsRef<str>) -> u4c {
 		.get_or_insert_with(hash, || add_get_str_id(string))
 }
 
-/// Returns the bytes of the string with the given string ID.
-/// Returns None if the string ID is invalid.
+/// Returns the bytes of the string with the given string ID, or `None` if the
+/// string ID is invalid.
 pub fn get_string_bytes_from_id(id: u4c) -> Option<Vec<u8>> {
 	unsafe { ByondValue::new_ref_unchecked(ByondValueType::STRING, id) }
 		.get_string_bytes()
 		.ok()
 }
 
-/// Returns the string with the given string ID.
-/// Returns None if the string ID is invalid.
+/// Returns the string with the given string ID, or `None`` if the string ID is
+/// invalid.
 pub fn get_string_from_id(id: u4c) -> Option<String> {
 	unsafe { ByondValue::new_ref_unchecked(ByondValueType::STRING, id) }
 		.get_string()

@@ -6,12 +6,12 @@ inventory::collect!(InitFunc);
 ///
 /// To submit a function to be ran by meowtonin when it loads, do this:
 ///
-/// ```ignore
+/// ```no_run
 /// fn do_thing_on_init() {
-///     println!("mrrrp mrrrp mrrow");
+///    println!("mrrrp mrrrp mrrow");
 /// }
 ///
-/// meowtonin::inventory::submit! { InitFunc(do_thing_on_init) }
+/// meowtonin::inventory::submit! { meowtonin::init::InitFunc(do_thing_on_init) }
 /// ```
 pub struct InitFunc(pub fn() -> ());
 

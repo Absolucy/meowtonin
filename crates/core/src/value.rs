@@ -63,6 +63,7 @@ impl ByondValue {
 	}
 
 	/// Creates a new [ByondValue], using the given path and arguments.
+	///
 	/// Equivalent to `new path(args...)` in DM.
 	pub fn new<Path, Args>(path: Path, args: Args) -> ByondResult<Self>
 	where
@@ -84,6 +85,7 @@ impl ByondValue {
 	}
 
 	/// Returns the length of the value.
+	///
 	/// Equivalent to calling `length(self)` in DM.
 	pub fn length<Type>(&self) -> ByondResult<Type>
 	where
@@ -171,7 +173,7 @@ impl ByondValue {
 
 	/// Gets the pixloc coordinates of an atom.
 	///
-	/// Returns None if the value doesn't have pixloc coordinates, such as if
+	/// Returns `None` if the value doesn't have pixloc coordinates, such as if
 	/// value is not an atom.
 	///
 	/// If the atom is off-map, this will return [ByondPixLoc::ZERO].

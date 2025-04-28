@@ -34,8 +34,11 @@ pub fn is_in_thread_sync() -> bool {
 }
 
 /// Simple RAII counter to mark if we're in a ThreadSync call or not, due to
-/// differing refcounting behavior. This uses a counter instead of a bool, to
-/// account for weird cases involving potentially nested ThreadSync calls.
+/// differing refcounting behavior.
+///
+/// This uses a counter instead of a bool, to account for weird cases involving
+/// potentially nested ThreadSync calls.
+///
 /// I hate that this is needed.
 struct ThreadSyncGuard;
 
