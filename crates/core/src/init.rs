@@ -8,7 +8,7 @@ inventory::collect!(InitFunc);
 ///
 /// ```no_run
 /// fn do_thing_on_init() {
-///    println!("mrrrp mrrrp mrrow");
+///     println!("mrrrp mrrrp mrrow");
 /// }
 ///
 /// meowtonin::inventory::submit! { meowtonin::init::InitFunc(do_thing_on_init) }
