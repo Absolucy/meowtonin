@@ -1,8 +1,5 @@
 // SPDX-License-Identifier: 0BSD
-use meowtonin_byondapi_sys::u4c;
-
-// SPDX-License-Identifier: 0BSD
-use crate::{byond, ByondError, ByondResult, ByondValue, ByondXYZ};
+use crate::{byond, ByondError, ByondResult, ByondValue, ByondXYZ, sys::u4c};
 use std::mem::MaybeUninit;
 
 pub fn block(corner_a: ByondXYZ, corner_b: ByondXYZ) -> ByondResult<Vec<ByondValue>> {

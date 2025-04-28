@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: 0BSD// SPDX-License-Identifier: 0BSD
+// SPDX-License-Identifier: 0BSD
 use crate::{
 	byond,
 	sys::{ByondValueData, CByondValue},
