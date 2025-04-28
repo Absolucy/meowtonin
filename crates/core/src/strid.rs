@@ -25,14 +25,7 @@ fn string_hash(string: impl AsRef<str>) -> u64 {
 	hasher.finish()
 }
 
-/// Looks up the ID of a given string, caching the result.
-pub fn lookup_string_id(string: impl AsRef<str>) -> u4c {
-	let string = string.as_ref();
-	let hash = string_hash(string);
-	let cache = STRID_CACHE.pin();
-	if let Some(id) = cache.get(&hash) {
-		return *id;
-	}
+fn add_get_str_id(string: &str) -> u4c {
 	let string = match CString::new(string) {
 		Ok(string) => string,
 		Err(_) => panic!("attempted to get id of invalid string"),
@@ -41,8 +34,16 @@ pub fn lookup_string_id(string: impl AsRef<str>) -> u4c {
 	if id == NONE as u32 {
 		panic!("attempted to get/create id of invalid string");
 	}
-	cache.insert(hash, id);
 	id
+}
+
+/// Looks up the ID of a given string, caching the result.
+pub fn lookup_string_id(string: impl AsRef<str>) -> u4c {
+	let string = string.as_ref();
+	let hash = string_hash(string);
+	*STRID_CACHE
+		.pin()
+		.get_or_insert_with(hash, || add_get_str_id(string))
 }
 
 /// Returns the bytes of the string with the given string ID.
