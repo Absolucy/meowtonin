@@ -38,7 +38,10 @@ impl ByondValue {
 	}
 
 	/// Returns a null [ByondValue].
-	#[deprecated(note = "ByondValue::NULL is preferred over ByondValue::null()")]
+	#[deprecated(
+		since = "0.2.0",
+		note = "ByondValue::NULL is preferred over ByondValue::null()"
+	)]
 	pub const fn null() -> Self {
 		Self::NULL
 	}
