@@ -130,8 +130,8 @@ impl ByondValueType {
 
 	/// Returns if this type is reference counted or not.
 	///
-	/// If you want to check if you SHOULD care about reference counting on a
-	/// value (even if it is technically a reference), use
+	/// If you're checking to see if you should call [ByondValue::inc_ref],
+	/// [ByondValue::dec_ref], or [ByondValue::dec_temp_ref], use
 	/// [Self::should_ref_count] instead.
 	///
 	/// # Returns
