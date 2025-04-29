@@ -24,6 +24,10 @@ pub enum ByondError {
 	/// in BYOND's string tree (thus is not a valid proc)
 	#[error("Attempted to call invalid proc")]
 	InvalidProc,
+	/// This error is thrown from call when you try to set a var name that isn't
+	/// in BYOND's string tree (thus is not a valid variable)
+	#[error("Attempted to read/write invalid variable")]
+	InvalidVariable,
 	/// Thrown when trying to get a [String] from a
 	/// [`ByondValue`](crate::ByondValue).
 	#[error("BYOND string was invalid UTF-8")]

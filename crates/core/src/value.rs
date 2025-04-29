@@ -8,10 +8,9 @@ pub mod typecheck;
 
 use crate::{
 	ByondError, ByondResult, ByondValueType, FromByond, ToByond, byond, pixloc::ByondPixLoc,
-	sys::CByondValue,
+	strid::lookup_string_id, sys::CByondValue,
 };
 use std::{
-	ffi::CString,
 	fmt,
 	hash::{Hash, Hasher},
 	mem::MaybeUninit,
@@ -118,14 +117,10 @@ impl ByondValue {
 		if !self.is_ref() {
 			return Err(ByondError::NotReferenceable);
 		}
-		let c_string = CString::new(name.as_ref()).map_err(|_| ByondError::NonUtf8String)?;
+		let name_id = lookup_string_id(name).ok_or(ByondError::InvalidVariable)?;
 		unsafe {
 			let mut result = MaybeUninit::uninit();
-			map_byond_error!(byond().Byond_ReadVar(
-				&self.0,
-				c_string.as_c_str().as_ptr(),
-				result.as_mut_ptr()
-			))?;
+			map_byond_error!(byond().Byond_ReadVarByStrId(&self.0, name_id, result.as_mut_ptr()))?;
 			let result = Self(result.assume_init());
 			Return::from_byond(&result)
 		}
@@ -140,9 +135,9 @@ impl ByondValue {
 		if !self.is_ref() {
 			return Err(ByondError::NotReferenceable);
 		}
+		let name_id = lookup_string_id(name).ok_or(ByondError::InvalidVariable)?;
 		let value = value.to_byond()?;
-		let c_string = CString::new(name.as_ref()).map_err(|_| ByondError::NonUtf8String)?;
-		map_byond_error!(byond().Byond_WriteVar(&self.0, c_string.as_c_str().as_ptr(), &value.0))
+		map_byond_error!(byond().Byond_WriteVarByStrId(&self.0, name_id, &value.0))
 	}
 
 	pub fn read_pointer<Return>(&self) -> ByondResult<Return>
