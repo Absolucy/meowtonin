@@ -12,7 +12,7 @@ use std::{
 macro_rules! check_byondvalue_type {
 	($value:ident, $type:expr, $api:ident) => {
 		if cfg!(feature = "fast-typechecking") {
-			$value.0.type_ == $type.0
+			$value.get_type() == $type
 		} else {
 			unsafe { byond().$api(&$value.0) }
 		}
