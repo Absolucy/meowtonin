@@ -3,7 +3,6 @@ use crate::{
 	ByondResult, ByondValue, ByondValueType, byond,
 	sys::{ByondValueData, CByondValue},
 };
-use std::ops::{Deref, DerefMut};
 
 impl ByondValue {
 	/// Creates a new reference with the given value type and reference ID.
