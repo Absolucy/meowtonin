@@ -9,13 +9,13 @@ use smol_str::SmolStr;
 use std::{
 	borrow::Cow,
 	cell::RefCell,
-	ffi::c_void,
+	ffi::{CString, c_void},
 	panic::PanicHookInfo,
 	path::{Path, PathBuf},
-	sync::{LazyLock, Once},
+	sync::LazyLock,
 };
 
-use crate::ByondValue;
+use crate::{ByondValue, byond};
 
 static INTERNAL_PATTERNS: LazyLock<AhoCorasick> = LazyLock::new(|| {
 	AhoCorasick::new([
@@ -181,7 +181,7 @@ fn encode_panic(panic_info: &PanicHookInfo) -> Panic {
 				line: symbol.lineno(),
 				address: symbol.addr().map(|addr| {
 					const POINTER_HEX_WIDTH: usize = std::mem::size_of::<*mut c_void>() * 2;
-					format!("{:0width$p}", addr, width = POINTER_HEX_WIDTH)
+					format!("{addr:0POINTER_HEX_WIDTH$p}")
 				}),
 				module,
 			})
@@ -198,7 +198,7 @@ thread_local! {
 	static LAST_PANIC: RefCell<Option<Panic>> = const { RefCell::new(None) };
 }
 
-fn panic_hook(panic_info: &PanicHookInfo) {
+pub(crate) fn panic_hook(panic_info: &PanicHookInfo) {
 	let panic_info = encode_panic(panic_info);
 
 	if cfg!(any(debug_assertions, feature = "rel-debugging")) {
@@ -240,14 +240,14 @@ pub fn stack_trace_if_panic() -> bool {
 				.unwrap_or_default();
 			let message = match last_panic.message {
 				Some(message) => ByondValue::new_string(message.as_ref()),
-				None => ByondValue::null(),
+				None => ByondValue::NULL,
 			};
 			let (file, line) = match last_panic.location {
 				Some(loc) => (
 					ByondValue::new_string(loc.file),
 					ByondValue::new_num(loc.line as f32),
 				),
-				None => (ByondValue::null(), ByondValue::new_num(0.0)),
+				None => (ByondValue::NULL, ByondValue::new_num(0.0)),
 			};
 			let _ = crate::call_global::<_, _, _, ()>("meowtonin_stack_trace", [
 				message, file, line, panic_json,
@@ -258,9 +258,24 @@ pub fn stack_trace_if_panic() -> bool {
 	}
 }
 
-#[doc(hidden)]
-pub fn setup_panic_hook() {
-	static SET_HOOK: Once = Once::new();
+thread_local! {
+	static CRASH_REASON: RefCell<CString> = RefCell::new(CString::default());
+}
 
-	SET_HOOK.call_once(|| std::panic::set_hook(Box::new(panic_hook)));
+#[doc(hidden)]
+pub fn byond_crash(reason: String) -> ! {
+	let reason = CString::new(reason).unwrap_or_else(|error| {
+		let safe_len = error.nul_position();
+		let mut reason = error.into_vec();
+		reason.truncate(safe_len);
+		CString::new(reason).unwrap_or_default()
+	});
+	let reason_ptr = CRASH_REASON.with_borrow_mut(move |return_string| {
+		*return_string = reason;
+		return_string.as_ptr()
+	});
+	unsafe {
+		byond().Byond_CRASH(reason_ptr); // this does a longjmp - any subsequent code will be UNREACHABLE
+		std::hint::unreachable_unchecked()
+	}
 }

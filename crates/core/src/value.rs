@@ -6,9 +6,11 @@ pub mod reference;
 pub mod string;
 pub mod typecheck;
 
-use crate::{byond, sys::CByondValue, ByondError, ByondResult, ByondValueType, FromByond, ToByond};
+use crate::{
+	ByondError, ByondResult, ByondValueType, FromByond, ToByond, byond, pixloc::ByondPixLoc,
+	strid::lookup_string_id, sys::CByondValue,
+};
 use std::{
-	ffi::CString,
 	fmt,
 	hash::{Hash, Hasher},
 	mem::MaybeUninit,
@@ -20,15 +22,27 @@ use std::{
 pub struct ByondValue(pub CByondValue);
 
 impl ByondValue {
-	/// A reference to the "global" object.
-	const GLOBAL: ByondValue = unsafe { Self::new_ref_unchecked(ByondValueType::WORLD, 1) };
+	/// A null value.
+	pub const NULL: Self = unsafe { Self::new_ref_unchecked(ByondValueType::NULL, 0) };
 
+	/// A reference to the "global" object, equivalent to DM's `global.vars`.
+	pub const GLOBAL: Self = unsafe { Self::new_ref_unchecked(ByondValueType::WORLD, 1) };
+
+	/// A reference to the "world" object, equivalent to DM's `world`.
+	pub const WORLD: Self = unsafe { Self::new_ref_unchecked(ByondValueType::WORLD, 0) };
+
+	/// Returns the inner [CByondValue].
 	pub const fn into_inner(self) -> CByondValue {
 		self.0
 	}
 
+	/// Returns a null [ByondValue].
+	#[deprecated(
+		since = "0.2.0",
+		note = "ByondValue::NULL is preferred over ByondValue::null()"
+	)]
 	pub const fn null() -> Self {
-		Self(unsafe { MaybeUninit::zeroed().assume_init() })
+		Self::NULL
 	}
 
 	/// Shorthand for [ToByond::to_byond].
@@ -48,6 +62,7 @@ impl ByondValue {
 	}
 
 	/// Creates a new [ByondValue], using the given path and arguments.
+	///
 	/// Equivalent to `new path(args...)` in DM.
 	pub fn new<Path, Args>(path: Path, args: Args) -> ByondResult<Self>
 	where
@@ -69,6 +84,7 @@ impl ByondValue {
 	}
 
 	/// Returns the length of the value.
+	///
 	/// Equivalent to calling `length(self)` in DM.
 	pub fn length<Type>(&self) -> ByondResult<Type>
 	where
@@ -82,6 +98,7 @@ impl ByondValue {
 	}
 
 	/// Gets the internal type of the value.
+	#[inline]
 	pub const fn get_type(&self) -> ByondValueType {
 		ByondValueType(self.0.type_)
 	}
@@ -100,14 +117,10 @@ impl ByondValue {
 		if !self.is_ref() {
 			return Err(ByondError::NotReferenceable);
 		}
-		let c_string = CString::new(name.as_ref()).map_err(|_| ByondError::NonUtf8String)?;
+		let name_id = lookup_string_id(name).ok_or(ByondError::InvalidVariable)?;
 		unsafe {
 			let mut result = MaybeUninit::uninit();
-			map_byond_error!(byond().Byond_ReadVar(
-				&self.0,
-				c_string.as_c_str().as_ptr(),
-				result.as_mut_ptr()
-			))?;
+			map_byond_error!(byond().Byond_ReadVarByStrId(&self.0, name_id, result.as_mut_ptr()))?;
 			let result = Self(result.assume_init());
 			Return::from_byond(&result)
 		}
@@ -122,9 +135,9 @@ impl ByondValue {
 		if !self.is_ref() {
 			return Err(ByondError::NotReferenceable);
 		}
+		let name_id = lookup_string_id(name).ok_or(ByondError::InvalidVariable)?;
 		let value = value.to_byond()?;
-		let c_string = CString::new(name.as_ref()).map_err(|_| ByondError::NonUtf8String)?;
-		map_byond_error!(byond().Byond_WriteVar(&self.0, c_string.as_c_str().as_ptr(), &value.0))
+		map_byond_error!(byond().Byond_WriteVarByStrId(&self.0, name_id, &value.0))
 	}
 
 	pub fn read_pointer<Return>(&self) -> ByondResult<Return>
@@ -152,11 +165,26 @@ impl ByondValue {
 		let value = value.to_byond()?;
 		unsafe { map_byond_error!(byond().Byond_WritePointer(&self.0, &value.0)) }
 	}
+
+	/// Gets the pixloc coordinates of an atom.
+	///
+	/// Returns `None` if the value doesn't have pixloc coordinates, such as if
+	/// value is not an atom.
+	///
+	/// If the atom is off-map, this will return [ByondPixLoc::ZERO].
+	pub fn pixloc(&self) -> Option<ByondPixLoc> {
+		let mut pixloc = MaybeUninit::uninit();
+		if unsafe { byond().Byond_PixLoc(&self.0, pixloc.as_mut_ptr()) } {
+			Some(ByondPixLoc(unsafe { pixloc.assume_init() }))
+		} else {
+			None
+		}
+	}
 }
 
 impl Default for ByondValue {
 	fn default() -> Self {
-		unsafe { Self::null() }
+		unsafe { Self::NULL }
 	}
 }
 

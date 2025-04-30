@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{byond, ByondError, ByondResult, ByondValue, FromByond, ToByond};
+use crate::{ByondError, ByondResult, ByondValue, FromByond, ToByond, byond};
 use std::mem::MaybeUninit;
 
 impl ByondValue {
@@ -38,6 +38,7 @@ impl ByondValue {
 	}
 
 	/// Returns if this is likely an associative list or not.
+	///
 	/// This checks through two methods: if any of the values are non-null, or
 	/// if any keys are duplicated, then it's an probably an assoc list.
 	///
@@ -112,10 +113,12 @@ impl ByondValue {
 		Ok(Some(value))
 	}
 
-	/// Iterates through the assoc values of the list if this value is a list,
-	/// if the value isn't a list then it returns an error. Non assoc lists will
-	/// have the second field of the tuple be null (key, value) for proper assoc
-	/// lists
+	/// Iterates through the assoc values of the list if this value is a list.
+	///
+	/// If the value isn't a list then it returns an error.
+	///
+	/// Non assoc lists will have the second field of the tuple be null (key,
+	/// value) for proper assoc lists.
 	pub fn iter(&self) -> ByondResult<impl Iterator<Item = (ByondValue, ByondValue)> + '_> {
 		if !self.is_list() {
 			return Err(ByondError::NotAList);
@@ -198,9 +201,10 @@ unsafe fn stupid_assoc_cast(list: Vec<ByondValue>) -> Vec<[ByondValue; 2]> {
 		std::mem::size_of::<CByondValue>() * 2,
 		std::mem::size_of::<[ByondValue; 2]>()
 	);
-	std::hint::assert_unchecked(list.len() % 2 == 0);
+	unsafe { std::hint::assert_unchecked(list.len() % 2 == 0) };
 	let stupid: Vec<CByondValue> = list.into_iter().map(|x| x.0).collect();
-	let assoc_list: Vec<[CByondValue; 2]> = bytemuck::try_cast_vec(stupid).unwrap_unchecked();
+	let assoc_list: Vec<[CByondValue; 2]> =
+		unsafe { bytemuck::try_cast_vec(stupid).unwrap_unchecked() };
 	assoc_list
 		.into_iter()
 		.map(|[a, b]| [ByondValue(a), ByondValue(b)])

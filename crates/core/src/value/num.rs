@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{byond, ByondError, ByondResult, ByondValue};
+use crate::{ByondError, ByondResult, ByondValue, byond};
 use std::{borrow::Cow, mem::MaybeUninit};
 
 impl ByondValue {

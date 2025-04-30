@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: 0BSD
-use libc::{dladdr, Dl_info};
+use libc::{Dl_info, dladdr};
 use smol_str::SmolStr;
 use std::{
-	ffi::{c_void, CStr},
+	ffi::{CStr, c_void},
 	mem::MaybeUninit,
 	path::PathBuf,
 };

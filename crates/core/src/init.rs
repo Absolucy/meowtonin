@@ -2,10 +2,16 @@
 inventory::collect!(InitFunc);
 
 /// This function will be ran to set up things before the lib is loaded
-/// The lib is only loaded when any byondapi functions are called from byond
-/// To submit a function (func) to be ran by byondapi when it loads, do:
+/// The lib is only loaded when any byondapi functions are called from BYOND.
+///
+/// To submit a function to be ran by meowtonin when it loads, do this:
+///
 /// ```no_run
-/// meowtonin::inventory::submit! {InitFunc(func)}
+/// fn do_thing_on_init() {
+///     println!("mrrrp mrrrp mrrow");
+/// }
+///
+/// meowtonin::inventory::submit! { meowtonin::init::InitFunc(do_thing_on_init) }
 /// ```
 pub struct InitFunc(pub fn() -> ());
 
@@ -31,7 +37,7 @@ inventory::submit! {
 #[doc(hidden)]
 pub fn do_init() {
 	// Clear string ID cache, just in case anything's changed.
-	crate::strid::STRID_CACHE.write().clear();
+	crate::strid::STRID_CACHE.pin().clear();
 
 	// Run any custom initialization functions.
 	for func in inventory::iter::<InitFunc> {
