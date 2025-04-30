@@ -41,6 +41,8 @@ default = ["lossy-utf8"]
 rel-debugging = []
 # Uses lossy string conversion instead of strict UTF-8 converison.
 lossy-utf8 = []
+# Speed up ByondValue type checking by directly using the "type" var in the struct, however this is technically not "official" and may break in future BYOND updates.
+fast-typechecking = []
 
 [package.metadata.docs.rs]
 targets = ["i686-pc-windows-msvc", "i686-unknown-linux-gnu"]

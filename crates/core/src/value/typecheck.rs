@@ -6,13 +6,26 @@ use std::{
 	ops::Deref,
 };
 
+/// Simple helper macro that does a "fast" typecheck when the
+/// `fast-typechecking` feature is enabled, and uses the actual byondapi
+/// function to check otherwise.
+macro_rules! check_byondvalue_type {
+	($value:ident, $type:expr, $api:ident) => {
+		if cfg!(feature = "fast-typechecking") {
+			$value.0.type_ == $type.0
+		} else {
+			unsafe { byond().$api(&$value.0) }
+		}
+	};
+}
+
 impl ByondValue {
 	/// Determines if the [ByondValue] is a null value.
 	///
 	/// # Returns
 	/// `true` if the value is null, `false` otherwise.
 	pub fn is_null(&self) -> bool {
-		unsafe { byond().ByondValue_IsNull(&self.0) }
+		check_byondvalue_type!(self, ByondValueType::NULL, ByondValue_IsNull)
 	}
 
 	/// Checks if the [ByondValue] is a number.
@@ -20,7 +33,7 @@ impl ByondValue {
 	/// # Returns
 	/// `true` if the value is a number, `false` otherwise.
 	pub fn is_number(&self) -> bool {
-		unsafe { byond().ByondValue_IsNum(&self.0) }
+		check_byondvalue_type!(self, ByondValueType::NUMBER, ByondValue_IsNum)
 	}
 
 	/// Checks if the [ByondValue] is a string.
@@ -28,7 +41,7 @@ impl ByondValue {
 	/// # Returns
 	/// `true` if the value is a string, `false` otherwise.
 	pub fn is_string(&self) -> bool {
-		unsafe { byond().ByondValue_IsStr(&self.0) }
+		check_byondvalue_type!(self, ByondValueType::STRING, ByondValue_IsStr)
 	}
 
 	/// Determines if the [ByondValue] represents a list.
@@ -36,6 +49,7 @@ impl ByondValue {
 	/// # Returns
 	/// `true` if the value is a list, `false` otherwise.
 	pub fn is_list(&self) -> bool {
+		// no fast typechecking here, a LOT of things are considered a list
 		unsafe { byond().ByondValue_IsList(&self.0) }
 	}
 
@@ -53,7 +67,11 @@ impl ByondValue {
 	/// # Returns
 	/// `true` if the value is a reference, `false` otherwise.
 	pub fn is_ref(&self) -> bool {
-		unsafe { byond().ByondValue_GetRef(&self.0) != 0 }
+		if cfg!(feature = "fast-typechecking") {
+			self.get_type().is_ref_counted()
+		} else {
+			unsafe { byond().ByondValue_GetRef(&self.0) != 0 }
+		}
 	}
 }
 
