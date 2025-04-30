@@ -50,13 +50,6 @@ impl ByondValue {
 		unsafe { byond().ByondValue_IncRef(&self.0) }
 	}
 
-	/// Increments this value's ref count and returns it as an [RcByondValue],
-	/// which will decrement the ref count when dropped.
-	pub fn referenced(self) -> RcByondValue {
-		unsafe { self.inc_ref() };
-		RcByondValue(self)
-	}
-
 	/// De-increments the reference count of the value.
 	///
 	/// This function is marked as unsafe because in most cases, you should not
@@ -100,75 +93,5 @@ impl ByondValue {
 				self.dec_temp_ref();
 			}
 		}
-	}
-}
-
-/// A [ByondValue] that increments its ref upon creation,
-/// and decrements the ref when dropped.
-#[derive(PartialEq, Eq, Hash)]
-#[repr(transparent)]
-pub struct RcByondValue(ByondValue);
-
-impl Deref for RcByondValue {
-	type Target = ByondValue;
-
-	fn deref(&self) -> &Self::Target {
-		&self.0
-	}
-}
-
-impl DerefMut for RcByondValue {
-	fn deref_mut(&mut self) -> &mut Self::Target {
-		&mut self.0
-	}
-}
-
-impl AsRef<ByondValue> for RcByondValue {
-	fn as_ref(&self) -> &ByondValue {
-		&self.0
-	}
-}
-
-impl AsMut<ByondValue> for RcByondValue {
-	fn as_mut(&mut self) -> &mut ByondValue {
-		&mut self.0
-	}
-}
-
-impl PartialEq<ByondValue> for RcByondValue {
-	fn eq(&self, other: &ByondValue) -> bool {
-		self.0.eq(other)
-	}
-}
-
-impl PartialEq<RcByondValue> for ByondValue {
-	fn eq(&self, other: &RcByondValue) -> bool {
-		self.eq(&other.0)
-	}
-}
-
-impl From<ByondValue> for RcByondValue {
-	fn from(value: ByondValue) -> Self {
-		value.referenced()
-	}
-}
-
-impl From<CByondValue> for RcByondValue {
-	fn from(value: CByondValue) -> Self {
-		ByondValue::from(value).referenced()
-	}
-}
-
-impl Drop for RcByondValue {
-	fn drop(&mut self) {
-		if self.get_type().should_ref_count() {
-			unsafe { self.0.dec_ref() };
-		}
-	}
-}
-
-impl Clone for RcByondValue {
-	fn clone(&self) -> Self {
-		self.0.clone().referenced()
 	}
 }
