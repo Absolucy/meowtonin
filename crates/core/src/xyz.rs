@@ -50,7 +50,7 @@ impl ByondXYZ {
 
 impl PartialEq for ByondXYZ {
 	fn eq(&self, other: &Self) -> bool {
-		self.0.x == other.0.x && self.0.y == other.0.y && self.0.z == other.0.z
+		self.x() == other.x() && self.y() == other.y() && self.z() == other.z()
 	}
 }
 

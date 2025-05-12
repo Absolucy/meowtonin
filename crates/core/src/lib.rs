@@ -16,8 +16,7 @@ pub mod from;
 pub mod init;
 pub mod misc;
 pub mod panic;
-//#[doc(hidden)]
-//pub mod panic_old;
+pub mod pixloc;
 pub mod proc;
 pub mod strid;
 pub mod sync;
@@ -34,15 +33,17 @@ pub use crate::{
 	error::{ByondError, ByondResult},
 	from::FromByond,
 	proc::call_global,
+	sys::ByondVersion,
 	to::ToByond,
-	value::{typecheck::ByondValueType, ByondValue},
+	value::{ByondValue, typecheck::ByondValueType},
 	xyz::ByondXYZ,
 };
 pub use inventory;
 pub use meowtonin_impl::byond_fn;
+use std::sync::Once;
 
-/// A simple macro to create a [`ByondValue`] from any Rust value that
-/// implements [`ToByond`].
+/// A simple macro to create a [`ByondValue`](crate::value::ByondValue) from any
+/// Rust value that implements [`ToByond`](crate::to::ToByond).
 #[macro_export]
 macro_rules! byondval {
 	(const $value:expr) => {{
@@ -73,11 +74,21 @@ pub unsafe fn parse_args(argc: sys::u4c, argv: *mut ByondValue) -> Vec<ByondValu
 }
 
 /// Returns the current major version and build version of BYOND.
-pub fn byond_version() -> (u32, u32) {
+pub fn byond_version() -> ByondVersion {
 	byond().get_version()
 }
 
 /// Returns the version number the current .dmb was built with
-pub fn dmb_version() -> u32 {
+pub fn dmb_version() -> sys::u4c {
 	unsafe { byond().Byond_GetDMBVersion() }
+}
+
+#[doc(hidden)]
+pub fn setup_once() {
+	static SETUP: Once = Once::new();
+
+	SETUP.call_once(|| {
+		let _ = sync::is_main_thread(); // initialize main thread OnceCell
+		std::panic::set_hook(Box::new(panic::panic_hook))
+	});
 }

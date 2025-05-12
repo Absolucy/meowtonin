@@ -1,45 +1,59 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{byond, sys::ByondValueType as InternalByondValueType, ByondValue};
+use crate::{ByondValue, byond, sys::ByondValueType as InternalByondValueType};
 use std::{
 	borrow::Cow,
 	fmt::{self, Display},
 	ops::Deref,
 };
 
+/// Simple helper macro that does a "fast" typecheck when the
+/// `fast-typechecking` feature is enabled, and uses the actual byondapi
+/// function to check otherwise.
+macro_rules! check_byondvalue_type {
+	($value:ident, $type:expr, $api:ident) => {
+		if cfg!(feature = "fast-typechecking") {
+			$value.get_type() == $type
+		} else {
+			unsafe { byond().$api(&$value.0) }
+		}
+	};
+}
+
 impl ByondValue {
-	/// Determines if the [`ByondValue`] is a null value.
+	/// Determines if the [ByondValue] is a null value.
 	///
 	/// # Returns
 	/// `true` if the value is null, `false` otherwise.
 	pub fn is_null(&self) -> bool {
-		unsafe { byond().ByondValue_IsNull(&self.0) }
+		check_byondvalue_type!(self, ByondValueType::NULL, ByondValue_IsNull)
 	}
 
-	/// Checks if the [`ByondValue`] is a number.
+	/// Checks if the [ByondValue] is a number.
 	///
 	/// # Returns
 	/// `true` if the value is a number, `false` otherwise.
 	pub fn is_number(&self) -> bool {
-		unsafe { byond().ByondValue_IsNum(&self.0) }
+		check_byondvalue_type!(self, ByondValueType::NUMBER, ByondValue_IsNum)
 	}
 
-	/// Checks if the [`ByondValue`] is a string.
+	/// Checks if the [ByondValue] is a string.
 	///
 	/// # Returns
 	/// `true` if the value is a string, `false` otherwise.
 	pub fn is_string(&self) -> bool {
-		unsafe { byond().ByondValue_IsStr(&self.0) }
+		check_byondvalue_type!(self, ByondValueType::STRING, ByondValue_IsStr)
 	}
 
-	/// Determines if the [`ByondValue`] represents a list.
+	/// Determines if the [ByondValue] represents a list.
 	///
 	/// # Returns
 	/// `true` if the value is a list, `false` otherwise.
 	pub fn is_list(&self) -> bool {
+		// no fast typechecking here, a LOT of things are considered a list
 		unsafe { byond().ByondValue_IsList(&self.0) }
 	}
 
-	/// Evaluates whether the [`ByondValue`] is considered "true" or not.
+	/// Evaluates whether the [ByondValue] is considered "true" or not.
 	///
 	/// # Returns
 	/// `true` if the value is logically true, `false` otherwise.
@@ -47,13 +61,17 @@ impl ByondValue {
 		unsafe { byond().ByondValue_IsTrue(&self.0) }
 	}
 
-	/// Evaluates whether the [`ByondValue`] is a reference (object) type or
+	/// Evaluates whether the [ByondValue] is a reference (object) type or
 	/// not. Does not check validity.
 	///
 	/// # Returns
 	/// `true` if the value is a reference, `false` otherwise.
 	pub fn is_ref(&self) -> bool {
-		unsafe { byond().ByondValue_GetRef(&self.0) != 0 }
+		if cfg!(feature = "fast-typechecking") {
+			self.get_type().is_ref_counted()
+		} else {
+			unsafe { byond().ByondValue_GetRef(&self.0) != 0 }
+		}
 	}
 }
 
@@ -126,6 +144,41 @@ impl ByondValueType {
 			Self::POINTER => Cow::Borrowed("pointer"),
 			_ => Cow::Owned(format!("unknown type {:X}", self.0)),
 		}
+	}
+
+	/// Returns if this type is reference counted or not.
+	///
+	/// If you're checking to see if you should call [`ByondValue::inc_ref()`],
+	/// [`ByondValue::dec_ref()`], or [`ByondValue::dec_temp_ref()`], use
+	/// [`should_ref_count()`](Self::should_ref_count) instead.
+	///
+	/// # Returns
+	/// `true` if the value is reference counted, `false` otherwise.
+	///
+	/// Currently, this only returns `false` for [`NULL`](Self::NULL) and
+	///  [`NUMBER`](Self::NUMBER).
+	#[inline]
+	pub const fn is_ref_counted(&self) -> bool {
+		!matches!(*self, Self::NULL | Self::NUMBER)
+	}
+
+	/// Returns if this type SHOULD be reference counted.
+	///
+	/// The difference between this and
+	/// [`is_ref_counted()`](Self::is_ref_counted) is that this also checks to
+	/// see if this type SHOULDN'T be refcounted, even if it is technically a
+	/// reference.
+	///
+	/// # Returns
+	/// `true` if the value should be reference counted, `false` otherwise.
+	///
+	/// Currently, this only returns `false` for [`NULL`](Self::NULL),
+	/// [`NUMBER`](Self::NUMBER), and [`WORLD`](Self::WORLD).
+	#[inline]
+	pub const fn should_ref_count(self) -> bool {
+		// we have to compare the inner values for the world check to keep this const.
+		// it's dumb, I know.
+		self.is_ref_counted() && self.0 != Self::WORLD.0
 	}
 }
 

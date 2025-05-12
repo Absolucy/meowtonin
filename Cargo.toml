@@ -4,12 +4,11 @@ resolver = "2"
 
 [workspace.package]
 authors = ["Lucy <lucy@absolucy.moe>"]
-edition = "2021"
+edition = "2024"
 license = "0BSD"
 repository = "https://github.com/Absolucy/meowtonin"
-rust-version = "1.81"
+rust-version = "1.85"
 version = "0.2.0"
-
 
 [workspace.dependencies]
 libloading = "0.8"
