@@ -27,6 +27,6 @@ where
 			args.len() as _,
 			result.as_mut_ptr(),
 		))?;
-		Return::from_byond(&ByondValue(result.assume_init()))
+		Return::from_byond(&ByondValue::initialize_refcounted(result))
 	}
 }

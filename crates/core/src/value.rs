@@ -18,7 +18,6 @@ use std::{
 
 #[must_use]
 #[repr(transparent)]
-#[derive(Clone)]
 pub struct ByondValue(pub CByondValue);
 
 impl ByondValue {
@@ -31,9 +30,12 @@ impl ByondValue {
 	/// A reference to the "world" object, equivalent to DM's `world`.
 	pub const WORLD: Self = unsafe { Self::new_ref_unchecked(ByondValueType::WORLD, 0) };
 
-	/// Returns the inner [CByondValue].
-	pub const fn into_inner(self) -> CByondValue {
-		self.0
+	/// Returns the inner [CByondValue], without decrementing the refcount.
+	/// You should only use this if you know what you're doing!
+	pub unsafe fn into_inner(self) -> CByondValue {
+		let inner = self.0;
+		std::mem::forget(self);
+		inner
 	}
 
 	/// Returns a null [ByondValue].
@@ -79,7 +81,7 @@ impl ByondValue {
 				args.len() as _,
 				result.as_mut_ptr()
 			))?;
-			Ok(Self(result.assume_init()))
+			Ok(Self::initialize_refcounted(result))
 		}
 	}
 
@@ -121,7 +123,7 @@ impl ByondValue {
 		unsafe {
 			let mut result = MaybeUninit::uninit();
 			map_byond_error!(byond().Byond_ReadVarByStrId(&self.0, name_id, result.as_mut_ptr()))?;
-			let result = Self(result.assume_init());
+			let result = Self::initialize_refcounted(result);
 			Return::from_byond(&result)
 		}
 	}
@@ -208,12 +210,6 @@ impl PartialEq<ByondValue> for bool {
 
 impl Eq for ByondValue {}
 
-impl From<CByondValue> for ByondValue {
-	fn from(value: CByondValue) -> Self {
-		Self(value)
-	}
-}
-
 impl Hash for ByondValue {
 	fn hash<H: Hasher>(&self, state: &mut H) {
 		let value_type = self.get_type();
@@ -258,13 +254,25 @@ impl fmt::Display for ByondValue {
 	}
 }
 
+impl Clone for ByondValue {
+	fn clone(&self) -> Self {
+		if self.get_type().should_ref_count() {
+			unsafe { self.inc_ref() };
+		}
+		Self(self.0)
+	}
+}
+
+impl Drop for ByondValue {
+	fn drop(&mut self) {
+		if self.get_type().should_ref_count() {
+			unsafe { self.dec_ref() };
+		}
+	}
+}
+
 #[doc(hidden)]
 pub fn test_byondvalue_clear_is_zero() {
-	// Verify assumptions about the type
-	assert!(
-		!std::mem::needs_drop::<ByondValue>(),
-		"ByondValue must not need dropping"
-	);
 	assert!(
 		std::mem::size_of::<ByondValue>() > 0,
 		"ByondValue must not be zero-sized"

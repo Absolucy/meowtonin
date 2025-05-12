@@ -3,6 +3,7 @@ use crate::{
 	ByondResult, ByondValue, ByondValueType, byond,
 	sys::{ByondValueData, CByondValue},
 };
+use std::mem::MaybeUninit;
 
 impl ByondValue {
 	/// Creates a new reference with the given value type and reference ID.
@@ -23,6 +24,12 @@ impl ByondValue {
 			junk3: 0,
 			data: ByondValueData { ref_: ref_id },
 		})
+	}
+
+	pub(crate) fn initialize_refcounted(value: MaybeUninit<CByondValue>) -> Self {
+		let value = Self(unsafe { value.assume_init() });
+		value.setup_ref_counting();
+		value
 	}
 
 	/// Returns the reference count of the value.
@@ -89,7 +96,7 @@ impl ByondValue {
 		{
 			unsafe {
 				self.inc_ref();
-				self.dec_temp_ref();
+				//self.dec_temp_ref();
 			}
 		}
 	}

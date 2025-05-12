@@ -11,7 +11,7 @@ extern "C-unwind" fn trampoline<F: FnOnce() -> ByondValue + Send>(
 ) -> CByondValue {
 	let _guard = ThreadSyncGuard::new();
 	let data = unsafe { Box::from_raw(data as *mut CallbackData<F>) };
-	(data.callback)().into_inner()
+	unsafe { (data.callback)().into_inner() }
 }
 
 pub fn thread_sync<F>(callback: F, block: bool) -> ByondValue
@@ -21,7 +21,7 @@ where
 	let data = Box::new(CallbackData { callback });
 	let data_ptr = Box::into_raw(data) as *mut c_void;
 
-	unsafe { byond().Byond_ThreadSync(Some(trampoline::<F>), data_ptr, block) }.into()
+	ByondValue(unsafe { byond().Byond_ThreadSync(Some(trampoline::<F>), data_ptr, block) })
 }
 
 thread_local! {
@@ -68,4 +68,10 @@ pub fn is_main_thread() -> bool {
 
 	let thread_id = std::thread::current().id();
 	*MAIN_THREAD_ID.get_or_init(|| thread_id) == thread_id
+}
+
+/// Returns if we should manually increment a persistent ref.
+/// This returns true if we're on the main thread, and NOT in threadsync.
+pub fn should_setup_ref_counting() -> bool {
+	is_main_thread() && !is_in_thread_sync()
 }

@@ -12,17 +12,8 @@ impl ByondValue {
 		unsafe {
 			let mut value = MaybeUninit::uninit();
 			byond().ByondValue_SetStr(value.as_mut_ptr(), string.as_ptr().cast());
-			Self(value.assume_init())
+			Self::initialize_refcounted(value)
 		}
-	}
-
-	pub fn set_string<Str>(&mut self, string: Str)
-	where
-		Str: Into<Vec<u8>>,
-	{
-		let mut string = string.into();
-		string.push(0);
-		unsafe { byond().ByondValue_SetStr(&mut self.0, string.as_ptr().cast()) }
 	}
 
 	pub fn get_string_bytes(&self) -> ByondResult<Vec<u8>> {

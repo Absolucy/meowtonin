@@ -29,7 +29,7 @@ impl ByondValue {
 				args.len() as _,
 				result.as_mut_ptr(),
 			))?;
-			let result = Self(result.assume_init());
+			let result = Self::initialize_refcounted(result);
 			Return::from_byond(&result)
 		}
 	}
