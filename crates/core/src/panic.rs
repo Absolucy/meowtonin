@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: 0BSD
 mod resolve;
 
+use crate::byond;
 use aho_corasick::AhoCorasick;
 use backtrace::{Backtrace, BacktraceSymbol};
 use parking_lot::RwLock;
@@ -10,12 +11,11 @@ use std::{
 	borrow::Cow,
 	cell::RefCell,
 	ffi::{CString, c_void},
+	fmt::Display,
 	panic::PanicHookInfo,
 	path::{Path, PathBuf},
 	sync::LazyLock,
 };
-
-use crate::{ByondValue, byond};
 
 static INTERNAL_PATTERNS: LazyLock<AhoCorasick> = LazyLock::new(|| {
 	AhoCorasick::new([
@@ -116,6 +116,19 @@ pub struct Panic {
 	pub backtrace: Vec<PanicFrame>,
 }
 
+impl Display for Panic {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		if let Some(location) = &self.location {
+			write!(f, "{location}: ")?;
+		}
+		match &self.message {
+			Some(message) => write!(f, "{message}")?,
+			None => write!(f, "no error message")?,
+		}
+		Ok(())
+	}
+}
+
 /// Information about the origin of the code that caused a panic.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct PanicLocation {
@@ -124,6 +137,12 @@ pub struct PanicLocation {
 	/// The line number of the file containing the code that resulted in the
 	/// panic.
 	pub line: u32,
+}
+
+impl Display for PanicLocation {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{}:{}", self.file, self.line)
+	}
 }
 
 /// A frame in a panic backtrace.
@@ -232,30 +251,8 @@ pub(crate) fn panic_hook(panic_info: &PanicHookInfo) {
 }
 
 #[doc(hidden)]
-pub fn stack_trace_if_panic() -> bool {
-	match LAST_PANIC.take() {
-		Some(last_panic) => {
-			let panic_json = serde_json::to_string(&last_panic)
-				.map(ByondValue::new_string)
-				.unwrap_or_default();
-			let message = match last_panic.message {
-				Some(message) => ByondValue::new_string(message.as_ref()),
-				None => ByondValue::NULL,
-			};
-			let (file, line) = match last_panic.location {
-				Some(loc) => (
-					ByondValue::new_string(loc.file),
-					ByondValue::new_num(loc.line as f32),
-				),
-				None => (ByondValue::NULL, ByondValue::new_num(0.0)),
-			};
-			let _ = crate::call_global::<_, _, _, ()>("meowtonin_stack_trace", [
-				message, file, line, panic_json,
-			]);
-			true
-		}
-		None => false,
-	}
+pub fn get_stack_trace() -> Option<String> {
+	LAST_PANIC.take().map(|last_panic| last_panic.to_string())
 }
 
 thread_local! {

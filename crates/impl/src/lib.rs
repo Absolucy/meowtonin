@@ -107,29 +107,43 @@ fn generate_export_fn(
 	};
 
 	quote! {
-		#[no_mangle]
+		#[unsafe(no_mangle)]
 		#[inline(never)]
-		pub unsafe extern "C" fn #func_name(
+		pub unsafe extern "C-unwind" fn #func_name(
 			__argc: ::meowtonin::sys::u4c,
 			__argv: *mut ::meowtonin::ByondValue
 		) -> ::meowtonin::ByondValue {
 			::meowtonin::setup_once();
-			#let_args
+			let __retval: std::result::Result<::meowtonin::ByondValue, std::string::String>;
+			{
+				#let_args
 
-			match ::std::panic::catch_unwind(move || {
-				#do_call
-			}) {
-				Ok(Ok(value)) => value,
-				Ok(Err(err)) => {
-					let error = err.to_string();
-					let source = #func_name_str.to_string();
-					let _ = ::meowtonin::call_global::<_, _, _, ()>("meowtonin_stack_trace", [error, source]);
-					::meowtonin::ByondValue::NULL
-				},
-				Err(_err) => {
-					::meowtonin::panic::stack_trace_if_panic();
-					::meowtonin::ByondValue::NULL
+				match ::std::panic::catch_unwind(move || {
+					#do_call
+				}) {
+					Ok(Ok(value)) => {
+						__retval = Ok(value);
+					},
+					Ok(Err(err)) => {
+						__retval = Err(format!(
+							"panic at {source}: {error}",
+							error = err.to_string(),
+							source = #func_name_str.to_string()
+						));
+					},
+					Err(_err) => match ::meowtonin::panic::get_stack_trace() {
+						Some(message) => {
+							__retval = Err(message);
+						}
+						None => {
+							__retval = Err("unknown error".to_owned());
+						}
+					}
 				}
+			}
+			match __retval {
+				Ok(value) => value,
+				Err(error) => ::meowtonin::panic::byond_crash(error)
 			}
 		}
 	}
