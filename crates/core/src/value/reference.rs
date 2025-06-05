@@ -91,8 +91,7 @@ impl ByondValue {
 	#[doc(hidden)]
 	pub fn setup_ref_counting(&self) {
 		if self.get_type().should_ref_count()
-			&& crate::sync::is_main_thread()
-			&& !crate::sync::is_in_thread_sync()
+			&& crate::sync::should_setup_ref_counting()
 		{
 			unsafe {
 				self.inc_ref();
