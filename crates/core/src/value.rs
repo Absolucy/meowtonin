@@ -56,7 +56,7 @@ impl ByondValue {
 	}
 
 	/// Shorthand for [FromByond::from_byond].
-	pub fn to<Return>(&self) -> ByondResult<Return>
+	pub fn to<Return>(self) -> ByondResult<Return>
 	where
 		Return: FromByond,
 	{
@@ -88,14 +88,13 @@ impl ByondValue {
 	/// Returns the length of the value.
 	///
 	/// Equivalent to calling `length(self)` in DM.
-	pub fn length<Type>(&self) -> ByondResult<Type>
-	where
-		Type: FromByond,
-	{
+	pub fn length(&self) -> ByondResult<usize> {
 		unsafe {
 			let mut result = MaybeUninit::uninit();
-			map_byond_error!(byond().Byond_Length(&self.0, result.as_mut_ptr()))
-				.and_then(|_| Type::from_byond(&Self(result.assume_init())))
+			map_byond_error!(byond().Byond_Length(&self.0, result.as_mut_ptr()))?;
+			Self(unsafe { result.assume_init() })
+				.get_number()
+				.map(|size| size as usize)
 		}
 	}
 
@@ -123,8 +122,7 @@ impl ByondValue {
 		unsafe {
 			let mut result = MaybeUninit::uninit();
 			map_byond_error!(byond().Byond_ReadVarByStrId(&self.0, name_id, result.as_mut_ptr()))?;
-			let result = Self::initialize_refcounted(result);
-			Return::from_byond(&result)
+			Return::from_byond(Self::initialize_refcounted(result))
 		}
 	}
 
@@ -152,8 +150,7 @@ impl ByondValue {
 		unsafe {
 			let mut result = MaybeUninit::uninit();
 			map_byond_error!(byond().Byond_ReadPointer(&self.0, result.as_mut_ptr()))?;
-			let result = Self(result.assume_init());
-			Return::from_byond(&result)
+			Return::from_byond(Self::initialize_refcounted(result))
 		}
 	}
 
@@ -234,7 +231,7 @@ impl fmt::Display for ByondValue {
 				write!(f, "{string}")
 			}
 			ByondValueType::LIST => {
-				let length = self.length::<usize>().unwrap_or(0);
+				let length = self.length().unwrap_or(0);
 				write!(f, "list[len={length}]")
 			}
 			ByondValueType::MOB_TYPEPATH

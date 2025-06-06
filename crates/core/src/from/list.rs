@@ -9,11 +9,8 @@ impl<Value> FromByond for Vec<Value>
 where
 	Value: FromByond,
 {
-	fn from_byond(value: &ByondValue) -> ByondResult<Self> {
-		value
-			.values()?
-			.map(|value| Value::from_byond(&value))
-			.collect()
+	fn from_byond(value: ByondValue) -> ByondResult<Self> {
+		value.values()?.map(Value::from_byond).collect()
 	}
 }
 
@@ -22,10 +19,10 @@ where
 	Key: FromByond,
 	Value: FromByond,
 {
-	fn from_byond(value: &ByondValue) -> ByondResult<Self> {
+	fn from_byond(value: ByondValue) -> ByondResult<Self> {
 		value
 			.iter()?
-			.map(|(key, value)| Ok((Key::from_byond(&key)?, Value::from_byond(&value)?)))
+			.map(|(key, value)| Ok((Key::from_byond(key)?, Value::from_byond(value)?)))
 			.collect()
 	}
 }
@@ -34,11 +31,8 @@ impl<Value> FromByond for VecDeque<Value>
 where
 	Value: FromByond,
 {
-	fn from_byond(value: &ByondValue) -> ByondResult<Self> {
-		value
-			.values()?
-			.map(|value| Value::from_byond(&value))
-			.collect()
+	fn from_byond(value: ByondValue) -> ByondResult<Self> {
+		value.values()?.map(Value::from_byond).collect()
 	}
 }
 
@@ -47,10 +41,10 @@ where
 	Key: FromByond,
 	Value: FromByond,
 {
-	fn from_byond(value: &ByondValue) -> ByondResult<Self> {
+	fn from_byond(value: ByondValue) -> ByondResult<Self> {
 		value
 			.iter()?
-			.map(|(key, value)| Ok((Key::from_byond(&key)?, Value::from_byond(&value)?)))
+			.map(|(key, value)| Ok((Key::from_byond(key)?, Value::from_byond(value)?)))
 			.collect()
 	}
 }
@@ -61,11 +55,10 @@ where
 	Value: FromByond,
 	Hasher: BuildHasher + Default,
 {
-	fn from_byond(value: &ByondValue) -> ByondResult<Self> {
-		let mut out =
-			HashMap::with_capacity_and_hasher(value.length::<usize>()?, Hasher::default());
+	fn from_byond(value: ByondValue) -> ByondResult<Self> {
+		let mut out = HashMap::with_capacity_and_hasher(value.length()?, Hasher::default());
 		for (key, value) in value.iter()? {
-			out.insert(Key::from_byond(&key)?, Value::from_byond(&value)?);
+			out.insert(Key::from_byond(key)?, Value::from_byond(value)?);
 		}
 		Ok(out)
 	}
@@ -76,11 +69,10 @@ where
 	Value: FromByond + Hash + Eq,
 	Hasher: BuildHasher + Default,
 {
-	fn from_byond(value: &ByondValue) -> ByondResult<Self> {
-		let mut out =
-			HashSet::with_capacity_and_hasher(value.length::<usize>()?, Hasher::default());
+	fn from_byond(value: ByondValue) -> ByondResult<Self> {
+		let mut out = HashSet::with_capacity_and_hasher(value.length()?, Hasher::default());
 		for key in value.values()? {
-			out.insert(Value::from_byond(&key)?);
+			out.insert(Value::from_byond(key)?);
 		}
 		Ok(out)
 	}
@@ -91,10 +83,10 @@ where
 	Key: FromByond + Ord,
 	Value: FromByond,
 {
-	fn from_byond(value: &ByondValue) -> ByondResult<Self> {
+	fn from_byond(value: ByondValue) -> ByondResult<Self> {
 		let mut out = BTreeMap::new();
 		for (key, value) in value.iter()? {
-			out.insert(Key::from_byond(&key)?, Value::from_byond(&value)?);
+			out.insert(Key::from_byond(key)?, Value::from_byond(value)?);
 		}
 		Ok(out)
 	}
@@ -104,10 +96,10 @@ impl<Value> FromByond for BTreeSet<Value>
 where
 	Value: FromByond + Eq + Ord,
 {
-	fn from_byond(value: &ByondValue) -> ByondResult<Self> {
+	fn from_byond(value: ByondValue) -> ByondResult<Self> {
 		let mut out = BTreeSet::new();
 		for value in value.values()? {
-			out.insert(Value::from_byond(&value)?);
+			out.insert(Value::from_byond(value)?);
 		}
 		Ok(out)
 	}

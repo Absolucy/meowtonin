@@ -47,7 +47,7 @@ impl<'de> Deserializer<'de> for &ByondDeserializer {
 	where
 		V: de::Visitor<'de>,
 	{
-		bool::from_byond(&self.value)
+		bool::from_byond(self.value.clone())
 			.map_err(DeserializeError::from)
 			.and_then(|value| visitor.visit_bool(value))
 	}
@@ -56,7 +56,7 @@ impl<'de> Deserializer<'de> for &ByondDeserializer {
 	where
 		V: de::Visitor<'de>,
 	{
-		i8::from_byond(&self.value)
+		i8::from_byond(self.value.clone())
 			.map_err(DeserializeError::from)
 			.and_then(|value| visitor.visit_i8(value))
 	}
@@ -65,7 +65,7 @@ impl<'de> Deserializer<'de> for &ByondDeserializer {
 	where
 		V: de::Visitor<'de>,
 	{
-		i16::from_byond(&self.value)
+		i16::from_byond(self.value.clone())
 			.map_err(DeserializeError::from)
 			.and_then(|value| visitor.visit_i16(value))
 	}
@@ -74,7 +74,7 @@ impl<'de> Deserializer<'de> for &ByondDeserializer {
 	where
 		V: de::Visitor<'de>,
 	{
-		i32::from_byond(&self.value)
+		i32::from_byond(self.value.clone())
 			.map_err(DeserializeError::from)
 			.and_then(|value| visitor.visit_i32(value))
 	}
@@ -83,7 +83,7 @@ impl<'de> Deserializer<'de> for &ByondDeserializer {
 	where
 		V: de::Visitor<'de>,
 	{
-		i64::from_byond(&self.value)
+		i64::from_byond(self.value.clone())
 			.map_err(DeserializeError::from)
 			.and_then(|value| visitor.visit_i64(value))
 	}
@@ -92,7 +92,7 @@ impl<'de> Deserializer<'de> for &ByondDeserializer {
 	where
 		V: de::Visitor<'de>,
 	{
-		u8::from_byond(&self.value)
+		u8::from_byond(self.value.clone())
 			.map_err(DeserializeError::from)
 			.and_then(|value| visitor.visit_u8(value))
 	}
@@ -101,7 +101,7 @@ impl<'de> Deserializer<'de> for &ByondDeserializer {
 	where
 		V: de::Visitor<'de>,
 	{
-		u16::from_byond(&self.value)
+		u16::from_byond(self.value.clone())
 			.map_err(DeserializeError::from)
 			.and_then(|value| visitor.visit_u16(value))
 	}
@@ -110,7 +110,7 @@ impl<'de> Deserializer<'de> for &ByondDeserializer {
 	where
 		V: de::Visitor<'de>,
 	{
-		u32::from_byond(&self.value)
+		u32::from_byond(self.value.clone())
 			.map_err(DeserializeError::from)
 			.and_then(|value| visitor.visit_u32(value))
 	}
@@ -119,7 +119,7 @@ impl<'de> Deserializer<'de> for &ByondDeserializer {
 	where
 		V: de::Visitor<'de>,
 	{
-		u64::from_byond(&self.value)
+		u64::from_byond(self.value.clone())
 			.map_err(DeserializeError::from)
 			.and_then(|value| visitor.visit_u64(value))
 	}
@@ -128,7 +128,7 @@ impl<'de> Deserializer<'de> for &ByondDeserializer {
 	where
 		V: de::Visitor<'de>,
 	{
-		f32::from_byond(&self.value)
+		f32::from_byond(self.value.clone())
 			.map_err(DeserializeError::from)
 			.and_then(|value| visitor.visit_f32(value))
 	}
@@ -137,7 +137,7 @@ impl<'de> Deserializer<'de> for &ByondDeserializer {
 	where
 		V: de::Visitor<'de>,
 	{
-		f64::from_byond(&self.value)
+		f64::from_byond(self.value.clone())
 			.map_err(DeserializeError::from)
 			.and_then(|value| visitor.visit_f64(value))
 	}
@@ -146,7 +146,7 @@ impl<'de> Deserializer<'de> for &ByondDeserializer {
 	where
 		V: de::Visitor<'de>,
 	{
-		String::from_byond(&self.value)
+		String::from_byond(self.value.clone())
 			.map_err(DeserializeError::from)
 			.and_then(|value| value.chars().next().ok_or(DeserializeError::EndOfArray))
 			.and_then(|value| visitor.visit_char(value))
@@ -156,7 +156,7 @@ impl<'de> Deserializer<'de> for &ByondDeserializer {
 	where
 		V: de::Visitor<'de>,
 	{
-		String::from_byond(&self.value)
+		String::from_byond(self.value.clone())
 			.map_err(DeserializeError::from)
 			.and_then(|value| visitor.visit_str(&value))
 	}
@@ -165,7 +165,7 @@ impl<'de> Deserializer<'de> for &ByondDeserializer {
 	where
 		V: de::Visitor<'de>,
 	{
-		String::from_byond(&self.value)
+		String::from_byond(self.value.clone())
 			.map_err(DeserializeError::from)
 			.and_then(|value| visitor.visit_string(value))
 	}
@@ -174,7 +174,7 @@ impl<'de> Deserializer<'de> for &ByondDeserializer {
 	where
 		V: de::Visitor<'de>,
 	{
-		Vec::<u8>::from_byond(&self.value)
+		Vec::<u8>::from_byond(self.value.clone())
 			.map_err(DeserializeError::from)
 			.and_then(|value| visitor.visit_byte_buf(value))
 	}

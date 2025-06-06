@@ -93,8 +93,7 @@ impl ByondValue {
 			let mut result = MaybeUninit::uninit();
 			let idx = idx.to_byond()?;
 			map_byond_error!(byond().Byond_ReadListIndex(&self.0, &idx.0, result.as_mut_ptr()))?;
-			let result = Self::initialize_refcounted(result);
-			Value::from_byond(&result)
+			Value::from_byond(Self::initialize_refcounted(result))
 		}
 	}
 
@@ -125,7 +124,7 @@ impl ByondValue {
 		if !self.is_list() {
 			return Err(ByondError::NotAList);
 		}
-		let len = self.length::<usize>()?;
+		let len = self.length()?;
 		if len == 0 {
 			return Ok(None);
 		}
@@ -144,7 +143,7 @@ impl ByondValue {
 		if !self.is_list() {
 			return Err(ByondError::NotAList);
 		}
-		let len = self.length::<usize>()?;
+		let len = self.length()?;
 		Ok(ListIterator {
 			value: self,
 			len,
@@ -156,7 +155,7 @@ impl ByondValue {
 		if !self.is_list() {
 			return Err(ByondError::NotAList);
 		}
-		let len = self.length::<usize>()?;
+		let len = self.length()?;
 		Ok(ValueIterator {
 			value: self,
 			len,
