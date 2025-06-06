@@ -7,7 +7,7 @@ use std::ops::{Add, AddAssign, Sub, SubAssign};
 pub struct ByondXYZ(pub CByondXYZ);
 
 impl ByondXYZ {
-	/// Creates a new `ByondXYZ` instance, with the given X, Y, and Z
+	/// Creates a new [`ByondXYZ`] instance, with the given X, Y, and Z
 	/// coordinates.
 	pub const fn new(x: i16, y: i16, z: i16) -> Self {
 		Self(CByondXYZ { x, y, z, junk: 0 })
