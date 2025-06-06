@@ -40,9 +40,10 @@ impl ByondXYZ {
 	}
 
 	/// Returns the tile distance between two [`ByondXYZ`] values.
-	/// This should be identical to the `get_dist` proc in BYOND.
+	/// This should be identical to the `get_dist` proc in BYOND, which uses
+	/// Chebyshev distance.
 	///
-	/// If you want euclidean distance, i.e for pathfinding heuristics, use
+	/// If you want Euclidean distance, i.e for pathfinding heuristics, use
 	/// [`distance_euclidean()`](Self::distance_euclidean).
 	pub fn distance(&self, other: &ByondXYZ) -> u16 {
 		let dx = self.x().saturating_sub(other.x()).unsigned_abs();
@@ -52,11 +53,11 @@ impl ByondXYZ {
 		dx.max(dy).max(dz)
 	}
 
-	/// Returns the euclidean distance between the coordinates of two
+	/// Returns the Euclidean distance between the coordinates of two
 	/// [`ByondXYZ`] values.
 	///
-	/// If you want something identical to BYOND's `get_dist` proc, use
-	/// [`distance()`](Self::distance).
+	/// If you want something identical to BYOND's `get_dist` proc, aka
+	/// Chebyshev distance, use [`distance()`](Self::distance).
 	pub fn distance_euclidean(&self, other: &ByondXYZ) -> f64 {
 		let dx = self.x().saturating_sub(other.x()).pow(2) as f64;
 		let dy = self.y().saturating_sub(other.y()).pow(2) as f64;
