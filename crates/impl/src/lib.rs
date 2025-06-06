@@ -108,7 +108,17 @@ fn generate_export_fn(
 
 	let do_call = if length > 0 {
 		let args: Vec<_> = (0..length)
-			.map(|_| quote! { __args_iter.next().unwrap_or(::meowtonin::ByondValue::NULL) })
+			.map(|_| {
+				quote! {
+					__args_iter
+						.next()
+						.inspect(|value| {
+							if value.get_type().should_ref_count() {
+								unsafe { value.inc_ref()} ;
+							}
+						}).unwrap_or(::meowtonin::ByondValue::NULL)
+				}
+			})
 			.collect();
 		quote! {
 			let mut __args_iter = __args.into_iter();
