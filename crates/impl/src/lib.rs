@@ -1,16 +1,23 @@
 // SPDX-License-Identifier: 0BSD
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
-use quote::quote;
-use syn::{FnArg, ItemFn, PatType, ReturnType, parse_macro_input};
+use quote::{ToTokens, quote};
+use syn::{FnArg, ItemFn, PatType, ReturnType, parse_macro_input, spanned::Spanned};
 
 /// Generates argument parsing code for a function parameter
 fn generate_arg_parser(input: &FnArg, idx: usize) -> TokenStream2 {
 	if let FnArg::Typed(PatType { attrs, pat, ty, .. }) = input {
 		let mutability = attrs.iter().find(|attr| attr.path().is_ident("mut"));
+		let arg_name = syn::Ident::new(&format!("__arg_{}", idx), pat.span());
+		let error_message = format!(
+			"failed to parse argument {idx} ({pat}: {ty})",
+			idx = idx + 1,
+			pat = pat.to_token_stream(),
+			ty = ty.to_token_stream(),
+		);
 		quote! {
-			let #mutability #pat: #ty = ::meowtonin::FromByond::from_byond(&__byond_args[#idx])
-				.expect("failed to parse argument");
+			let #mutability #pat: #ty = ::meowtonin::FromByond::from_byond(#arg_name)
+				.expect(#error_message);
 		}
 	} else {
 		quote!()
@@ -51,9 +58,17 @@ fn generate_wrapper_fn(
 	return_type: &TokenStream2,
 	return_conversion: &TokenStream2,
 	body: &syn::Block,
+	arg_count: usize,
 ) -> TokenStream2 {
-	let args_ident = if !parse_args.is_empty() {
-		quote! { mut __byond_args: &[::meowtonin::ByondValue] }
+	let args_ident = if arg_count > 0 {
+		let arg_params: Vec<_> = (0..arg_count)
+			.map(|i| {
+				let arg_name =
+					syn::Ident::new(&format!("__arg_{}", i), proc_macro2::Span::call_site());
+				quote! { #arg_name: ::meowtonin::ByondValue }
+			})
+			.collect();
+		quote! { #(#arg_params),* }
 	} else {
 		quote! {}
 	};
@@ -86,19 +101,18 @@ fn generate_export_fn(
 	let let_args = if length > 0 {
 		quote! {
 			let mut __args = unsafe { ::meowtonin::parse_args(__argc, __argv) };
-			if __args.len() < #length {
-				__args.extend((0..#length - __args.len())
-					.map(|_| ::meowtonin::ByondValue::NULL))
-			}
 		}
 	} else {
 		quote! {}
 	};
 
 	let do_call = if length > 0 {
+		let args: Vec<_> = (0..length)
+			.map(|_| quote! { __args_iter.next().unwrap_or(::meowtonin::ByondValue::NULL) })
+			.collect();
 		quote! {
-			let __args = __args;
-			#wrapper_ident(&__args)
+			let mut __args_iter = __args.into_iter();
+			#wrapper_ident(#(#args),*)
 		}
 	} else {
 		quote! {
@@ -180,6 +194,7 @@ pub fn byond_fn(_attr: TokenStream, item: TokenStream) -> TokenStream {
 		&return_type,
 		&return_conversion,
 		&func.block,
+		func.sig.inputs.len(),
 	);
 
 	// Generate the exported FFI function
