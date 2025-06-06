@@ -7,25 +7,31 @@ use std::ops::{Add, AddAssign, Sub, SubAssign};
 pub struct ByondXYZ(pub CByondXYZ);
 
 impl ByondXYZ {
+	/// Creates a new `ByondXYZ` instance, with the given X, Y, and Z
+	/// coordinates.
 	pub const fn new(x: i16, y: i16, z: i16) -> Self {
 		Self(CByondXYZ { x, y, z, junk: 0 })
 	}
 
+	/// Returns the X coordinate.
 	#[inline]
 	pub const fn x(&self) -> i16 {
 		self.0.x
 	}
 
+	/// Returns the Y coordinate.
 	#[inline]
 	pub const fn y(&self) -> i16 {
 		self.0.y
 	}
 
+	/// Returns the Z coordinate.
 	#[inline]
 	pub const fn z(&self) -> i16 {
 		self.0.z
 	}
 
+	/// Returns the rectangular width and height between two corners.
 	pub const fn block_size(&self, other: &ByondXYZ) -> (u16, u16) {
 		let (our_x, our_y) = (self.x() as i32, self.y() as i32);
 		let (other_x, other_y) = (other.x() as i32, other.y() as i32);
@@ -34,6 +40,7 @@ impl ByondXYZ {
 		(dx, dy)
 	}
 
+	/// Returns the total volume of a block between two corners.
 	pub const fn total_block_size(&self, other: &ByondXYZ) -> u16 {
 		let (w, h) = self.block_size(other);
 		w.saturating_mul(h)
