@@ -39,12 +39,18 @@ impl ByondXYZ {
 		w.saturating_mul(h)
 	}
 
+	/// Returns the distance between two the coordinates of two [`ByondXYZ`]
+	/// values.
+	///
+	/// This returns euclidean distance, so it's closer to the
+	/// `get_dist_euclidean` proc in most SS13 codebases, rather than BYOND's
+	/// own native `get_dist` proc.
 	pub fn distance(&self, other: &ByondXYZ) -> f64 {
-		let dx = (self.x().saturating_sub(other.x())) as f64;
-		let dy = (self.y().saturating_sub(other.y())) as f64;
-		let dz = (self.z().saturating_sub(other.z())) as f64;
+		let dx = self.x().saturating_sub(other.x()).pow(2) as f64;
+		let dy = self.y().saturating_sub(other.y()).pow(2) as f64;
+		let dz = self.z().saturating_sub(other.z()).pow(2) as f64;
 
-		(dx * dx + dy * dy + dz * dz).sqrt()
+		(dx + dy + dz).sqrt()
 	}
 }
 
