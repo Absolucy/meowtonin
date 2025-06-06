@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: 0BSD
 use super::bindings::u4c;
-use std::cmp::Ordering;
+use std::{cmp::Ordering, fmt::Display};
 
 type Byond_GetVersion = unsafe extern "C" fn(version: *mut u4c, build: *mut u4c);
 
@@ -17,7 +17,7 @@ pub(crate) unsafe fn get_byond_version(library: &libloading::Library) -> ByondVe
 	ByondVersion { version, build }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Hash, Default)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Default)]
 pub struct ByondVersion {
 	pub version: u4c,
 	pub build: u4c,
@@ -35,5 +35,16 @@ impl Ord for ByondVersion {
 			Ordering::Equal => self.build.cmp(&other.build),
 			other => other,
 		}
+	}
+}
+
+impl Display for ByondVersion {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(
+			f,
+			"{version}.{build}",
+			version = self.version,
+			build = self.build
+		)
 	}
 }
