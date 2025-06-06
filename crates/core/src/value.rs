@@ -24,12 +24,6 @@ impl ByondValue {
 	/// A null value.
 	pub const NULL: Self = unsafe { Self::new_ref_unchecked(ByondValueType::NULL, 0) };
 
-	/// A reference to the "global" object, equivalent to DM's `global.vars`.
-	pub const GLOBAL: Self = unsafe { Self::new_ref_unchecked(ByondValueType::WORLD, 1) };
-
-	/// A reference to the "world" object, equivalent to DM's `world`.
-	pub const WORLD: Self = unsafe { Self::new_ref_unchecked(ByondValueType::WORLD, 0) };
-
 	/// Returns the inner [CByondValue], without decrementing the refcount.
 	/// You should only use this if you know what you're doing!
 	pub unsafe fn into_inner(self) -> CByondValue {
@@ -45,6 +39,23 @@ impl ByondValue {
 	)]
 	pub const fn null() -> Self {
 		Self::NULL
+	}
+
+	/// A reference to the "world" object, equivalent to DM's `world`.
+	pub const fn world() -> &'static Self {
+		static WORLD: ByondValue =
+			unsafe { ByondValue::new_ref_unchecked(ByondValueType::WORLD, 0) };
+
+		&WORLD
+	}
+
+	/// Returns a reference to the "global" object, equivalent to DM's
+	/// `global.vars`.
+	pub const fn global() -> &'static Self {
+		static GLOBAL: ByondValue =
+			unsafe { ByondValue::new_ref_unchecked(ByondValueType::WORLD, 1) };
+
+		&GLOBAL
 	}
 
 	/// Shorthand for [ToByond::to_byond].
