@@ -135,7 +135,7 @@ fn generate_export_fn(
 		#[inline(never)]
 		pub unsafe extern "C-unwind" fn #func_name(
 			__argc: ::meowtonin::sys::u4c,
-			__argv: *mut ::meowtonin::ByondValue
+			__argv: *mut ::meowtonin::sys::CByondValue
 		) -> ::meowtonin::ByondValue {
 			::meowtonin::setup_once();
 			let __retval: std::result::Result<::meowtonin::ByondValue, std::string::String>;

@@ -39,6 +39,7 @@ pub use crate::{
 	xyz::ByondXYZ,
 };
 pub use inventory;
+use meowtonin_byondapi_sys::CByondValue;
 pub use meowtonin_impl::byond_fn;
 use std::sync::Once;
 
@@ -66,11 +67,14 @@ macro_rules! byondval {
 /// Don't pass in a null argv pointer please god
 /// Just give this what BYOND gives you and pray for the best
 #[doc(hidden)]
-pub unsafe fn parse_args(argc: sys::u4c, argv: *mut ByondValue) -> Vec<ByondValue> {
+pub unsafe fn parse_args(argc: sys::u4c, argv: *mut CByondValue) -> Vec<ByondValue> {
 	if argc == 0 || argv.is_null() {
 		return Vec::new();
 	}
-	unsafe { std::slice::from_raw_parts_mut(argv, argc as usize).to_vec() }
+	unsafe { std::slice::from_raw_parts(argv, argc as usize) }
+		.iter()
+		.map(|value| ByondValue(*value))
+		.collect()
 }
 
 /// Returns the current major version and build version of BYOND.
