@@ -208,7 +208,7 @@ pub struct ByondApi {
 		buf: *mut ::std::os::raw::c_char,
 		buflen: *mut u4c,
 	) -> bool,
-	#[cfg(feature = "byond-1662")]
+	#[cfg(feature = "byond-1664")]
 	pub Byond_Return: unsafe extern "C-unwind" fn(
 		waiting_proc: *const CByondValue,
 		retval: *const CByondValue,
@@ -219,7 +219,7 @@ pub struct ByondApi {
 		list: *mut CByondValue,
 		len: *mut u4c,
 	) -> bool,
-	#[cfg(feature = "byond-1662")]
+	#[cfg(feature = "byond-1664")]
 	pub ByondValue_IsType: unsafe extern "C-unwind" fn(
 		src: *const CByondValue,
 		typestr: *const ::std::os::raw::c_char,
@@ -313,10 +313,10 @@ impl ByondApi {
 			.get(b"_Byond_CallGlobalProcByStrId\0")
 			.map(|sym| *sym)?;
 		let Byond_ToString = __library.get(b"_Byond_ToString\0").map(|sym| *sym)?;
-		#[cfg(feature = "byond-1662")]
+		#[cfg(feature = "byond-1664")]
 		let Byond_Return = __library.get(b"_Byond_Return\0").map(|sym| *sym)?;
 		let Byond_Block = __library.get(b"_Byond_Block\0").map(|sym| *sym)?;
-		#[cfg(feature = "byond-1662")]
+		#[cfg(feature = "byond-1664")]
 		let ByondValue_IsType = __library.get(b"_ByondValue_IsType\0").map(|sym| *sym)?;
 		let Byond_Length = __library.get(b"_Byond_Length\0").map(|sym| *sym)?;
 		let Byond_LocateIn = __library.get(b"_Byond_LocateIn\0").map(|sym| *sym)?;
@@ -371,10 +371,10 @@ impl ByondApi {
 			Byond_CallGlobalProc,
 			Byond_CallGlobalProcByStrId,
 			Byond_ToString,
-			#[cfg(feature = "byond-1662")]
+			#[cfg(feature = "byond-1664")]
 			Byond_Return,
 			Byond_Block,
-			#[cfg(feature = "byond-1662")]
+			#[cfg(feature = "byond-1664")]
 			ByondValue_IsType,
 			Byond_Length,
 			Byond_LocateIn,
@@ -724,7 +724,7 @@ impl ByondApi {
 	) -> bool {
 		(self.Byond_ToString)(src, buf, buflen)
 	}
-	#[cfg(feature = "byond-1662")]
+	#[cfg(feature = "byond-1664")]
 	#[doc = "Returns from a byond,await: call\n Blocks if not on the main thread.\n # \
 	         Arguments\n\n* `waiting_proc` - The /callee waiting on a response\n * `retval` - The \
 	         return value to pass back to the waiting proc\n # Returns\n\nTrue on success; false \
@@ -752,7 +752,7 @@ impl ByondApi {
 	) -> bool {
 		(self.Byond_Block)(corner1, corner2, list, len)
 	}
-	#[cfg(feature = "byond-1662")]
+	#[cfg(feature = "byond-1664")]
 	#[doc = "Equivalent to calling istype(src, text2path(typestr)).\n Blocks if not on the main \
 	         thread.\n # Arguments\n\n* `src` - The value\n * `typestr` - The type path to check\n \
 	         # Returns\n\nTrue if src is of the given type, false if not"]

@@ -193,7 +193,7 @@ impl ByondValue {
 	}
 
 	/// Equivalent to calling `istype(src, text2path(typepath))``.
-	#[cfg(feature = "byond-1662")]
+	#[cfg(feature = "byond-1664")]
 	pub fn is_type<Str>(&self, typepath: Str) -> bool
 	where
 		Str: AsRef<str>,
