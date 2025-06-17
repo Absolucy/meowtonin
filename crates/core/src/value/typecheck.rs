@@ -113,12 +113,20 @@ impl ByondValueType {
 	pub const DATUM_TYPEPATH: Self = Self(0x20);
 	/// A value that represents a `/datum` object.
 	pub const DATUM: Self = Self(0x21);
+	/// A value that represents a `/savefile` object.
+	pub const SAVEFILE: Self = Self(0x23);
+	/// A value that presents a global proc ref (i.e /proc/some_global_proc)
+	pub const GLOBAL_PROC: Self = Self(0x26);
 	/// A value that represents a number.
 	pub const NUMBER: Self = Self(0x2A);
 	/// A pointer value.
 	pub const POINTER: Self = Self(0x3C);
 	/// A value that represents an `/alist` object.
 	pub const ALIST: Self = Self(0x55);
+	/// A value that represents a `/pixloc` object.
+	pub const PIXLOC: Self = Self(0x56);
+	/// A value that represents a `/vector` object.
+	pub const VECTOR: Self = Self(0x57);
 	/// A value that represents a `/callee` object.
 	pub const CALLEE: Self = Self(0x58);
 }
@@ -144,9 +152,12 @@ impl ByondValueType {
 			Self::LIST => Cow::Borrowed("list"),
 			Self::DATUM_TYPEPATH => Cow::Borrowed("datum typepath"),
 			Self::DATUM => Cow::Borrowed("datum"),
+			Self::GLOBAL_PROC => Cow::Borrowed("global proc ref"),
 			Self::NUMBER => Cow::Borrowed("number"),
 			Self::POINTER => Cow::Borrowed("pointer"),
 			Self::ALIST => Cow::Borrowed("alist"),
+			Self::PIXLOC => Cow::Borrowed("pixloc"),
+			Self::VECTOR => Cow::Borrowed("vector"),
 			Self::CALLEE => Cow::Borrowed("callee"),
 			_ => Cow::Owned(format!("unknown type {:X}", self.0)),
 		}
