@@ -15,12 +15,14 @@ cfg-if = "1"
 libloading = { workspace = true }
 
 [build-dependencies]
-bindgen = { version = "0.71", optional = true }
+bindgen = { version = "0.72", optional = true }
 doxygen-rs = { version = "0.4", optional = true }
 
 [features]
-default = ["bytemuck"]
+default = ["bytemuck", "byond-1662"]
 generate-bindings = ["bindgen", "doxygen-rs"]
+# ByondValue_IsType support
+byond-1662 = []
 
 [package.metadata.docs.rs]
 targets = ["i686-pc-windows-msvc", "i686-unknown-linux-gnu"]

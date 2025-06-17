@@ -2,6 +2,52 @@
 #define BYONDAPI_H
 
 /*
+	Byondapi calling format:
+
+	In call_ext() or load_ext(), prefix your library's exported function name with byond: to use
+	Byondapi format. Prefix with @ to use STDCALL instead of CDECL calling convention.
+	Prefixing a function name with byond,await: uses the await format (below)
+
+	Functions in your library that are called via Byondapi look like this:
+
+		extern "C" BYOND_EXPORT CByondValue MyFunction(u4c n, CByondValue v[]) {
+			...
+		}
+
+	And it's called from DM via:
+
+		call_ext("mylib", "byond:MyFunction")(arguments)
+
+	If load_ext() is used:
+
+		var myfunction = load_ext("mylib", "byond:MyFunction")
+		call(myfunction)(arguments)
+
+	AWAIT FORMAT
+
+	If the function is prefixed with byond,await, you can use a special asynchronous format. This will
+	put the calling proc to sleep until you call Byond_Return(), so it's non-blocking.
+
+		var/result = call("mylib", "byond,await:LongFunction")(arguments)
+        world << "After a long wait, my result is [result]."
+
+	The function in your library has an extra argument for the /callee of the sleeping proc.
+
+		extern "C" BYOND_EXPORT void LongFunction(u4c n, CByondValue v[], CByondValue waiting_proc) {
+			std::thread t(LongFunctionStuff, waiting_proc);
+			t.detach();
+			// return right away
+		}
+
+		void LongFunctionStuff(CByondValue waiting_proc) {
+			CByondValue retval;
+			... // do stuff that takes a long time
+
+			Byond_Return(&waiting_proc, &retval);
+		}
+ */
+
+/*
 	BYOND public API version 516.1651
 
 	Because for some reason nobody can get their ducks in a row, all of the
@@ -19,6 +65,10 @@
 	  - Calls made from other threads always produce persistent references
 	    that must be cleaned up with Byond_DecRef().
 	  - Byond_ThreadSync() always creates persistent references.
+
+	- BYOND 516.1664:
+
+	  - New async format introduced.
  */
 
 #if defined(WIN32) || defined(WIN64)
@@ -337,7 +387,7 @@ DUNGPUB u4c Byond_AddGetStrId(char const *str);	// adds a string to the tree if 
  * Blocks if not on the main thread.
  * @param loc Object that owns the var
  * @param varname Var name as null-terminated string
- * @param result Pointer to accept result
+ * @param result Pointer to accept result (referenced)
  * @return True on success
  */
 DUNGPUB bool Byond_ReadVar(CByondValue const *loc, char const *varname, CByondValue *result);
@@ -347,7 +397,7 @@ DUNGPUB bool Byond_ReadVar(CByondValue const *loc, char const *varname, CByondVa
  * Blocks if not on the main thread.
  * @param loc Object that owns the var
  * @param varname Var name as string ID
- * @param result Pointer to accept result
+ * @param result Pointer to accept result (referenced)
  * @return True on success
  * @see Byond_GetStrId()
  */
@@ -373,7 +423,7 @@ DUNGPUB bool Byond_WriteVar(CByondValue const *loc, char const *varname, CByondV
 DUNGPUB bool Byond_WriteVarByStrId(CByondValue const *loc, u4c varname, CByondValue const *val);
 
 /**
- * Creates an empty list with a temporary reference. Equivalent to list().
+ * Creates an empty list (referenced). Equivalent to list().
  * Blocks if not on the main thread.
  * @param result Result
  * @return True on success
@@ -381,7 +431,7 @@ DUNGPUB bool Byond_WriteVarByStrId(CByondValue const *loc, u4c varname, CByondVa
 DUNGPUB bool Byond_CreateList(CByondValue *result);
 
 /**
- * Reads items from a list.
+ * Reads items (referenced) from a list.
  * Blocks if not on the main thread.
  * @param loc The list to read
  * @param list CByondValue array, allocated by caller (can be null if querying length)
@@ -411,7 +461,7 @@ DUNGPUB bool Byond_WriteList(CByondValue const *loc, CByondValue const *list, u4
 DUNGPUB bool Byond_ReadListAssoc(CByondValue const *loc, CByondValue *list, u4c *len);
 
 /**
- * Reads an item from a list.
+ * Reads an item (referenced) from a list.
  * Blocks if not on the main thread.
  * @param loc The list
  * @param idx The index in the list (may be a number, or a non-number if using associative lists)
@@ -433,7 +483,7 @@ DUNGPUB bool Byond_WriteListIndex(CByondValue const *loc, CByondValue const *idx
  * Reads from a BYOND pointer
  * Blocks if not on the main thread.
  * @param ptr The BYOND pointer
- * @param result Pointer to accept result
+ * @param result Pointer to accept result (referenced)
  * @return True on success
  */
 DUNGPUB bool Byond_ReadPointer(CByondValue const *ptr, CByondValue *result);
@@ -463,7 +513,7 @@ DUNGPUB bool Byond_WritePointer(CByondValue const *ptr, CByondValue const *val);
  * @param name Proc name as null-terminated string
  * @param arg Array of arguments
  * @param arg_count Number of arguments
- * @param result Pointer to accept result
+ * @param result Pointer to accept result (referenced)
  * @return True on success
  */
 DUNGPUB bool Byond_CallProc(CByondValue const *src, char const *name, CByondValue const *arg, u4c arg_count, CByondValue *result);
@@ -475,7 +525,7 @@ DUNGPUB bool Byond_CallProc(CByondValue const *src, char const *name, CByondValu
  * @param name Proc name as string ID
  * @param arg Array of arguments
  * @param arg_count Number of arguments
- * @param result Pointer to accept result
+ * @param result Pointer to accept result (referenced)
  * @return True on success
  * @see Byond_GetStrId()
  */
@@ -488,7 +538,7 @@ DUNGPUB bool Byond_CallProcByStrId(CByondValue const *src, u4c name, CByondValue
  * @param name Proc name as null-terminated string
  * @param arg Array of arguments
  * @param arg_count  Number of arguments
- * @param result Pointer to accept result
+ * @param result Pointer to accept result (referenced)
  * @return True on success
  */
 DUNGPUB bool Byond_CallGlobalProc(char const *name, CByondValue const *arg, u4c arg_count, CByondValue *result);	// result MUST be initialized first!
@@ -515,6 +565,15 @@ DUNGPUB bool Byond_CallGlobalProcByStrId(u4c name, CByondValue const *arg, u4c a
  */
 DUNGPUB bool Byond_ToString(CByondValue const *src, char *buf, u4c *buflen);
 
+/**
+ * Returns from a byond,await: call
+ * Blocks if not on the main thread.
+ * @param waiting_proc The /callee waiting on a response
+ * @param retval The return value to pass back to the waiting proc
+ * @return True on success; false if the waiting proc doesn't exist
+ */
+DUNGPUB bool Byond_Return(CByondValue const *waiting_proc, CByondValue const *retval);
+
 // Other builtins
 
 /**
@@ -529,7 +588,16 @@ DUNGPUB bool Byond_ToString(CByondValue const *src, char *buf, u4c *buflen);
 DUNGPUB bool Byond_Block(CByondXYZ const *corner1, CByondXYZ const *corner2, CByondValue *list, u4c *len);
 
 /**
- * Equivalent to calling length(value).
+ * Equivalent to calling istype(src, text2path(typestr)).
+ * Blocks if not on the main thread.
+ * @param src The value
+ * @param typestr The type path to check
+ * @return True if src is of the given type, false if not
+ */
+DUNGPUB bool ByondValue_IsType(CByondValue const *src, char const *typestr);
+
+/**
+ * Equivalent to calling length(src).
  * Blocks if not on the main thread.
  * @param src The value
  * @param result Pointer to accept result as a CByondValue (intended for future possible override of length)
@@ -542,7 +610,7 @@ DUNGPUB bool Byond_Length(CByondValue const *src, CByondValue *result);
  * Blocks if not on the main thread.
  * @param type The type to locate
  * @param list The list to locate in; can be a null pointer instead of a CByondValue to locate(type) without a list
- * @param result Pointer to accept result; can be null if nothing is found
+ * @param result Pointer to accept result (referenced); can be null if nothing is found
  * @return True on success (including if nothing is found); false on error
  */
 DUNGPUB bool Byond_LocateIn(CByondValue const *type, CByondValue const *list, CByondValue *result);
@@ -552,7 +620,7 @@ DUNGPUB bool Byond_LocateIn(CByondValue const *type, CByondValue const *list, CB
  * Blocks if not on the main thread.
  * Result is null if coords are invalid.
  * @param xyz The x,y,z coords
- * @param result Pointer to accept result
+ * @param result Pointer to accept result (NOT referenced; is a turf or null)
  * @return True (always)
  */
 DUNGPUB bool Byond_LocateXYZ(CByondXYZ const *xyz, CByondValue *result);
@@ -563,7 +631,7 @@ DUNGPUB bool Byond_LocateXYZ(CByondXYZ const *xyz, CByondValue *result);
  * @param type The type to create (type path or string)
  * @param arg Array of arguments
  * @param arg_count Number of arguments
- * @param result Pointer to accept result
+ * @param result Pointer to accept result (referenced)
  * @return True on success
  */
 DUNGPUB bool Byond_New(CByondValue const *type, CByondValue const *arg, u4c arg_count, CByondValue *result);
@@ -573,7 +641,7 @@ DUNGPUB bool Byond_New(CByondValue const *type, CByondValue const *arg, u4c arg_
  * Blocks if not on the main thread.
  * @param type The type to create (type path or string)
  * @param arglist Arguments, as a reference to an arglist
- * @param result Pointer to accept result
+ * @param result Pointer to accept result (referenced)
  * @return True on success
  */
 DUNGPUB bool Byond_NewArglist(CByondValue const *type, CByondValue const *arglist, CByondValue *result);	// result MUST be initialized first!

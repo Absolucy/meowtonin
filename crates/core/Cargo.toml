@@ -18,7 +18,7 @@ cfg-if = "1"
 inventory = "0.3"
 libloading = { workspace = true }
 log = "0.4"
-meowtonin-byondapi-sys = { path = "../sys", version = "0.2" }
+meowtonin-byondapi-sys = { path = "../sys", version = "0.2", default-features = false }
 meowtonin-impl = { path = "../impl", version = "0.2" }
 nohash-hasher = "0.2"
 papaya = "0.2"
@@ -36,13 +36,15 @@ windows = { version = "0.61", features = ["Win32_Foundation", "Win32_System", "W
 libc = "0.2"
 
 [features]
-default = ["lossy-utf8"]
+default = ["lossy-utf8", "bytemuck", "byond-1662"]
 # Enables debug panic logging in release builds
 rel-debugging = []
 # Uses lossy string conversion instead of strict UTF-8 converison.
 lossy-utf8 = []
 # Speed up ByondValue type checking by directly using the "type" var in the struct, however this is technically not "official" and may break in future BYOND updates.
 fast-typechecking = []
+bytemuck = ["meowtonin-byondapi-sys/bytemuck"]
+byond-1662 = ["meowtonin-byondapi-sys/byond-1662"]
 
 [package.metadata.docs.rs]
 targets = ["i686-pc-windows-msvc", "i686-unknown-linux-gnu"]
