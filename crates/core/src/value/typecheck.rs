@@ -117,6 +117,8 @@ impl ByondValueType {
 	pub const NUMBER: Self = Self(0x2A);
 	/// A pointer value.
 	pub const POINTER: Self = Self(0x3C);
+	/// A value that represents an `/alist` object.
+	pub const ALIST: Self = Self(0x55);
 }
 
 impl ByondValueType {
@@ -142,6 +144,7 @@ impl ByondValueType {
 			Self::DATUM => Cow::Borrowed("datum"),
 			Self::NUMBER => Cow::Borrowed("number"),
 			Self::POINTER => Cow::Borrowed("pointer"),
+			Self::ALIST => Cow::Borrowed("alist"),
 			_ => Cow::Owned(format!("unknown type {:X}", self.0)),
 		}
 	}
