@@ -11,7 +11,6 @@ use crate::{
 	strid::lookup_string_id, sys::CByondValue,
 };
 use std::{
-	ffi::CString,
 	fmt,
 	hash::{Hash, Hasher},
 	mem::MaybeUninit,
@@ -198,7 +197,7 @@ impl ByondValue {
 	where
 		Str: AsRef<str>,
 	{
-		match CString::new(typepath.as_ref()) {
+		match std::ffi::CString::new(typepath.as_ref()) {
 			Ok(typepath) => unsafe { byond().ByondValue_IsType(&self.0, typepath.as_ptr()) },
 			Err(_) => false,
 		}
