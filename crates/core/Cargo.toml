@@ -36,7 +36,7 @@ windows = { version = "0.61", features = ["Win32_Foundation", "Win32_System", "W
 libc = "0.2"
 
 [features]
-default = ["lossy-utf8", "bytemuck", "byond-1664"]
+default = ["lossy-utf8", "bytemuck"]
 # Enables debug panic logging in release builds
 rel-debugging = []
 # Uses lossy string conversion instead of strict UTF-8 converison.

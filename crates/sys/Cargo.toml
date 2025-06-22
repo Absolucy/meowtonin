@@ -19,7 +19,7 @@ bindgen = { version = "0.72", optional = true }
 doxygen-rs = { version = "0.4", optional = true }
 
 [features]
-default = ["bytemuck", "byond-1664"]
+default = ["bytemuck"]
 generate-bindings = ["bindgen", "doxygen-rs"]
 # ByondValue_IsType support
 byond-1664 = []
