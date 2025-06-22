@@ -8,7 +8,7 @@ use syn::{FnArg, ItemFn, PatType, ReturnType, parse_macro_input, spanned::Spanne
 fn generate_arg_parser(input: &FnArg, idx: usize) -> TokenStream2 {
 	if let FnArg::Typed(PatType { attrs, pat, ty, .. }) = input {
 		let mutability = attrs.iter().find(|attr| attr.path().is_ident("mut"));
-		let arg_name = syn::Ident::new(&format!("__arg_{}", idx), pat.span());
+		let arg_name = syn::Ident::new(&format!("__arg_{idx}"), pat.span());
 		let error_message = format!(
 			"failed to parse argument {idx} ({pat}: {ty})",
 			idx = idx + 1,
@@ -64,7 +64,7 @@ fn generate_wrapper_fn(
 		let arg_params: Vec<_> = (0..arg_count)
 			.map(|i| {
 				let arg_name =
-					syn::Ident::new(&format!("__arg_{}", i), proc_macro2::Span::call_site());
+					syn::Ident::new(&format!("__arg_{i}"), proc_macro2::Span::call_site());
 				quote! { #arg_name: ::meowtonin::ByondValue }
 			})
 			.collect();
