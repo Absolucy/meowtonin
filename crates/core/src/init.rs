@@ -15,6 +15,7 @@ inventory::collect!(InitFunc);
 /// ```
 pub struct InitFunc(pub fn() -> ());
 
+/* currently broken
 #[cfg(debug_assertions)]
 inventory::submit! {
 	InitFunc(|| unsafe {
@@ -32,7 +33,8 @@ inventory::submit! {
 			]
 		).unwrap();
 	})
-}
+}/
+*/
 
 #[doc(hidden)]
 pub fn do_init() {
