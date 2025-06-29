@@ -121,6 +121,8 @@ impl ByondValueType {
 	pub const NUMBER: Self = Self(0x2A);
 	/// A pointer value.
 	pub const POINTER: Self = Self(0x3C);
+	/// An external function loaded with load_ext;
+	pub const LOADED_FUNC: Self = Self(0x45);
 	/// A value that represents an `/alist` object.
 	pub const ALIST: Self = Self(0x55);
 	/// A value that represents a `/pixloc` object.
@@ -155,6 +157,7 @@ impl ByondValueType {
 			Self::GLOBAL_PROC => Cow::Borrowed("global proc ref"),
 			Self::NUMBER => Cow::Borrowed("number"),
 			Self::POINTER => Cow::Borrowed("pointer"),
+			Self::LOADED_FUNC => Cow::Borrowed("loaded external function"),
 			Self::ALIST => Cow::Borrowed("alist"),
 			Self::PIXLOC => Cow::Borrowed("pixloc"),
 			Self::VECTOR => Cow::Borrowed("vector"),
