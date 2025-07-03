@@ -13,6 +13,7 @@ license.workspace = true
 ahash = "0.8"
 aho-corasick = "1"
 backtrace = "0.3"
+constcat = { version = "0.6" }
 bytemuck = { version = "1", features = ["extern_crate_std"] }
 cfg-if = "1"
 inventory = "0.3"

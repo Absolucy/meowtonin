@@ -22,7 +22,7 @@ pub struct ByondValue(pub CByondValue);
 
 impl ByondValue {
 	/// A null value.
-	pub const NULL: Self = unsafe { Self::new_ref_unchecked(ByondValueType::NULL, 0) };
+	pub const NULL: Self = unsafe { Self::new_ref_unchecked(ByondValueType::Null, 0) };
 
 	/// Returns the inner [CByondValue], without decrementing the refcount.
 	/// You should only use this if you know what you're doing!
@@ -44,7 +44,7 @@ impl ByondValue {
 	/// A reference to the "world" object, equivalent to DM's `world`.
 	pub const fn world() -> &'static Self {
 		static WORLD: ByondValue =
-			unsafe { ByondValue::new_ref_unchecked(ByondValueType::WORLD, 0) };
+			unsafe { ByondValue::new_ref_unchecked(ByondValueType::World, 0) };
 
 		&WORLD
 	}
@@ -53,7 +53,7 @@ impl ByondValue {
 	/// `global.vars`.
 	pub const fn global() -> &'static Self {
 		static GLOBAL: ByondValue =
-			unsafe { ByondValue::new_ref_unchecked(ByondValueType::WORLD, 1) };
+			unsafe { ByondValue::new_ref_unchecked(ByondValueType::World, 1) };
 
 		&GLOBAL
 	}
@@ -155,7 +155,7 @@ impl ByondValue {
 	where
 		Return: FromByond,
 	{
-		if self.get_type() != ByondValueType::POINTER {
+		if self.get_type() != ByondValueType::Pointer {
 			return Err(ByondError::NotReferenceable);
 		}
 		unsafe {
@@ -169,7 +169,7 @@ impl ByondValue {
 	where
 		Value: ToByond,
 	{
-		if self.get_type() != ByondValueType::POINTER {
+		if self.get_type() != ByondValueType::Pointer {
 			return Err(ByondError::NotReferenceable);
 		}
 		let value = value.to_byond()?;
@@ -242,8 +242,8 @@ impl Hash for ByondValue {
 		value_type.0.hash(state);
 		unsafe {
 			match value_type {
-				ByondValueType::NULL => (),
-				ByondValueType::NUMBER => self.0.data.num.to_bits().hash(state),
+				ByondValueType::Null => (),
+				ByondValueType::Number => self.0.data.num.to_bits().hash(state),
 				_ => self.0.data.ref_.hash(state),
 			}
 		}
@@ -254,22 +254,18 @@ impl fmt::Display for ByondValue {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		let value_type = self.get_type();
 		match value_type {
-			ByondValueType::NULL => write!(f, "null"),
-			ByondValueType::STRING | ByondValueType::NUMBER => {
+			ByondValueType::Null => write!(f, "null"),
+			ByondValueType::String | ByondValueType::Number => {
 				let string = self.get_string().unwrap_or_else(|_| String::from("???"));
 				write!(f, "{string}")
 			}
-			ByondValueType::LIST => {
+			ByondValueType::List => {
 				let length = self.length().unwrap_or(0);
 				write!(f, "list[len={length}]")
 			}
-			ByondValueType::MOB_TYPEPATH
-			| ByondValueType::OBJ_TYPEPATH
-			| ByondValueType::TURF_TYPEPATH
-			| ByondValueType::AREA_TYPEPATH
-			| ByondValueType::DATUM_TYPEPATH => {
-				let string = self.get_string().unwrap_or_else(|_| String::from("???"));
-				write!(f, "{string}")
+			ByondValueType::Alist => {
+				let length = self.length().unwrap_or(0);
+				write!(f, "alist[len={length}]")
 			}
 			_ => {
 				let type_name = value_type.name();

@@ -19,10 +19,10 @@ impl<'de> Deserializer<'de> for &ByondDeserializer {
 	{
 		let val = self.value.get_type();
 		match val {
-			ByondValueType::NULL => visitor.visit_unit(),
-			ByondValueType::STRING => self.deserialize_string(visitor),
-			ByondValueType::NUMBER => self.deserialize_f32(visitor),
-			ByondValueType::POINTER => Err(DeserializeError::Unexpected(
+			ByondValueType::Null => visitor.visit_unit(),
+			ByondValueType::String => self.deserialize_string(visitor),
+			ByondValueType::Number => self.deserialize_f32(visitor),
+			ByondValueType::Pointer => Err(DeserializeError::Unexpected(
 				"serializable value (null, str, num, list, string-ish)".into(),
 				"pointer".into(),
 			)),
