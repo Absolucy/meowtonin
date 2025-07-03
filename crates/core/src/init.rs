@@ -15,27 +15,6 @@ inventory::collect!(InitFunc);
 /// ```
 pub struct InitFunc(pub fn() -> ());
 
-/* currently broken
-#[cfg(debug_assertions)]
-inventory::submit! {
-	InitFunc(|| unsafe {
-		#[cfg(windows)]
-		let _ = windows::Win32::System::Console::AllocConsole();
-		use simplelog::*;
-		let timestamp = std::time::SystemTime::now()
-			.duration_since(std::time::UNIX_EPOCH)
-			.unwrap()
-			.as_secs();
-		CombinedLogger::init(
-			vec![
-				TermLogger::new(LevelFilter::Debug, Config::default(), TerminalMode::Mixed, ColorChoice::Auto),
-				WriteLogger::new(LevelFilter::Debug, Config::default(), std::fs::File::create(format!("meowtonin-{timestamp}.log")).unwrap()),
-			]
-		).unwrap();
-	})
-}/
-*/
-
 #[doc(hidden)]
 pub fn do_init() {
 	// Clear string ID cache, just in case anything's changed.
