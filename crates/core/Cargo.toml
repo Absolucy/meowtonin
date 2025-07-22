@@ -45,6 +45,7 @@ fast-typechecking = []
 bytemuck = ["meowtonin-byondapi-sys/bytemuck"]
 # Allows
 byond-1664 = ["meowtonin-byondapi-sys/byond-1664"]
+ref-debugging = []
 
 [package.metadata.docs.rs]
 targets = ["i686-pc-windows-msvc", "i686-unknown-linux-gnu"]

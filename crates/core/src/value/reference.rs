@@ -53,7 +53,16 @@ impl ByondValue {
 	/// This function is marked as unsafe because in most cases, you should not
 	/// be manually handling refcounting.
 	pub unsafe fn inc_ref(&self) {
-		unsafe { byond().ByondValue_IncRef(&self.0) }
+		if cfg!(feature = "ref-debugging") && !self.is_string() {
+			let old = self.ref_count().unwrap_or(9999);
+			unsafe { byond().ByondValue_IncRef(&self.0) };
+			let new = self.ref_count().unwrap_or(9999);
+			let ref_type = self.0.type_;
+			let ref_id = unsafe { self.0.data.ref_ };
+			println!("inc_ref({self} // {ref_type}:{ref_id}): {old} -> {new}");
+		} else {
+			unsafe { byond().ByondValue_IncRef(&self.0) };
+		}
 	}
 
 	/// De-increments the reference count of the value.
@@ -61,7 +70,16 @@ impl ByondValue {
 	/// This function is marked as unsafe because in most cases, you should not
 	/// be manually handling refcounting.
 	pub unsafe fn dec_ref(&self) {
-		unsafe { byond().ByondValue_DecRef(&self.0) }
+		if cfg!(feature = "ref-debugging") && !self.is_string() {
+			let old = self.ref_count().unwrap_or(9999);
+			unsafe { byond().ByondValue_DecRef(&self.0) };
+			let new = self.ref_count().unwrap_or(9999);
+			let ref_type = self.0.type_;
+			let ref_id = unsafe { self.0.data.ref_ };
+			println!("dec_ref({self} // {ref_type}:{ref_id}): {old} -> {new}");
+		} else {
+			unsafe { byond().ByondValue_DecRef(&self.0) };
+		}
 	}
 
 	/// Marks a temporary reference as no longer in use.
