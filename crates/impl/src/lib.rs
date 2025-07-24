@@ -1,21 +1,17 @@
 // SPDX-License-Identifier: 0BSD
+use darling::FromMeta;
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::{ToTokens, quote};
-use syn::{FnArg, ItemFn, Meta, PatType, ReturnType, parse_macro_input, spanned::Spanned};
+use syn::{FnArg, ItemFn, PatType, ReturnType, parse_macro_input, spanned::Spanned};
 
-/// Parses the attribute arguments to determine if variadic mode is enabled
-fn parse_attribute(attr: TokenStream) -> bool {
-	if attr.is_empty() {
-		return false;
-	}
-
-	let meta = syn::parse::<Meta>(attr).ok();
-	match meta {
-		Some(Meta::Path(path)) if path.is_ident("variadic") => true,
-		Some(Meta::List(list)) if list.path.is_ident("variadic") => true,
-		_ => false,
-	}
+#[derive(Debug, FromMeta, Copy, Clone)]
+#[darling(derive_syn_parse)]
+struct ByondFnArgs {
+	#[darling(default)]
+	variadic: bool,
+	#[darling(default)]
+	debug_log: bool,
 }
 
 /// Generates argument parsing code for a function parameter
@@ -128,17 +124,31 @@ fn generate_wrapper_fn(
 	}
 }
 
+fn generate_debug_msg(func_name: &str, msg_type: &str, args: &ByondFnArgs) -> TokenStream2 {
+	if !args.debug_log {
+		return quote! {};
+	}
+	let msg = format!("debug: {func_name} {msg_type}");
+	quote! {
+		{ eprintln!(#msg) };
+	}
+}
+
 /// Generates the FFI export function that handles panic catching and error
 /// conversion
 fn generate_export_fn(
 	func_name: &syn::Ident,
 	wrapper_ident: &syn::Ident,
 	length: usize,
-	variadic: bool,
+	args: &ByondFnArgs,
 ) -> TokenStream2 {
 	let func_name_str = func_name.to_string();
 
-	let let_args = if variadic || length > 0 {
+	let debug_start = generate_debug_msg(&func_name_str, "start", args);
+	let debug_end = generate_debug_msg(&func_name_str, "end", args);
+	let debug_crash = generate_debug_msg(&func_name_str, "CRASH!!!", args);
+
+	let let_args = if args.variadic || length > 0 {
 		quote! {
 			let mut __args = unsafe { ::meowtonin::parse_args(__argc, __argv) };
 		}
@@ -146,7 +156,7 @@ fn generate_export_fn(
 		quote! {}
 	};
 
-	let do_call = if variadic {
+	let do_call = if args.variadic {
 		quote! {
 			// Increment ref count for all args
 			for value in &__args {
@@ -190,6 +200,7 @@ fn generate_export_fn(
 			::meowtonin::setup_once();
 			let __retval: std::result::Result<::meowtonin::ByondValue, std::string::String>;
 			{
+				#debug_start
 				#let_args
 
 				match ::std::panic::catch_unwind(move || {
@@ -216,8 +227,14 @@ fn generate_export_fn(
 				}
 			}
 			match __retval {
-				Ok(value) => value,
-				Err(error) => ::meowtonin::panic::byond_crash(error)
+				Ok(value) => {
+					#debug_end
+					value
+				},
+				Err(error) => {
+					#debug_crash
+					::meowtonin::panic::byond_crash(error)
+				}
 			}
 		}
 	}
@@ -226,7 +243,13 @@ fn generate_export_fn(
 /// Main proc macro attribute that generates BYOND FFI bindings
 #[proc_macro_attribute]
 pub fn byond_fn(attr: TokenStream, item: TokenStream) -> TokenStream {
-	let variadic = parse_attribute(attr);
+	let args: ByondFnArgs = match syn::parse(attr) {
+		Ok(v) => v,
+		Err(e) => {
+			return e.to_compile_error().into();
+		}
+	};
+
 	let func = parse_macro_input!(item as ItemFn);
 
 	let func_name = &func.sig.ident;
@@ -237,7 +260,7 @@ pub fn byond_fn(attr: TokenStream, item: TokenStream) -> TokenStream {
 	let mod_ident = syn::Ident::new(&mod_name, func_name.span());
 
 	// Generate argument parsing code for each parameter (only for non-variadic)
-	let parse_args: Vec<_> = if !variadic {
+	let parse_args: Vec<_> = if !args.variadic {
 		func.sig
 			.inputs
 			.iter()
@@ -259,11 +282,11 @@ pub fn byond_fn(attr: TokenStream, item: TokenStream) -> TokenStream {
 		&return_conversion,
 		&func.block,
 		func.sig.inputs.len(),
-		variadic,
+		args.variadic,
 	);
 
 	// Generate the exported FFI function
-	let export_fn = generate_export_fn(func_name, &wrapper_ident, func.sig.inputs.len(), variadic);
+	let export_fn = generate_export_fn(func_name, &wrapper_ident, func.sig.inputs.len(), &args);
 
 	// Combine everything into the final output
 	quote! {

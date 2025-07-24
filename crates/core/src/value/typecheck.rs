@@ -228,6 +228,15 @@ impl ByondValueType {
 		Self::Datum,
 	];
 
+	/// All types that are tpyepaths.
+	pub const PATH_TYPES: &[Self] = &[
+		Self::MobTypepath,
+		Self::ObjTypepath,
+		Self::TurfTypepath,
+		Self::AreaTypepath,
+		Self::DatumTypepath,
+	];
+
 	/// Types that can be indexed by arbitrary strings
 	pub const STRING_INDEXABLE_TYPES: &[Self] = concat_slices!([ByondValueType]:
 		ByondValueType::VARS_TYPES,
@@ -361,12 +370,19 @@ impl ByondValueType {
 	///
 	/// # Returns
 	/// `true` if the value is reference counted, `false` otherwise.
-	///
-	/// Currently, this only returns `false` for [`NULL`](Self::NULL) and
-	///  [`NUMBER`](Self::NUMBER).
 	#[inline]
 	pub const fn is_ref_counted(&self) -> bool {
-		!matches!(*self, Self::Null | Self::Number)
+		!matches!(
+			*self,
+			Self::Null
+				| Self::Number
+				| Self::MobTypepath
+				| Self::ObjTypepath
+				| Self::TurfTypepath
+				| Self::AreaTypepath
+				| Self::DatumTypepath
+				| Self::Turf
+		)
 	}
 
 	/// Returns if this type SHOULD be reference counted.
