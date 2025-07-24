@@ -130,7 +130,7 @@ fn generate_debug_msg(func_name: &str, msg_type: &str, args: &ByondFnArgs) -> To
 	}
 	let msg = format!("debug: {func_name} {msg_type}");
 	quote! {
-		{ eprintln!(#msg) };
+		{ println!(#msg) };
 	}
 }
 
