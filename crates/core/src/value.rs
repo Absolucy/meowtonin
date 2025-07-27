@@ -18,19 +18,12 @@ use std::{
 
 #[must_use]
 #[repr(transparent)]
+#[derive(Clone)]
 pub struct ByondValue(pub CByondValue);
 
 impl ByondValue {
 	/// A null value.
 	pub const NULL: Self = unsafe { Self::new_ref_unchecked(ByondValueType::Null, 0) };
-
-	/// Returns the inner [CByondValue], without decrementing the refcount.
-	/// You should only use this if you know what you're doing!
-	pub unsafe fn into_inner(self) -> CByondValue {
-		let inner = self.0;
-		std::mem::forget(self);
-		inner
-	}
 
 	/// Returns a null [ByondValue].
 	#[deprecated(
@@ -92,7 +85,7 @@ impl ByondValue {
 				args.len() as _,
 				result.as_mut_ptr()
 			))?;
-			Ok(Self::initialize_refcounted(result))
+			Ok(Self(unsafe { result.assume_init() }))
 		}
 	}
 
@@ -133,7 +126,7 @@ impl ByondValue {
 		unsafe {
 			let mut result = MaybeUninit::uninit();
 			map_byond_error!(byond().Byond_ReadVarByStrId(&self.0, name_id, result.as_mut_ptr()))?;
-			Return::from_byond(Self::initialize_refcounted(result))
+			Return::from_byond(Self(unsafe { result.assume_init() }))
 		}
 	}
 
@@ -161,7 +154,7 @@ impl ByondValue {
 		unsafe {
 			let mut result = MaybeUninit::uninit();
 			map_byond_error!(byond().Byond_ReadPointer(&self.0, result.as_mut_ptr()))?;
-			Return::from_byond(Self::initialize_refcounted(result))
+			Return::from_byond(Self(unsafe { result.assume_init() }))
 		}
 	}
 
@@ -272,23 +265,6 @@ impl fmt::Display for ByondValue {
 				let string = self.get_string().unwrap_or_else(|_| String::from("???"));
 				write!(f, "<{type_name}>: {string}")
 			}
-		}
-	}
-}
-
-impl Clone for ByondValue {
-	fn clone(&self) -> Self {
-		if self.get_type().should_ref_count() {
-			unsafe { self.inc_ref() };
-		}
-		Self(self.0)
-	}
-}
-
-impl Drop for ByondValue {
-	fn drop(&mut self) {
-		if self.get_type().should_ref_count() {
-			unsafe { self.dec_ref() };
 		}
 	}
 }

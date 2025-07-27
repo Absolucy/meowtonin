@@ -7,7 +7,7 @@ impl ByondValue {
 		unsafe {
 			let mut value = MaybeUninit::uninit();
 			map_byond_error!(byond().Byond_CreateList(value.as_mut_ptr()))?;
-			Ok(Self::initialize_refcounted(value))
+			Ok(Self(unsafe { value.assume_init() }))
 		}
 	}
 
@@ -16,21 +16,13 @@ impl ByondValue {
 		if !self.is_list() {
 			return Err(ByondError::NotAList);
 		}
-		let list = unsafe {
+		unsafe {
 			crate::misc::with_buffer::<_, ByondValue, _, _>(
 				None,
 				|ptr, len| byond().Byond_ReadList(&self.0, ptr.cast(), len),
 				|buffer| buffer,
-			)?
-		};
-		if crate::sync::should_setup_ref_counting() {
-			for value in &list {
-				if value.get_type().should_ref_count() {
-					unsafe { value.inc_ref() };
-				}
-			}
+			)
 		}
-		Ok(list)
 	}
 
 	// TODO: properly refcounted lists
@@ -38,24 +30,13 @@ impl ByondValue {
 		if !self.is_list() {
 			return Err(ByondError::NotAList);
 		}
-		let list = unsafe {
+		unsafe {
 			crate::misc::with_buffer::<_, ByondValue, _, _>(
 				None,
 				|ptr, len| byond().Byond_ReadListAssoc(&self.0, ptr.cast(), len),
 				|buffer| stupid_assoc_cast(buffer),
-			)?
-		};
-		if crate::sync::should_setup_ref_counting() {
-			for [key, value] in &list {
-				if key.get_type().should_ref_count() {
-					unsafe { key.inc_ref() };
-				}
-				if value.get_type().should_ref_count() {
-					unsafe { value.inc_ref() };
-				}
-			}
+			)
 		}
-		Ok(list)
 	}
 
 	/// Returns if this is likely an associative list or not.
@@ -93,7 +74,7 @@ impl ByondValue {
 			let mut result = MaybeUninit::uninit();
 			let idx = idx.to_byond()?;
 			map_byond_error!(byond().Byond_ReadListIndex(&self.0, &idx.0, result.as_mut_ptr()))?;
-			Value::from_byond(Self::initialize_refcounted(result))
+			Value::from_byond(Self(unsafe { result.assume_init() }))
 		}
 	}
 

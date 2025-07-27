@@ -32,7 +32,7 @@ pub fn locate(
 			.map(|list| &list.0 as *const _)
 			.unwrap_or_else(std::ptr::null);
 		map_byond_error!(byond().Byond_LocateIn(&typepath.0, list, result.as_mut_ptr()))?;
-		Ok(ByondValue::initialize_refcounted(result))
+		Ok(ByondValue(unsafe { result.assume_init() }))
 	}
 }
 

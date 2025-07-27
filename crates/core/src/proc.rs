@@ -27,6 +27,6 @@ where
 			args.len() as _,
 			result.as_mut_ptr(),
 		))?;
-		Return::from_byond(ByondValue::initialize_refcounted(result))
+		Return::from_byond(ByondValue(unsafe { result.assume_init() }))
 	}
 }

@@ -158,12 +158,6 @@ fn generate_export_fn(
 
 	let do_call = if args.variadic {
 		quote! {
-			// Increment ref count for all args
-			for value in &__args {
-				if value.get_type().should_ref_count() {
-					unsafe { value.inc_ref() };
-				}
-			}
 			#wrapper_ident(__args)
 		}
 	} else if length > 0 {
@@ -172,11 +166,7 @@ fn generate_export_fn(
 				quote! {
 					__args_iter
 						.next()
-						.inspect(|value| {
-							if value.get_type().should_ref_count() {
-								unsafe { value.inc_ref()} ;
-							}
-						}).unwrap_or(::meowtonin::ByondValue::NULL)
+						.unwrap_or(::meowtonin::ByondValue::NULL)
 				}
 			})
 			.collect();

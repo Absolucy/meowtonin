@@ -12,7 +12,7 @@ impl ByondValue {
 		unsafe {
 			let mut value = MaybeUninit::uninit();
 			byond().ByondValue_SetStr(value.as_mut_ptr(), string.as_ptr().cast());
-			Self::initialize_refcounted(value)
+			Self(unsafe { value.assume_init() })
 		}
 	}
 

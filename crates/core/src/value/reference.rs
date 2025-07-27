@@ -3,7 +3,11 @@ use crate::{
 	ByondResult, ByondValue, ByondValueType, byond,
 	sys::{ByondValueData, CByondValue},
 };
-use std::mem::MaybeUninit;
+use std::{
+	fmt,
+	hash::{Hash, Hasher},
+	ops::{Deref, DerefMut},
+};
 
 impl ByondValue {
 	/// Creates a new reference with the given value type and reference ID.
@@ -26,12 +30,6 @@ impl ByondValue {
 		})
 	}
 
-	pub(crate) fn initialize_refcounted(value: MaybeUninit<CByondValue>) -> Self {
-		let value = Self(unsafe { value.assume_init() });
-		value.setup_ref_counting();
-		value
-	}
-
 	/// Returns the reference count of the value.
 	pub fn ref_count(&self) -> ByondResult<usize> {
 		let mut result = 0;
@@ -49,10 +47,7 @@ impl ByondValue {
 	}
 
 	/// Increments the reference count of the value.
-	///
-	/// This function is marked as unsafe because in most cases, you should not
-	/// be manually handling refcounting.
-	pub unsafe fn inc_ref(&self) {
+	pub fn inc_ref(&self) {
 		if cfg!(feature = "ref-debugging") && !self.is_string() {
 			let old = self.ref_count().unwrap_or(9999);
 			unsafe { byond().ByondValue_IncRef(&self.0) };
@@ -66,10 +61,7 @@ impl ByondValue {
 	}
 
 	/// De-increments the reference count of the value.
-	///
-	/// This function is marked as unsafe because in most cases, you should not
-	/// be manually handling refcounting.
-	pub unsafe fn dec_ref(&self) {
+	pub fn dec_ref(&self) {
 		if cfg!(feature = "ref-debugging") && !self.is_string() {
 			let old = self.ref_count().unwrap_or(9999);
 			unsafe { byond().ByondValue_DecRef(&self.0) };
@@ -87,10 +79,7 @@ impl ByondValue {
 	/// Temporary references are automatically created for values created on the
 	/// main thread (and not from within [crate::sync::thread_sync]), which
 	/// expire at the end of the tick.
-	///
-	/// This function is marked as unsafe because in most cases, you should not
-	/// be manually handling refcounting.
-	pub unsafe fn dec_temp_ref(&self) {
+	pub fn dec_temp_ref(&self) {
 		unsafe { byond().ByondValue_DecTempRef(&self.0) }
 	}
 
@@ -105,11 +94,87 @@ impl ByondValue {
 			None
 		}
 	}
+}
 
-	#[doc(hidden)]
-	pub fn setup_ref_counting(&self) {
-		if self.get_type().should_ref_count() && crate::sync::should_setup_ref_counting() {
-			unsafe { self.inc_ref() };
-		}
+/// A wrapper for [`ByondValue`] that decrements the reference count when
+/// dropped.
+#[derive(PartialEq, Eq)]
+pub struct RcByondValue(ByondValue);
+
+impl RcByondValue {
+	/// Creates a new [`RcByondValue`] *without incrementing the refcount*.
+	/// Use this for values that already have a persistent ref.
+	pub const fn new_from_persistent(value: ByondValue) -> Self {
+		Self(value)
+	}
+
+	/// Creates a new [`RcByondValue`], incrementing the refcount.
+	/// Use this for values that have a temporary ref.
+	pub fn new(value: ByondValue) -> Self {
+		value.inc_ref();
+		Self(value)
+	}
+}
+
+impl AsRef<ByondValue> for RcByondValue {
+	fn as_ref(&self) -> &ByondValue {
+		&self.0
+	}
+}
+
+impl AsMut<ByondValue> for RcByondValue {
+	fn as_mut(&mut self) -> &mut ByondValue {
+		&mut self.0
+	}
+}
+
+impl Deref for RcByondValue {
+	type Target = ByondValue;
+
+	fn deref(&self) -> &Self::Target {
+		&self.0
+	}
+}
+
+impl DerefMut for RcByondValue {
+	fn deref_mut(&mut self) -> &mut Self::Target {
+		&mut self.0
+	}
+}
+
+impl Clone for RcByondValue {
+	fn clone(&self) -> Self {
+		self.0.inc_ref();
+		Self(self.0.clone())
+	}
+}
+
+impl Drop for RcByondValue {
+	fn drop(&mut self) {
+		self.0.dec_ref();
+	}
+}
+
+impl fmt::Display for RcByondValue {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		self.0.fmt(f)
+	}
+}
+
+impl PartialEq<ByondValue> for RcByondValue {
+	fn eq(&self, other: &ByondValue) -> bool {
+		self.0 == *other
+	}
+}
+
+impl PartialEq<RcByondValue> for ByondValue {
+	fn eq(&self, other: &RcByondValue) -> bool {
+		*self == other.0
+	}
+}
+
+impl Hash for RcByondValue {
+	fn hash<H: Hasher>(&self, state: &mut H) {
+		self.0.hash(state)
 	}
 }
