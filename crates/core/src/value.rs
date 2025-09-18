@@ -75,6 +75,7 @@ impl ByondValue {
 		Path: Into<String>,
 		Args: AsRef<[Self]>,
 	{
+		tracy::zone!("ByondValue::new");
 		unsafe {
 			let mut result = MaybeUninit::uninit();
 			let path = path.into().to_byond()?;
@@ -93,6 +94,7 @@ impl ByondValue {
 	///
 	/// Equivalent to calling `length(self)` in DM.
 	pub fn length(&self) -> ByondResult<usize> {
+		tracy::zone!("ByondValue::length");
 		unsafe {
 			let mut result = MaybeUninit::uninit();
 			map_byond_error!(byond().Byond_Length(&self.0, result.as_mut_ptr()))?;
@@ -110,6 +112,7 @@ impl ByondValue {
 
 	/// Returns the typepath of the value as a string, if it is a reference.
 	pub fn typepath(&self) -> ByondResult<String> {
+		tracy::zone!("ByondValue::typepath");
 		self.read_var("type")
 	}
 
@@ -119,6 +122,7 @@ impl ByondValue {
 		Name: AsRef<str>,
 		Return: FromByond,
 	{
+		tracy::zone!("ByondValue::read_var");
 		if !self.is_ref() {
 			return Err(ByondError::NotReferenceable);
 		}
@@ -136,6 +140,7 @@ impl ByondValue {
 		Name: AsRef<str>,
 		Value: ToByond,
 	{
+		tracy::zone!("ByondValue::write_var");
 		if !self.is_ref() {
 			return Err(ByondError::NotReferenceable);
 		}
@@ -148,6 +153,7 @@ impl ByondValue {
 	where
 		Return: FromByond,
 	{
+		tracy::zone!("ByondValue::read_pointer");
 		if self.get_type() != ByondValueType::Pointer {
 			return Err(ByondError::NotReferenceable);
 		}
@@ -162,6 +168,7 @@ impl ByondValue {
 	where
 		Value: ToByond,
 	{
+		tracy::zone!("ByondValue::write_pointer");
 		if self.get_type() != ByondValueType::Pointer {
 			return Err(ByondError::NotReferenceable);
 		}
@@ -176,6 +183,7 @@ impl ByondValue {
 	///
 	/// If the atom is off-map, this will return [ByondPixLoc::ZERO].
 	pub fn pixloc(&self) -> Option<ByondPixLoc> {
+		tracy::zone!("ByondValue::pixloc");
 		let mut pixloc = MaybeUninit::uninit();
 		if unsafe { byond().Byond_PixLoc(&self.0, pixloc.as_mut_ptr()) } {
 			Some(ByondPixLoc(unsafe { pixloc.assume_init() }))
@@ -190,6 +198,7 @@ impl ByondValue {
 	where
 		Str: AsRef<str>,
 	{
+		tracy::zone!("ByondValue::is_type");
 		match std::ffi::CString::new(typepath.as_ref()) {
 			Ok(typepath) => unsafe { byond().ByondValue_IsType(&self.0, typepath.as_ptr()) },
 			Err(_) => false,

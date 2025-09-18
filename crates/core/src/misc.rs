@@ -3,6 +3,7 @@ use crate::{ByondError, ByondResult, ByondValue, ByondXYZ, byond, sys::u4c};
 use std::mem::MaybeUninit;
 
 pub fn block(corner_a: ByondXYZ, corner_b: ByondXYZ) -> ByondResult<Vec<ByondValue>> {
+	tracy::zone!("block");
 	unsafe {
 		let initial_capacity = corner_a.total_block_size(&corner_b) as usize;
 		with_buffer::<_, ByondValue, _, _>(
@@ -14,6 +15,7 @@ pub fn block(corner_a: ByondXYZ, corner_b: ByondXYZ) -> ByondResult<Vec<ByondVal
 }
 
 pub fn locate_xyz(location: ByondXYZ) -> ByondResult<ByondValue> {
+	tracy::zone!("locate_xyz");
 	unsafe {
 		let mut result = MaybeUninit::uninit();
 		map_byond_error!(byond().Byond_LocateXYZ(&location.0, result.as_mut_ptr()))?;
@@ -25,6 +27,7 @@ pub fn locate(
 	typepath: ByondValue,
 	list: impl Into<Option<ByondValue>>,
 ) -> ByondResult<ByondValue> {
+	tracy::zone!("locate");
 	unsafe {
 		let mut result = MaybeUninit::uninit();
 		let list = list.into();

@@ -28,6 +28,12 @@ pub mod sys {
 	pub use meowtonin_byondapi_sys::*;
 }
 
+#[doc(hidden)]
+pub mod exports {
+	pub use inventory;
+	pub use tracy::{frame, get_location, zone, zone::zone as raw_zone};
+}
+
 pub use crate::{
 	byond::byond,
 	error::{ByondError, ByondResult},
@@ -38,10 +44,13 @@ pub use crate::{
 	value::{ByondValue, reference::RcByondValue, typecheck::ByondValueType},
 	xyz::ByondXYZ,
 };
-pub use inventory;
 use meowtonin_byondapi_sys::CByondValue;
 pub use meowtonin_impl::byond_fn;
 use std::sync::Once;
+
+#[cfg(feature = "tracy")]
+#[global_allocator]
+static ALLOC: tracy::alloc::GlobalAllocator = tracy::alloc::GlobalAllocator::new();
 
 /// A simple macro to create a [`ByondValue`](crate::value::ByondValue) from any
 /// Rust value that implements [`ToByond`](crate::to::ToByond).
@@ -91,8 +100,19 @@ pub fn dmb_version() -> sys::u4c {
 pub fn setup_once() {
 	static SETUP: Once = Once::new();
 
+	tracy::zone!("setup_once");
 	SETUP.call_once(|| {
 		let _ = sync::is_main_thread(); // initialize main thread OnceCell
+		tracy::zone!("set panic hook");
 		std::panic::set_hook(Box::new(panic::panic_hook))
 	});
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! tracy_zone {
+	($var:ident, $name:literal) => {
+		let loc = $crate::exports::get_location!($name);
+		let $var = $crate::exports::raw_zone(loc, true);
+	};
 }

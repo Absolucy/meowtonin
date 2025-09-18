@@ -15,6 +15,7 @@ impl ByondValue {
 		ArgList: IntoIterator<Item = Arg>,
 		Return: FromByond,
 	{
+		tracy::zone!("ByondValue::call");
 		let name_id = lookup_string_id(name).ok_or(ByondError::InvalidProc)?;
 		let args = args
 			.into_iter()
