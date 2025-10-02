@@ -46,7 +46,7 @@ impl<T> FromByond for ByondSerde<T>
 where
 	T: DeserializeOwned,
 {
-	fn from_byond(value: &ByondValue) -> ByondResult<Self> {
+	fn from_byond(value: ByondValue) -> ByondResult<Self> {
 		crate::deserialize(value.clone())
 			.map(Self::new)
 			.map_err(ByondError::boxed)

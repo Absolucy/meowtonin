@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{byond, strid::lookup_string_id, ByondResult, ByondValue, FromByond, ToByond};
+use crate::{
+	ByondError, ByondResult, ByondValue, FromByond, ToByond, byond, strid::lookup_string_id,
+};
 use std::mem::MaybeUninit;
 
 /// Calls a global proc.
@@ -12,7 +14,7 @@ where
 	ArgList: IntoIterator<Item = Arg>,
 	Return: FromByond,
 {
-	let name_id = lookup_string_id(name);
+	let name_id = lookup_string_id(name).ok_or(ByondError::InvalidProc)?;
 	let args = args
 		.into_iter()
 		.map(|arg| arg.to_byond())
@@ -25,6 +27,6 @@ where
 			args.len() as _,
 			result.as_mut_ptr(),
 		))?;
-		Return::from_byond(&ByondValue(result.assume_init()))
+		Return::from_byond(ByondValue(unsafe { result.assume_init() }))
 	}
 }

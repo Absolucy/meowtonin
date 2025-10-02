@@ -7,25 +7,31 @@ use std::ops::{Add, AddAssign, Sub, SubAssign};
 pub struct ByondXYZ(pub CByondXYZ);
 
 impl ByondXYZ {
+	/// Creates a new [`ByondXYZ`] instance, with the given X, Y, and Z
+	/// coordinates.
 	pub const fn new(x: i16, y: i16, z: i16) -> Self {
 		Self(CByondXYZ { x, y, z, junk: 0 })
 	}
 
+	/// Returns the X coordinate.
 	#[inline]
 	pub const fn x(&self) -> i16 {
 		self.0.x
 	}
 
+	/// Returns the Y coordinate.
 	#[inline]
 	pub const fn y(&self) -> i16 {
 		self.0.y
 	}
 
+	/// Returns the Z coordinate.
 	#[inline]
 	pub const fn z(&self) -> i16 {
 		self.0.z
 	}
 
+	/// Returns the rectangular width and height between two corners.
 	pub const fn block_size(&self, other: &ByondXYZ) -> (u16, u16) {
 		let (our_x, our_y) = (self.x() as i32, self.y() as i32);
 		let (other_x, other_y) = (other.x() as i32, other.y() as i32);
@@ -34,23 +40,43 @@ impl ByondXYZ {
 		(dx, dy)
 	}
 
+	/// Returns the total volume of a block between two corners.
 	pub const fn total_block_size(&self, other: &ByondXYZ) -> u16 {
 		let (w, h) = self.block_size(other);
 		w.saturating_mul(h)
 	}
 
-	pub fn distance(&self, other: &ByondXYZ) -> f64 {
-		let dx = (self.x().saturating_sub(other.x())) as f64;
-		let dy = (self.y().saturating_sub(other.y())) as f64;
-		let dz = (self.z().saturating_sub(other.z())) as f64;
+	/// Returns the tile distance between two [`ByondXYZ`] values.
+	/// This should be identical to the `get_dist` proc in BYOND, which uses
+	/// Chebyshev distance.
+	///
+	/// If you want Euclidean distance, i.e for pathfinding heuristics, use
+	/// [`distance_euclidean()`](Self::distance_euclidean).
+	pub fn distance(&self, other: &ByondXYZ) -> u16 {
+		let dx = self.x().saturating_sub(other.x()).unsigned_abs();
+		let dy = self.y().saturating_sub(other.y()).unsigned_abs();
+		let dz = self.z().saturating_sub(other.z()).unsigned_abs();
 
-		(dx * dx + dy * dy + dz * dz).sqrt()
+		dx.max(dy).max(dz)
+	}
+
+	/// Returns the Euclidean distance between the coordinates of two
+	/// [`ByondXYZ`] values.
+	///
+	/// If you want something identical to BYOND's `get_dist` proc, aka
+	/// Chebyshev distance, use [`distance()`](Self::distance).
+	pub fn distance_euclidean(&self, other: &ByondXYZ) -> f64 {
+		let dx = self.x().saturating_sub(other.x()).pow(2) as f64;
+		let dy = self.y().saturating_sub(other.y()).pow(2) as f64;
+		let dz = self.z().saturating_sub(other.z()).pow(2) as f64;
+
+		(dx + dy + dz).sqrt()
 	}
 }
 
 impl PartialEq for ByondXYZ {
 	fn eq(&self, other: &Self) -> bool {
-		self.0.x == other.0.x && self.0.y == other.0.y && self.0.z == other.0.z
+		self.x() == other.x() && self.y() == other.y() && self.z() == other.z()
 	}
 }
 

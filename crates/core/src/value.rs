@@ -6,9 +6,11 @@ pub mod reference;
 pub mod string;
 pub mod typecheck;
 
-use crate::{byond, sys::CByondValue, ByondError, ByondResult, ByondValueType, FromByond, ToByond};
+use crate::{
+	ByondError, ByondResult, ByondValueType, FromByond, ToByond, byond, pixloc::ByondPixLoc,
+	strid::lookup_string_id, sys::CByondValue,
+};
 use std::{
-	ffi::CString,
 	fmt,
 	hash::{Hash, Hasher},
 	mem::MaybeUninit,
@@ -20,15 +22,33 @@ use std::{
 pub struct ByondValue(pub CByondValue);
 
 impl ByondValue {
-	/// A reference to the "global" object.
-	const GLOBAL: ByondValue = unsafe { Self::new_ref_unchecked(ByondValueType::WORLD, 1) };
+	/// A null value.
+	pub const NULL: Self = unsafe { Self::new_ref_unchecked(ByondValueType::Null, 0) };
 
-	pub const fn into_inner(self) -> CByondValue {
-		self.0
+	/// Returns a null [ByondValue].
+	#[deprecated(
+		since = "0.2.0",
+		note = "ByondValue::NULL is preferred over ByondValue::null()"
+	)]
+	pub const fn null() -> Self {
+		Self::NULL
 	}
 
-	pub const fn null() -> Self {
-		Self(unsafe { MaybeUninit::zeroed().assume_init() })
+	/// A reference to the "world" object, equivalent to DM's `world`.
+	pub const fn world() -> &'static Self {
+		static WORLD: ByondValue =
+			unsafe { ByondValue::new_ref_unchecked(ByondValueType::World, 0) };
+
+		&WORLD
+	}
+
+	/// Returns a reference to the "global" object, equivalent to DM's
+	/// `global.vars`.
+	pub const fn global() -> &'static Self {
+		static GLOBAL: ByondValue =
+			unsafe { ByondValue::new_ref_unchecked(ByondValueType::World, 1) };
+
+		&GLOBAL
 	}
 
 	/// Shorthand for [ToByond::to_byond].
@@ -40,7 +60,7 @@ impl ByondValue {
 	}
 
 	/// Shorthand for [FromByond::from_byond].
-	pub fn to<Return>(&self) -> ByondResult<Return>
+	pub fn to<Return>(self) -> ByondResult<Return>
 	where
 		Return: FromByond,
 	{
@@ -48,6 +68,7 @@ impl ByondValue {
 	}
 
 	/// Creates a new [ByondValue], using the given path and arguments.
+	///
 	/// Equivalent to `new path(args...)` in DM.
 	pub fn new<Path, Args>(path: Path, args: Args) -> ByondResult<Self>
 	where
@@ -64,24 +85,25 @@ impl ByondValue {
 				args.len() as _,
 				result.as_mut_ptr()
 			))?;
-			Ok(Self(result.assume_init()))
+			Ok(Self(unsafe { result.assume_init() }))
 		}
 	}
 
 	/// Returns the length of the value.
+	///
 	/// Equivalent to calling `length(self)` in DM.
-	pub fn length<Type>(&self) -> ByondResult<Type>
-	where
-		Type: FromByond,
-	{
+	pub fn length(&self) -> ByondResult<usize> {
 		unsafe {
 			let mut result = MaybeUninit::uninit();
-			map_byond_error!(byond().Byond_Length(&self.0, result.as_mut_ptr()))
-				.and_then(|_| Type::from_byond(&Self(result.assume_init())))
+			map_byond_error!(byond().Byond_Length(&self.0, result.as_mut_ptr()))?;
+			Self(unsafe { result.assume_init() })
+				.get_number()
+				.map(|size| size as usize)
 		}
 	}
 
 	/// Gets the internal type of the value.
+	#[inline]
 	pub const fn get_type(&self) -> ByondValueType {
 		ByondValueType(self.0.type_)
 	}
@@ -100,16 +122,11 @@ impl ByondValue {
 		if !self.is_ref() {
 			return Err(ByondError::NotReferenceable);
 		}
-		let c_string = CString::new(name.as_ref()).map_err(|_| ByondError::NonUtf8String)?;
+		let name_id = lookup_string_id(name).ok_or(ByondError::InvalidVariable)?;
 		unsafe {
 			let mut result = MaybeUninit::uninit();
-			map_byond_error!(byond().Byond_ReadVar(
-				&self.0,
-				c_string.as_c_str().as_ptr(),
-				result.as_mut_ptr()
-			))?;
-			let result = Self(result.assume_init());
-			Return::from_byond(&result)
+			map_byond_error!(byond().Byond_ReadVarByStrId(&self.0, name_id, result.as_mut_ptr()))?;
+			Return::from_byond(Self(unsafe { result.assume_init() }))
 		}
 	}
 
@@ -122,23 +139,22 @@ impl ByondValue {
 		if !self.is_ref() {
 			return Err(ByondError::NotReferenceable);
 		}
+		let name_id = lookup_string_id(name).ok_or(ByondError::InvalidVariable)?;
 		let value = value.to_byond()?;
-		let c_string = CString::new(name.as_ref()).map_err(|_| ByondError::NonUtf8String)?;
-		map_byond_error!(byond().Byond_WriteVar(&self.0, c_string.as_c_str().as_ptr(), &value.0))
+		map_byond_error!(byond().Byond_WriteVarByStrId(&self.0, name_id, &value.0))
 	}
 
 	pub fn read_pointer<Return>(&self) -> ByondResult<Return>
 	where
 		Return: FromByond,
 	{
-		if self.get_type() != ByondValueType::POINTER {
+		if self.get_type() != ByondValueType::Pointer {
 			return Err(ByondError::NotReferenceable);
 		}
 		unsafe {
 			let mut result = MaybeUninit::uninit();
 			map_byond_error!(byond().Byond_ReadPointer(&self.0, result.as_mut_ptr()))?;
-			let result = Self(result.assume_init());
-			Return::from_byond(&result)
+			Return::from_byond(Self(unsafe { result.assume_init() }))
 		}
 	}
 
@@ -146,22 +162,55 @@ impl ByondValue {
 	where
 		Value: ToByond,
 	{
-		if self.get_type() != ByondValueType::POINTER {
+		if self.get_type() != ByondValueType::Pointer {
 			return Err(ByondError::NotReferenceable);
 		}
 		let value = value.to_byond()?;
 		unsafe { map_byond_error!(byond().Byond_WritePointer(&self.0, &value.0)) }
 	}
+
+	/// Gets the pixloc coordinates of an atom.
+	///
+	/// Returns `None` if the value doesn't have pixloc coordinates, such as if
+	/// value is not an atom.
+	///
+	/// If the atom is off-map, this will return [ByondPixLoc::ZERO].
+	pub fn pixloc(&self) -> Option<ByondPixLoc> {
+		let mut pixloc = MaybeUninit::uninit();
+		if unsafe { byond().Byond_PixLoc(&self.0, pixloc.as_mut_ptr()) } {
+			Some(ByondPixLoc(unsafe { pixloc.assume_init() }))
+		} else {
+			None
+		}
+	}
+
+	/// Equivalent to calling `istype(src, text2path(typepath))``.
+	#[cfg(feature = "byond-1664")]
+	pub fn is_type<Str>(&self, typepath: Str) -> bool
+	where
+		Str: AsRef<str>,
+	{
+		match std::ffi::CString::new(typepath.as_ref()) {
+			Ok(typepath) => unsafe { byond().ByondValue_IsType(&self.0, typepath.as_ptr()) },
+			Err(_) => false,
+		}
+	}
 }
 
 impl Default for ByondValue {
 	fn default() -> Self {
-		unsafe { Self::null() }
+		unsafe { Self::NULL }
 	}
 }
 
 impl PartialEq for ByondValue {
 	fn eq(&self, other: &Self) -> bool {
+		unsafe { byond().ByondValue_Equals(&self.0, &other.0) }
+	}
+}
+
+impl PartialEq<&ByondValue> for ByondValue {
+	fn eq(&self, other: &&Self) -> bool {
 		unsafe { byond().ByondValue_Equals(&self.0, &other.0) }
 	}
 }
@@ -180,20 +229,14 @@ impl PartialEq<ByondValue> for bool {
 
 impl Eq for ByondValue {}
 
-impl From<CByondValue> for ByondValue {
-	fn from(value: CByondValue) -> Self {
-		Self(value)
-	}
-}
-
 impl Hash for ByondValue {
 	fn hash<H: Hasher>(&self, state: &mut H) {
 		let value_type = self.get_type();
 		value_type.0.hash(state);
 		unsafe {
 			match value_type {
-				ByondValueType::NULL => (),
-				ByondValueType::NUMBER => self.0.data.num.to_bits().hash(state),
+				ByondValueType::Null => (),
+				ByondValueType::Number => self.0.data.num.to_bits().hash(state),
 				_ => self.0.data.ref_.hash(state),
 			}
 		}
@@ -204,22 +247,18 @@ impl fmt::Display for ByondValue {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		let value_type = self.get_type();
 		match value_type {
-			ByondValueType::NULL => write!(f, "null"),
-			ByondValueType::STRING | ByondValueType::NUMBER => {
+			ByondValueType::Null => write!(f, "null"),
+			ByondValueType::String | ByondValueType::Number => {
 				let string = self.get_string().unwrap_or_else(|_| String::from("???"));
 				write!(f, "{string}")
 			}
-			ByondValueType::LIST => {
-				let length = self.length::<usize>().unwrap_or(0);
+			ByondValueType::List => {
+				let length = self.length().unwrap_or(0);
 				write!(f, "list[len={length}]")
 			}
-			ByondValueType::MOB_TYPEPATH
-			| ByondValueType::OBJ_TYPEPATH
-			| ByondValueType::TURF_TYPEPATH
-			| ByondValueType::AREA_TYPEPATH
-			| ByondValueType::DATUM_TYPEPATH => {
-				let string = self.get_string().unwrap_or_else(|_| String::from("???"));
-				write!(f, "{string}")
+			ByondValueType::Alist => {
+				let length = self.length().unwrap_or(0);
+				write!(f, "alist[len={length}]")
 			}
 			_ => {
 				let type_name = value_type.name();
@@ -232,11 +271,6 @@ impl fmt::Display for ByondValue {
 
 #[doc(hidden)]
 pub fn test_byondvalue_clear_is_zero() {
-	// Verify assumptions about the type
-	assert!(
-		!std::mem::needs_drop::<ByondValue>(),
-		"ByondValue must not need dropping"
-	);
 	assert!(
 		std::mem::size_of::<ByondValue>() > 0,
 		"ByondValue must not be zero-sized"

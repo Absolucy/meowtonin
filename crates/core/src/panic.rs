@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: 0BSD
 mod resolve;
 
+use crate::byond;
 use aho_corasick::AhoCorasick;
 use backtrace::{Backtrace, BacktraceSymbol};
 use parking_lot::RwLock;
@@ -9,13 +10,12 @@ use smol_str::SmolStr;
 use std::{
 	borrow::Cow,
 	cell::RefCell,
-	ffi::c_void,
+	ffi::{CString, c_void},
+	fmt::Display,
 	panic::PanicHookInfo,
 	path::{Path, PathBuf},
-	sync::{LazyLock, Once},
+	sync::LazyLock,
 };
-
-use crate::ByondValue;
 
 static INTERNAL_PATTERNS: LazyLock<AhoCorasick> = LazyLock::new(|| {
 	AhoCorasick::new([
@@ -116,6 +116,19 @@ pub struct Panic {
 	pub backtrace: Vec<PanicFrame>,
 }
 
+impl Display for Panic {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		if let Some(location) = &self.location {
+			write!(f, "{location}: ")?;
+		}
+		match &self.message {
+			Some(message) => write!(f, "{message}")?,
+			None => write!(f, "no error message")?,
+		}
+		Ok(())
+	}
+}
+
 /// Information about the origin of the code that caused a panic.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct PanicLocation {
@@ -124,6 +137,12 @@ pub struct PanicLocation {
 	/// The line number of the file containing the code that resulted in the
 	/// panic.
 	pub line: u32,
+}
+
+impl Display for PanicLocation {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{}:{}", self.file, self.line)
+	}
 }
 
 /// A frame in a panic backtrace.
@@ -181,7 +200,7 @@ fn encode_panic(panic_info: &PanicHookInfo) -> Panic {
 				line: symbol.lineno(),
 				address: symbol.addr().map(|addr| {
 					const POINTER_HEX_WIDTH: usize = std::mem::size_of::<*mut c_void>() * 2;
-					format!("{:0width$p}", addr, width = POINTER_HEX_WIDTH)
+					format!("{addr:0POINTER_HEX_WIDTH$p}")
 				}),
 				module,
 			})
@@ -198,7 +217,7 @@ thread_local! {
 	static LAST_PANIC: RefCell<Option<Panic>> = const { RefCell::new(None) };
 }
 
-fn panic_hook(panic_info: &PanicHookInfo) {
+pub(crate) fn panic_hook(panic_info: &PanicHookInfo) {
 	let panic_info = encode_panic(panic_info);
 
 	if cfg!(any(debug_assertions, feature = "rel-debugging")) {
@@ -232,35 +251,28 @@ fn panic_hook(panic_info: &PanicHookInfo) {
 }
 
 #[doc(hidden)]
-pub fn stack_trace_if_panic() -> bool {
-	match LAST_PANIC.take() {
-		Some(last_panic) => {
-			let panic_json = serde_json::to_string(&last_panic)
-				.map(ByondValue::new_string)
-				.unwrap_or_default();
-			let message = match last_panic.message {
-				Some(message) => ByondValue::new_string(message.as_ref()),
-				None => ByondValue::null(),
-			};
-			let (file, line) = match last_panic.location {
-				Some(loc) => (
-					ByondValue::new_string(loc.file),
-					ByondValue::new_num(loc.line as f32),
-				),
-				None => (ByondValue::null(), ByondValue::new_num(0.0)),
-			};
-			let _ = crate::call_global::<_, _, _, ()>("meowtonin_stack_trace", [
-				message, file, line, panic_json,
-			]);
-			true
-		}
-		None => false,
-	}
+pub fn get_stack_trace() -> Option<String> {
+	LAST_PANIC.take().map(|last_panic| last_panic.to_string())
+}
+
+thread_local! {
+	static CRASH_REASON: RefCell<CString> = RefCell::new(CString::default());
 }
 
 #[doc(hidden)]
-pub fn setup_panic_hook() {
-	static SET_HOOK: Once = Once::new();
-
-	SET_HOOK.call_once(|| std::panic::set_hook(Box::new(panic_hook)));
+pub fn byond_crash(reason: String) -> ! {
+	let reason = CString::new(reason).unwrap_or_else(|error| {
+		let safe_len = error.nul_position();
+		let mut reason = error.into_vec();
+		reason.truncate(safe_len);
+		CString::new(reason).unwrap_or_default()
+	});
+	let reason_ptr = CRASH_REASON.with_borrow_mut(move |return_string| {
+		*return_string = reason;
+		return_string.as_ptr()
+	});
+	unsafe {
+		byond().Byond_CRASH(reason_ptr); // this does a longjmp - any subsequent code will be UNREACHABLE
+		std::hint::unreachable_unchecked()
+	}
 }

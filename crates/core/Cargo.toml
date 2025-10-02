@@ -13,33 +13,39 @@ license.workspace = true
 ahash = "0.8"
 aho-corasick = "1"
 backtrace = "0.3"
-cfg-if = "1"
 bytemuck = { version = "1", features = ["extern_crate_std"] }
+cfg-if = "1"
+constcat = { version = "0.6" }
 inventory = "0.3"
-log = "0.4"
-meowtonin-byondapi-sys = { path = "../sys", version = "0.2" }
+libloading = { workspace = true }
+meowtonin-byondapi-sys = { path = "../sys", version = "0.2", default-features = false }
 meowtonin-impl = { path = "../impl", version = "0.2" }
 nohash-hasher = "0.2"
+papaya = "0.2"
 parking_lot = "0.12"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-simplelog = "0.12"
-thiserror = "2"
 smol_str = { version = "0.3", features = ["serde"] }
-libloading = { workspace = true }
+thiserror = "2"
 
 [target.'cfg(windows)'.dependencies]
-windows = { version = "0.60", features = ["Win32_Foundation", "Win32_System", "Win32_System_Console", "Win32_System_LibraryLoader"] }
+windows = { version = "0.61", features = ["Win32_Foundation", "Win32_System", "Win32_System_Console", "Win32_System_LibraryLoader"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 libc = "0.2"
 
 [features]
-default = ["lossy-utf8"]
+default = ["lossy-utf8", "bytemuck"]
 # Enables debug panic logging in release builds
 rel-debugging = []
 # Uses lossy string conversion instead of strict UTF-8 converison.
 lossy-utf8 = []
+# Speed up ByondValue type checking by directly using the "type" var in the struct, however this is technically not "official" and may break in future BYOND updates.
+fast-typechecking = []
+bytemuck = ["meowtonin-byondapi-sys/bytemuck"]
+# Allows
+byond-1664 = ["meowtonin-byondapi-sys/byond-1664"]
+ref-debugging = []
 
 [package.metadata.docs.rs]
 targets = ["i686-pc-windows-msvc", "i686-unknown-linux-gnu"]

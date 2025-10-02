@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{byond, ByondError, ByondResult, ByondValue, ByondXYZ};
+use crate::{ByondError, ByondResult, ByondValue, ByondXYZ, byond, sys::u4c};
 use std::mem::MaybeUninit;
 
 pub fn block(corner_a: ByondXYZ, corner_b: ByondXYZ) -> ByondResult<Vec<ByondValue>> {
@@ -17,7 +17,7 @@ pub fn locate_xyz(location: ByondXYZ) -> ByondResult<ByondValue> {
 	unsafe {
 		let mut result = MaybeUninit::uninit();
 		map_byond_error!(byond().Byond_LocateXYZ(&location.0, result.as_mut_ptr()))?;
-		Ok(ByondValue(result.assume_init()))
+		Ok(ByondValue(result.assume_init())) // turfs are not refcounted
 	}
 }
 
@@ -32,11 +32,12 @@ pub fn locate(
 			.map(|list| &list.0 as *const _)
 			.unwrap_or_else(std::ptr::null);
 		map_byond_error!(byond().Byond_LocateIn(&typepath.0, list, result.as_mut_ptr()))?;
-		Ok(ByondValue(result.assume_init()))
+		Ok(ByondValue(unsafe { result.assume_init() }))
 	}
 }
 
 /// Returns if this is likely an associative list or not.
+///
 /// Do not rely on this being 100% accurate.
 pub fn is_likely_assoc(list: &[[ByondValue; 2]]) -> bool {
 	let mut found_keys = ahash::AHashSet::<&ByondValue>::with_capacity(list.len());
@@ -59,29 +60,45 @@ pub(crate) unsafe fn with_buffer<T, B, F, W>(
 where
 	B: Default,
 	F: FnOnce(Vec<B>) -> T,
-	W: Fn(*mut std::ffi::c_void, &mut usize) -> bool,
+	W: Fn(*mut std::ffi::c_void, &mut u4c) -> bool,
 {
 	let mut buffer: Vec<B> = match initial_capacity {
 		Some(cap) => Vec::with_capacity(cap),
 		None => Vec::new(),
 	};
-	let mut needed_len = buffer.capacity();
+	let mut needed_len = buffer.capacity() as u4c;
 
-	if writer(buffer.as_mut_ptr().cast(), &mut needed_len) {
-		// Safety: if this returns true, then the buffer was large enough, and thus
-		// needed_len <= capacity.
-		buffer.set_len(needed_len);
-		return Ok(transform(buffer));
-	}
-
-	// Reallocate and try again
-	buffer.reserve(needed_len.saturating_sub(buffer.len()));
 	if !writer(buffer.as_mut_ptr().cast(), &mut needed_len) {
-		return Err(ByondError::get_last_byond_error());
+		// buffer doesn't have enough space, let's allocate more.
+		buffer.reserve((needed_len as usize).saturating_sub(buffer.len()));
+		// maximum of 16 iterations - which should never happen, but well, whenever a
+		// coder says "this should never happen", it almost guarantees that somehow,
+		// said thing will happen.
+		let mut iters_left = 16_u8;
+		loop {
+			if writer(buffer.as_mut_ptr().cast(), &mut needed_len) {
+				// if writer returns true, then the buffer has successfully filled completely.
+				break;
+			}
+			iters_left -= 1;
+			if iters_left == 0 {
+				// We've somehow managed to hit 16 iterations without having sufficient length,
+				// return the last BYOND error.
+				return Err(ByondError::get_last_byond_error());
+			}
+			// Reallocate and try again
+			buffer.reserve((needed_len as usize).saturating_sub(buffer.len()));
+		}
 	}
+
+	debug_assert!(
+		needed_len as usize <= buffer.capacity(),
+		"buffer capacity was allocated incorrectly (needed len = {needed_len} > capacity = {})",
+		buffer.capacity()
+	);
 
 	// Safety: needed_len is always <= capacity here,
 	// unless BYOND did a really bad fucky wucky.
-	buffer.set_len(needed_len);
+	unsafe { buffer.set_len(needed_len as usize) };
 	Ok(transform(buffer))
 }

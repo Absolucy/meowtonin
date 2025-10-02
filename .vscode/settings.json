@@ -4,17 +4,26 @@
 	"rust-analyzer.inlayHints.lifetimeElisionHints.enable": "skip_trivial",
 	"rust-analyzer.lru.capacity": 512,
 	"rust-analyzer.restartServerOnConfigChange": true,
-	"rust-analyzer.typing.autoClosingAngleBrackets.enable": true,
-	"rust-analyzer.rustfmt.extraArgs": ["+nightly"],
+	"rust-analyzer.rustfmt.extraArgs": [
+		"+nightly"
+	],
+	"rust-analyzer.cargo.features": [
+		"byond-1664"
+	],
 	"psi-header.config": {
 		"license": "0BSD",
 		"forceToTop": true
 	},
 	"psi-header.changes-tracking": {
 		"isActive": true,
-		"include": ["rust"],
+		"include": [
+			"rust"
+		],
 		"autoHeader": "autoSave",
-		"enforceHeader": true
+		"enforceHeader": true,
+		"excludeGlob": [
+			"./crates/sys/src/bindings.rs"
+		]
 	},
 	"psi-header.lang-config": [
 		{
@@ -27,7 +36,9 @@
 	"psi-header.templates": [
 		{
 			"language": "rust",
-			"template": ["SPDX-License-Identifier: <<spdxid>>"]
+			"template": [
+				"SPDX-License-Identifier: <<spdxid>>"
+			]
 		}
 	]
 }

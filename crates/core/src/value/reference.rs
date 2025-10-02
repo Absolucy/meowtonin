@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: 0BSD
-use meowtonin_byondapi_sys::ByondValueData;
-
-// SPDX-License-Identifier: 0BSD
-use crate::{byond, sys::CByondValue, ByondResult, ByondValue, ByondValueType};
-use std::ops::{Deref, DerefMut};
+use crate::{
+	ByondResult, ByondValue, ByondValueType, byond,
+	sys::{ByondValueData, CByondValue},
+};
+use std::{
+	fmt,
+	hash::{Hash, Hasher},
+	ops::{Deref, DerefMut},
+};
 
 impl ByondValue {
 	/// Creates a new reference with the given value type and reference ID.
@@ -13,8 +17,9 @@ impl ByondValue {
 	}
 
 	/// Creates a new reference with the given value type and reference ID.
+	///
 	/// This is unsafe because it does not check if the provided reference is
-	/// valid, you should normally use [Self::new_ref] instead.
+	/// valid, you should normally use [`new_ref()`](Self::new_ref) instead.
 	pub const unsafe fn new_ref_unchecked(value_type: ByondValueType, ref_id: u32) -> Self {
 		Self(CByondValue {
 			type_: value_type.0,
@@ -29,39 +34,57 @@ impl ByondValue {
 	pub fn ref_count(&self) -> ByondResult<usize> {
 		let mut result = 0;
 		map_byond_error!(byond().Byond_Refcount(&self.0, &mut result))?;
-		Ok(result)
+		Ok(result as usize)
 	}
 
 	/// Gets the reference ID of the value, provided it is a reference.
-	/// This can later be used with [Self::new_ref] alongside the value type to
-	/// get the value back.
+	///
+	/// This can later be used with [`new_ref()`](Self::new_ref) alongside the
+	/// value type to get the value back.
 	pub fn ref_id(&self) -> Option<u32> {
 		let result = unsafe { byond().ByondValue_GetRef(&self.0) };
-		if result == 0 {
-			None
-		} else {
-			Some(result)
-		}
+		if result == 0 { None } else { Some(result) }
 	}
 
 	/// Increments the reference count of the value.
 	pub fn inc_ref(&self) {
-		unsafe { byond().ByondValue_IncRef(&self.0) };
-	}
-
-	/// Increments this value's ref count and returns it as an [RcByondValue],
-	/// which will decrement the ref count when dropped.
-	pub fn referenced(self) -> RcByondValue {
-		self.inc_ref();
-		RcByondValue(self)
+		if cfg!(feature = "ref-debugging") && !self.is_string() {
+			let old = self.ref_count().unwrap_or(9999);
+			unsafe { byond().ByondValue_IncRef(&self.0) };
+			let new = self.ref_count().unwrap_or(9999);
+			let ref_type = self.0.type_;
+			let ref_id = unsafe { self.0.data.ref_ };
+			println!("inc_ref({self} // {ref_type}:{ref_id}): {old} -> {new}");
+		} else {
+			unsafe { byond().ByondValue_IncRef(&self.0) };
+		}
 	}
 
 	/// De-increments the reference count of the value.
 	pub fn dec_ref(&self) {
-		unsafe { byond().ByondValue_DecRef(&self.0) };
+		if cfg!(feature = "ref-debugging") && !self.is_string() {
+			let old = self.ref_count().unwrap_or(9999);
+			unsafe { byond().ByondValue_DecRef(&self.0) };
+			let new = self.ref_count().unwrap_or(9999);
+			let ref_type = self.0.type_;
+			let ref_id = unsafe { self.0.data.ref_ };
+			println!("dec_ref({self} // {ref_type}:{ref_id}): {old} -> {new}");
+		} else {
+			unsafe { byond().ByondValue_DecRef(&self.0) };
+		}
+	}
+
+	/// Marks a temporary reference as no longer in use.
+	///
+	/// Temporary references are automatically created for values created on the
+	/// main thread (and not from within [crate::sync::thread_sync]), which
+	/// expire at the end of the tick.
+	pub fn dec_temp_ref(&self) {
+		unsafe { byond().ByondValue_DecTempRef(&self.0) }
 	}
 
 	/// Tests if the given value is a valid reference.
+	///
 	/// This will return `None` if the value is not a valid reference,
 	/// or give back the original input if it is.
 	pub fn test_ref(mut self) -> Option<Self> {
@@ -73,23 +96,23 @@ impl ByondValue {
 	}
 }
 
-/// A [ByondValue] that increments its ref upon creation,
-/// and decrements the ref when dropped.
-#[derive(PartialEq, Eq, Hash)]
-#[repr(transparent)]
+/// A wrapper for [`ByondValue`] that decrements the reference count when
+/// dropped.
+#[derive(PartialEq, Eq)]
 pub struct RcByondValue(ByondValue);
 
-impl Deref for RcByondValue {
-	type Target = ByondValue;
-
-	fn deref(&self) -> &Self::Target {
-		&self.0
+impl RcByondValue {
+	/// Creates a new [`RcByondValue`] *without incrementing the refcount*.
+	/// Use this for values that already have a persistent ref.
+	pub const fn new_from_persistent(value: ByondValue) -> Self {
+		Self(value)
 	}
-}
 
-impl DerefMut for RcByondValue {
-	fn deref_mut(&mut self) -> &mut Self::Target {
-		&mut self.0
+	/// Creates a new [`RcByondValue`], incrementing the refcount.
+	/// Use this for values that have a temporary ref.
+	pub fn new(value: ByondValue) -> Self {
+		value.inc_ref();
+		Self(value)
 	}
 }
 
@@ -105,27 +128,24 @@ impl AsMut<ByondValue> for RcByondValue {
 	}
 }
 
-impl PartialEq<ByondValue> for RcByondValue {
-	fn eq(&self, other: &ByondValue) -> bool {
-		self.0.eq(other)
+impl Deref for RcByondValue {
+	type Target = ByondValue;
+
+	fn deref(&self) -> &Self::Target {
+		&self.0
 	}
 }
 
-impl PartialEq<RcByondValue> for ByondValue {
-	fn eq(&self, other: &RcByondValue) -> bool {
-		self.eq(&other.0)
+impl DerefMut for RcByondValue {
+	fn deref_mut(&mut self) -> &mut Self::Target {
+		&mut self.0
 	}
 }
 
-impl From<ByondValue> for RcByondValue {
-	fn from(value: ByondValue) -> Self {
-		value.referenced()
-	}
-}
-
-impl From<CByondValue> for RcByondValue {
-	fn from(value: CByondValue) -> Self {
-		ByondValue::from(value).referenced()
+impl Clone for RcByondValue {
+	fn clone(&self) -> Self {
+		self.0.inc_ref();
+		Self(self.0.clone())
 	}
 }
 
@@ -135,8 +155,26 @@ impl Drop for RcByondValue {
 	}
 }
 
-impl Clone for RcByondValue {
-	fn clone(&self) -> Self {
-		self.0.clone().referenced()
+impl fmt::Display for RcByondValue {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		self.0.fmt(f)
+	}
+}
+
+impl PartialEq<ByondValue> for RcByondValue {
+	fn eq(&self, other: &ByondValue) -> bool {
+		self.0 == *other
+	}
+}
+
+impl PartialEq<RcByondValue> for ByondValue {
+	fn eq(&self, other: &RcByondValue) -> bool {
+		*self == other.0
+	}
+}
+
+impl Hash for RcByondValue {
+	fn hash<H: Hasher>(&self, state: &mut H) {
+		self.0.hash(state)
 	}
 }

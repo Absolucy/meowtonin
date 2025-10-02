@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{byond, ByondError, ByondResult, ByondValue};
+use crate::{ByondError, ByondResult, ByondValue, byond};
 use std::{borrow::Cow, mem::MaybeUninit};
 
 impl ByondValue {
@@ -10,15 +10,8 @@ impl ByondValue {
 		unsafe {
 			let mut value = MaybeUninit::uninit();
 			byond().ByondValue_SetNum(value.as_mut_ptr(), num.into());
-			Self(value.assume_init())
+			Self(value.assume_init()) // numbers are not refcounted
 		}
-	}
-
-	pub fn set_num<Num>(&mut self, num: Num)
-	where
-		Num: Into<f32>,
-	{
-		unsafe { byond().ByondValue_SetNum(&mut self.0, num.into()) }
 	}
 
 	pub fn get_number(&self) -> ByondResult<f32> {
