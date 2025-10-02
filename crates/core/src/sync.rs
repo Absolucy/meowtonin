@@ -21,7 +21,6 @@ where
 	let data = Box::new(CallbackData { callback });
 	let data_ptr = Box::into_raw(data) as *mut c_void;
 
-	tracy::zone!("thread_sync");
 	RcByondValue::new_from_persistent(ByondValue(unsafe {
 		byond().Byond_ThreadSync(Some(trampoline::<F>), data_ptr, block)
 	}))
@@ -33,7 +32,6 @@ thread_local! {
 
 /// Checks to see if we're in a ThreadSync call or not.
 pub fn is_in_thread_sync() -> bool {
-	tracy::zone!("is_in_thread_sync");
 	THREAD_SYNC_DEPTH.with(|depth| depth.get() > 0)
 }
 
@@ -70,7 +68,6 @@ impl Drop for ThreadSyncGuard {
 pub fn is_main_thread() -> bool {
 	static MAIN_THREAD_ID: OnceLock<ThreadId> = OnceLock::new();
 
-	tracy::zone!("is_main_thread");
 	let thread_id = std::thread::current().id();
 	*MAIN_THREAD_ID.get_or_init(|| thread_id) == thread_id
 }
@@ -78,6 +75,5 @@ pub fn is_main_thread() -> bool {
 /// Returns if we should manually increment a persistent ref.
 /// This returns true if we're on the main thread, and NOT in threadsync.
 pub fn should_setup_ref_counting() -> bool {
-	tracy::zone!("should_setup_ref_counting");
 	is_main_thread() && !is_in_thread_sync()
 }

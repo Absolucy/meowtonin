@@ -10,7 +10,6 @@ where
 	Value: ToByond,
 {
 	fn to_byond(&self) -> ByondResult<ByondValue> {
-		tracy::zone!("to_byond ([Value; LENGTH])");
 		let list = self
 			.iter()
 			.map(|value| value.to_byond())
@@ -26,7 +25,6 @@ where
 	Value: ToByond,
 {
 	fn to_byond(&self) -> ByondResult<ByondValue> {
-		tracy::zone!("to_byond (&[Value])");
 		let list = self
 			.iter()
 			.map(|value| value.to_byond())
@@ -42,7 +40,6 @@ where
 	Value: ToByond,
 {
 	fn to_byond(&self) -> ByondResult<ByondValue> {
-		tracy::zone!("to_byond (&[Value; LENGTH])");
 		let list = self
 			.iter()
 			.map(|value| value.to_byond())
@@ -58,7 +55,6 @@ where
 	Value: ToByond,
 {
 	fn to_byond(&self) -> ByondResult<ByondValue> {
-		tracy::zone!("to_byond (Vec<Value>)");
 		let list = self
 			.iter()
 			.map(|value| value.to_byond())
@@ -75,7 +71,6 @@ where
 	Value: ToByond,
 {
 	fn to_byond(&self) -> ByondResult<ByondValue> {
-		tracy::zone!("to_byond (Vec<(Key, Value)>)");
 		let mut list = ByondValue::new_list()?;
 		for (key, value) in self {
 			let key = key.to_byond()?;
@@ -91,7 +86,6 @@ where
 	Value: ToByond,
 {
 	fn to_byond(&self) -> ByondResult<ByondValue> {
-		tracy::zone!("to_byond (VecDeque<Value>)");
 		let list = self
 			.iter()
 			.map(|value| value.to_byond())
@@ -108,7 +102,6 @@ where
 	Value: ToByond,
 {
 	fn to_byond(&self) -> ByondResult<ByondValue> {
-		tracy::zone!("to_byond (VecDeque<(Key, Value)>)");
 		let mut list = ByondValue::new_list()?;
 		for (key, value) in self {
 			let key = key.to_byond()?;
@@ -125,7 +118,6 @@ where
 	Value: ToByond,
 {
 	fn to_byond(&self) -> ByondResult<ByondValue> {
-		tracy::zone!("to_byond (HashMap<Key, Value, Hasher>)");
 		let mut list = ByondValue::new_list()?;
 		for (key, value) in self {
 			let key = key.to_byond()?;
@@ -141,7 +133,6 @@ where
 	Key: ToByond + Eq + Hash,
 {
 	fn to_byond(&self) -> ByondResult<ByondValue> {
-		tracy::zone!("to_byond (HashSet<Key, Hasher>)");
 		let mut list = ByondValue::new_list()?;
 		for key in self {
 			let key = key.to_byond()?;
@@ -157,7 +148,6 @@ where
 	Value: ToByond + Ord,
 {
 	fn to_byond(&self) -> ByondResult<ByondValue> {
-		tracy::zone!("to_byond (BTreeMap<Key, Value>)");
 		let mut list = ByondValue::new_list()?;
 		for (key, value) in self {
 			let key = key.to_byond()?;
@@ -173,7 +163,6 @@ where
 	Key: ToByond + Eq + Ord,
 {
 	fn to_byond(&self) -> ByondResult<ByondValue> {
-		tracy::zone!("to_byond (BTreeSet<Key>)");
 		let mut list = ByondValue::new_list()?;
 		for key in self {
 			let key = key.to_byond()?;

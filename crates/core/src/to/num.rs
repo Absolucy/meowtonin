@@ -8,14 +8,12 @@ use std::borrow::Cow;
 
 impl ToByond for u8 {
 	fn to_byond(&self) -> ByondResult<ByondValue> {
-		tracy::zone!("to_byond (u8)");
 		Ok(ByondValue::new_num(f32::from(*self)))
 	}
 }
 
 impl ToByond for u16 {
 	fn to_byond(&self) -> ByondResult<ByondValue> {
-		tracy::zone!("to_byond (u16)");
 		Ok(ByondValue::new_num(f32::from(*self)))
 	}
 }
@@ -24,7 +22,6 @@ impl ToByond for u32 {
 	fn to_byond(&self) -> ByondResult<ByondValue> {
 		const MAX_VALUE: u32 = f32::MAX as u32;
 
-		tracy::zone!("to_byond (u32)");
 		let num = *self as f32;
 		if num.fract() != 0.0 || !(0..=MAX_VALUE).contains(self) {
 			Err(ByondError::InvalidConversion {
@@ -41,7 +38,6 @@ impl ToByond for usize {
 	fn to_byond(&self) -> ByondResult<ByondValue> {
 		const MAX_VALUE: usize = f32::MAX as usize;
 
-		tracy::zone!("to_byond (usize)");
 		let num = *self as f32;
 		if num.fract() != 0.0 || !(0..=MAX_VALUE).contains(self) {
 			Err(ByondError::InvalidConversion {
@@ -60,14 +56,12 @@ impl ToByond for usize {
 
 impl ToByond for i8 {
 	fn to_byond(&self) -> ByondResult<ByondValue> {
-		tracy::zone!("to_byond (i8)");
 		Ok(ByondValue::new_num(f32::from(*self)))
 	}
 }
 
 impl ToByond for i16 {
 	fn to_byond(&self) -> ByondResult<ByondValue> {
-		tracy::zone!("to_byond (i16)");
 		Ok(ByondValue::new_num(f32::from(*self)))
 	}
 }
@@ -77,7 +71,6 @@ impl ToByond for i32 {
 		const MIN_VALUE: i32 = f32::MIN as i32;
 		const MAX_VALUE: i32 = f32::MAX as i32;
 
-		tracy::zone!("to_byond (i32)");
 		let num = *self as f32;
 		if num.fract() != 0.0 || !(MIN_VALUE..=MAX_VALUE).contains(self) {
 			Err(ByondError::InvalidConversion {
@@ -95,7 +88,6 @@ impl ToByond for isize {
 		const MIN_VALUE: isize = f32::MIN as isize;
 		const MAX_VALUE: isize = f32::MAX as isize;
 
-		tracy::zone!("to_byond (isize)");
 		let num = *self as f32;
 		if num.fract() != 0.0 || !(MIN_VALUE..=MAX_VALUE).contains(self) {
 			Err(ByondError::InvalidConversion {
@@ -114,14 +106,12 @@ impl ToByond for isize {
 
 impl ToByond for bool {
 	fn to_byond(&self) -> ByondResult<ByondValue> {
-		tracy::zone!("to_byond (bool)");
 		u8::from(*self).to_byond()
 	}
 }
 
 impl ToByond for f32 {
 	fn to_byond(&self) -> ByondResult<ByondValue> {
-		tracy::zone!("to_byond (f32)");
 		Ok(ByondValue::new_num(*self))
 	}
 }

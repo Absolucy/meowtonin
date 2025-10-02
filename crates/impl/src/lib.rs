@@ -88,9 +88,7 @@ fn generate_wrapper_fn(
 
 	let parse_block = if !variadic {
 		quote! {
-			::meowtonin::tracy_zone!(__arg_zone, "arg parsing");
 			#(#parse_args)*
-			::std::mem::drop(__arg_zone);
 		}
 	} else {
 		quote! {}
@@ -189,22 +187,13 @@ fn generate_export_fn(
 			__argc: ::meowtonin::sys::u4c,
 			__argv: *mut ::meowtonin::sys::CByondValue
 		) -> ::meowtonin::ByondValue {
-			::meowtonin::exports::frame!();
-			::meowtonin::tracy_zone!(__func_zone, #func_name_str);
 			::meowtonin::setup_once();
 			let __retval: std::result::Result<::meowtonin::ByondValue, std::string::String>;
 			{
-				::meowtonin::tracy_zone!(__debug_start_zone, "debug_start");
 				#debug_start
-				std::mem::drop(__debug_start_zone);
-
-				::meowtonin::tracy_zone!(__let_args_zone, "let_args");
 				#let_args
-				std::mem::drop(__let_args_zone);
 
-				::meowtonin::tracy_zone!(__catch_start_zone, "catch_unwind setup");
 				match ::std::panic::catch_unwind(move || {
-					::std::mem::drop(__catch_start_zone);
 					#do_call
 				}) {
 					Ok(Ok(value)) => {
@@ -227,8 +216,6 @@ fn generate_export_fn(
 					}
 				}
 			}
-			::std::mem::drop(__func_zone);
-			::meowtonin::exports::frame!();
 			match __retval {
 				Ok(value) => {
 					#debug_end

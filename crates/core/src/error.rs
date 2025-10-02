@@ -61,7 +61,6 @@ impl ByondError {
 	where
 		Err: std::error::Error + Send + 'static,
 	{
-		tracy::zone!("ByondError::boxed");
 		Self::Boxed(Box::new(err))
 	}
 }
@@ -102,7 +101,6 @@ pub struct ByondApiError(pub CString);
 
 impl ByondApiError {
 	pub fn get_last() -> Option<Self> {
-		tracy::zone!("ByondApiError::get_last");
 		// Safety: It's always safe to call Byond_LastError
 		let ptr = unsafe { byond().Byond_LastError() };
 		if !ptr.is_null() {

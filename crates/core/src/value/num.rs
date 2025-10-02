@@ -7,7 +7,6 @@ impl ByondValue {
 	where
 		Num: Into<f32>,
 	{
-		tracy::zone!("ByondValue::new_num");
 		unsafe {
 			let mut value = MaybeUninit::uninit();
 			byond().ByondValue_SetNum(value.as_mut_ptr(), num.into());
@@ -16,7 +15,6 @@ impl ByondValue {
 	}
 
 	pub fn get_number(&self) -> ByondResult<f32> {
-		tracy::zone!("ByondValue::get_number");
 		if self.is_number() {
 			Ok(unsafe { byond().ByondValue_GetNum(&self.0) })
 		} else {

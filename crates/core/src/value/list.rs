@@ -4,7 +4,6 @@ use std::mem::MaybeUninit;
 
 impl ByondValue {
 	pub fn new_list() -> ByondResult<Self> {
-		tracy::zone!("ByondValue::new_list");
 		unsafe {
 			let mut value = MaybeUninit::uninit();
 			map_byond_error!(byond().Byond_CreateList(value.as_mut_ptr()))?;
@@ -14,7 +13,6 @@ impl ByondValue {
 
 	// TODO: properly refcounted lists
 	pub fn read_list(&self) -> ByondResult<Vec<Self>> {
-		tracy::zone!("ByondValue::read_list");
 		if !self.is_list() {
 			return Err(ByondError::NotAList);
 		}
@@ -29,7 +27,6 @@ impl ByondValue {
 
 	// TODO: properly refcounted lists
 	pub fn read_assoc_list(&self) -> ByondResult<Vec<[Self; 2]>> {
-		tracy::zone!("ByondValue::read_assoc_list");
 		if !self.is_list() {
 			return Err(ByondError::NotAList);
 		}
@@ -49,7 +46,6 @@ impl ByondValue {
 	///
 	/// Do not rely on this being 100% accurate.
 	pub fn is_likely_assoc(&self) -> ByondResult<bool> {
-		tracy::zone!("ByondValue::is_likely_assoc");
 		let list = self.read_assoc_list()?;
 		Ok(crate::misc::is_likely_assoc(&list))
 	}
@@ -58,7 +54,6 @@ impl ByondValue {
 	where
 		List: IntoIterator<Item = Self>,
 	{
-		tracy::zone!("ByondValue::write_list");
 		let contents = contents.into_iter().collect::<Vec<_>>();
 		map_byond_error!(byond().Byond_WriteList(
 			&self.0,
@@ -72,7 +67,6 @@ impl ByondValue {
 		Idx: ToByond,
 		Value: FromByond,
 	{
-		tracy::zone!("ByondValue::read_list_index");
 		if !self.is_list() {
 			return Err(ByondError::NotAList);
 		}
@@ -89,7 +83,6 @@ impl ByondValue {
 		Idx: ToByond,
 		Value: ToByond,
 	{
-		tracy::zone!("ByondValue::write_list_index");
 		if !self.is_list() {
 			return Err(ByondError::NotAList);
 		}
@@ -100,7 +93,6 @@ impl ByondValue {
 
 	/// Pushes a value into a list
 	pub fn push_list(&mut self, value: ByondValue) -> ByondResult<()> {
-		tracy::zone!("ByondValue::push_list");
 		if !self.is_list() {
 			return Err(ByondError::NotAList);
 		}
@@ -110,7 +102,6 @@ impl ByondValue {
 
 	/// Pops a value from a list
 	pub fn pop_list(&mut self) -> ByondResult<Option<ByondValue>> {
-		tracy::zone!("ByondValue::pop_list");
 		if !self.is_list() {
 			return Err(ByondError::NotAList);
 		}
@@ -162,7 +153,6 @@ struct ValueIterator<'a> {
 impl Iterator for ValueIterator<'_> {
 	type Item = ByondValue;
 	fn next(&mut self) -> Option<Self::Item> {
-		tracy::zone!("ValueIterator::next");
 		if self.ctr <= self.len {
 			let value = self
 				.value
@@ -187,7 +177,6 @@ struct ListIterator<'a> {
 impl Iterator for ListIterator<'_> {
 	type Item = (ByondValue, ByondValue);
 	fn next(&mut self) -> Option<Self::Item> {
-		tracy::zone!("ListIterator::next");
 		if self.ctr <= self.len {
 			let key = self
 				.value
@@ -209,7 +198,6 @@ impl Iterator for ListIterator<'_> {
 unsafe fn stupid_assoc_cast(list: Vec<ByondValue>) -> Vec<[ByondValue; 2]> {
 	use crate::sys::CByondValue;
 
-	tracy::zone!("stupid_assoc_cast");
 	assert_eq!(
 		std::mem::size_of::<CByondValue>() * 2,
 		std::mem::size_of::<[ByondValue; 2]>()

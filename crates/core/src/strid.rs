@@ -19,14 +19,12 @@ pub(crate) static STRID_CACHE: LazyLock<HashMap<u64, Option<u4c>, BuildNoHashHas
 	});
 
 fn string_hash(string: impl AsRef<str>) -> u64 {
-	tracy::zone!("string_hash");
 	let mut hasher = AHasher::default();
 	string.as_ref().hash(&mut hasher);
 	hasher.finish()
 }
 
 fn get_str_id(string: &str) -> Option<u4c> {
-	tracy::zone!("get_str_id");
 	let string = match CString::new(string) {
 		Ok(string) => string,
 		Err(_) => return None,
@@ -37,7 +35,6 @@ fn get_str_id(string: &str) -> Option<u4c> {
 
 /// Looks up the ID of a given string, caching the result.
 pub fn lookup_string_id(string: impl AsRef<str>) -> Option<u4c> {
-	tracy::zone!("lookup_string_id");
 	let string = string.as_ref();
 	let hash = string_hash(string);
 	*STRID_CACHE

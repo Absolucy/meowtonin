@@ -6,19 +6,12 @@ use std::sync::OnceLock;
 static BYOND: OnceLock<ByondApi> = OnceLock::new();
 
 fn init_lib() -> ByondApi {
-	tracy::zone!("init_lib");
-	{
-		tracy::zone!("clear string ID cache");
-		// Clear string ID cache, just in case anything's changed.
-		crate::strid::STRID_CACHE.pin().clear();
-	}
+	// Clear string ID cache, just in case anything's changed.
+	crate::strid::STRID_CACHE.pin().clear();
 
-	{
-		tracy::zone!("run init funcs");
-		// Run any custom initialization functions.
-		for func in inventory::iter::<InitFunc> {
-			func.0();
-		}
+	// Run any custom initialization functions.
+	for func in inventory::iter::<InitFunc> {
+		func.0();
 	}
 	// Dynamically load the byondcore dylib.
 	let library = {

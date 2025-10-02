@@ -7,7 +7,6 @@ impl ByondValue {
 	where
 		Str: Into<Vec<u8>>,
 	{
-		tracy::zone!("ByondValue::new_string");
 		let mut string = string.into();
 		string.push(0);
 		unsafe {
@@ -18,7 +17,6 @@ impl ByondValue {
 	}
 
 	pub fn get_string_bytes(&self) -> ByondResult<Vec<u8>> {
-		tracy::zone!("ByondValue::get_string_bytes");
 		unsafe {
 			crate::misc::with_buffer::<_, u8, _, _>(
 				None,
