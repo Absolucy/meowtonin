@@ -34,7 +34,7 @@ impl ByondValue {
 	/// # Returns
 	/// `true` if the value is a number, `false` otherwise.
 	pub fn is_number(&self) -> bool {
-		check_byondvalue_type!(self, ByondValueType::Null, ByondValue_IsNum)
+		check_byondvalue_type!(self, ByondValueType::Number, ByondValue_IsNum)
 	}
 
 	/// Checks if the [ByondValue] is a string.
