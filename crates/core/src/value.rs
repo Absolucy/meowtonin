@@ -18,7 +18,6 @@ use std::{
 
 #[must_use]
 #[repr(transparent)]
-#[derive(Clone)]
 pub struct ByondValue(pub CByondValue);
 
 impl ByondValue {
@@ -185,7 +184,6 @@ impl ByondValue {
 	}
 
 	/// Equivalent to calling `istype(src, text2path(typepath))``.
-	#[cfg(feature = "byond-1664")]
 	pub fn is_type<Str>(&self, typepath: Str) -> bool
 	where
 		Str: AsRef<str>,
@@ -194,6 +192,19 @@ impl ByondValue {
 			Ok(typepath) => unsafe { byond().ByondValue_IsType(&self.0, typepath.as_ptr()) },
 			Err(_) => false,
 		}
+	}
+}
+
+impl Drop for ByondValue {
+	fn drop(&mut self) {
+		self.dec_ref();
+	}
+}
+
+impl Clone for ByondValue {
+	fn clone(&self) -> Self {
+		self.inc_ref();
+		Self(self.0)
 	}
 }
 

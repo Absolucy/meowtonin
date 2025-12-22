@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{ByondValue, RcByondValue, byond, sys::CByondValue};
+use crate::{ByondValue, byond, sys::CByondValue};
 use std::{cell::Cell, os::raw::c_void, sync::OnceLock, thread::ThreadId};
 
 struct CallbackData<F: FnOnce() -> ByondValue + Send> {
@@ -14,16 +14,14 @@ extern "C-unwind" fn trampoline<F: FnOnce() -> ByondValue + Send>(
 	unsafe { (data.callback)().0 }
 }
 
-pub fn thread_sync<F>(callback: F, block: bool) -> RcByondValue
+pub fn thread_sync<F>(callback: F, block: bool) -> ByondValue
 where
 	F: FnOnce() -> ByondValue + Send + 'static,
 {
 	let data = Box::new(CallbackData { callback });
 	let data_ptr = Box::into_raw(data) as *mut c_void;
 
-	RcByondValue::new_from_persistent(ByondValue(unsafe {
-		byond().Byond_ThreadSync(Some(trampoline::<F>), data_ptr, block)
-	}))
+	ByondValue(unsafe { byond().Byond_ThreadSync(Some(trampoline::<F>), data_ptr, block) })
 }
 
 thread_local! {

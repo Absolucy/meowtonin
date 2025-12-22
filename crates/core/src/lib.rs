@@ -35,7 +35,7 @@ pub use crate::{
 	proc::call_global,
 	sys::ByondVersion,
 	to::ToByond,
-	value::{ByondValue, reference::RcByondValue, typecheck::ByondValueType},
+	value::{ByondValue, typecheck::ByondValueType},
 	xyz::ByondXYZ,
 };
 pub use inventory;
