@@ -194,6 +194,11 @@ impl ByondValue {
 		}
 	}
 
+	/// Compares two values for equivalence (a ~= b)
+	pub fn is_equivalent(&self, other: &ByondValue) -> bool {
+		unsafe { byond().ByondValue_Equiv(&self.0, &other.0) }
+	}
+
 	/// Replaces this value with a null value.
 	/// This will decref the old value on its own.
 	pub fn clear(&mut self) {
