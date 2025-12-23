@@ -200,6 +200,15 @@ impl ByondValue {
 		self.dec_ref();
 		unsafe { byond().ByondValue_Clear(&mut self.0) };
 	}
+
+	/// "Detaches" the [`CByondValue`] from this [`ByondValue`], meaning it
+	/// won't automatically decref on drop. Really should only be used for the
+	/// return value of your byondapi functions.
+	pub fn detach(self) -> CByondValue {
+		let value = self.0;
+		std::mem::forget(self);
+		value
+	}
 }
 
 impl Drop for ByondValue {

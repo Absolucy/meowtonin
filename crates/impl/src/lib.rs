@@ -186,7 +186,7 @@ fn generate_export_fn(
 		pub unsafe extern "C-unwind" fn #func_name(
 			__argc: ::meowtonin::sys::u4c,
 			__argv: *mut ::meowtonin::sys::CByondValue
-		) -> ::meowtonin::ByondValue {
+		) -> ::meowtonin::sys::CByondValue {
 			::meowtonin::setup_once();
 			let __retval: std::result::Result<::meowtonin::ByondValue, std::string::String>;
 			{
@@ -219,7 +219,7 @@ fn generate_export_fn(
 			match __retval {
 				Ok(value) => {
 					#debug_end
-					value
+					value.detach()
 				},
 				Err(error) => {
 					#debug_crash
