@@ -193,6 +193,13 @@ impl ByondValue {
 			Err(_) => false,
 		}
 	}
+
+	/// Replaces this value with a null value.
+	/// This will decref the old value on its own.
+	pub fn clear(&mut self) {
+		self.dec_ref();
+		unsafe { byond().ByondValue_Clear(&mut self.0) };
+	}
 }
 
 impl Drop for ByondValue {
