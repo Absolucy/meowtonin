@@ -22,3 +22,13 @@ where
 
 	ByondValue(unsafe { byond().Byond_ThreadSync(Some(trampoline::<F>), data_ptr, block) })
 }
+
+#[doc(hidden)]
+#[repr(transparent)]
+pub struct ByondCallee(CByondValue);
+
+impl ByondCallee {
+	pub fn finish_and_return(self, return_value: &CByondValue) -> bool {
+		unsafe { byond().Byond_Return(&self.0, return_value) }
+	}
+}
