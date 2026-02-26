@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{ByondError, ByondResult, ByondValue, FromByond, ToByond, byond, sys::u4c};
+use crate::{
+	ByondError, ByondResult, ByondValue, ByondValueType, FromByond, ToByond, byond, sys::u4c,
+};
 use std::mem::MaybeUninit;
 
 impl ByondValue {
@@ -59,6 +61,9 @@ impl ByondValue {
 	///
 	/// Do not rely on this being 100% accurate.
 	pub fn is_likely_assoc(&self) -> ByondResult<bool> {
+		if self.get_type() == ByondValueType::Alist {
+			return Ok(true);
+		}
 		let list = self.read_assoc_list()?;
 		Ok(crate::misc::is_likely_assoc(&list))
 	}
