@@ -247,6 +247,12 @@ impl PartialEq<&ByondValue> for ByondValue {
 	}
 }
 
+impl PartialEq<ByondValue> for &ByondValue {
+	fn eq(&self, other: &ByondValue) -> bool {
+		unsafe { byond().ByondValue_Equals(&self.0, &other.0) }
+	}
+}
+
 impl PartialEq<bool> for ByondValue {
 	fn eq(&self, other: &bool) -> bool {
 		self.is_true() == *other
