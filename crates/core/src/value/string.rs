@@ -27,7 +27,8 @@ impl ByondValue {
 	}
 
 	pub fn get_string(&self) -> ByondResult<String> {
-		buffer_to_string(&self.get_string_bytes()?)
+		self.get_string_bytes()
+			.and_then(|bytes| buffer_to_string(&bytes))
 	}
 }
 
