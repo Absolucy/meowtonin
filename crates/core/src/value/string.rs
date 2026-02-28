@@ -27,13 +27,12 @@ impl ByondValue {
 	}
 
 	pub fn get_string(&self) -> ByondResult<String> {
-		self.get_string_bytes()
-			.and_then(|bytes| buffer_to_string(&bytes))
+		self.get_string_bytes().and_then(buffer_to_string)
 	}
 }
 
-fn buffer_to_string(buffer: &[u8]) -> ByondResult<String> {
-	let cstr = CStr::from_bytes_until_nul(buffer)?;
+fn buffer_to_string(buffer: impl AsRef<[u8]>) -> ByondResult<String> {
+	let cstr = CStr::from_bytes_until_nul(buffer.as_ref())?;
 	if cfg!(feature = "lossy-utf8") {
 		Ok(cstr.to_string_lossy().into_owned())
 	} else {
