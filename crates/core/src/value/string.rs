@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{ByondResult, ByondValue, byond};
+use crate::{ByondError, ByondResult, ByondValue, byond};
 use std::{ffi::CStr, mem::MaybeUninit};
 
 impl ByondValue {
@@ -36,6 +36,6 @@ fn buffer_to_string(buffer: impl AsRef<[u8]>) -> ByondResult<String> {
 	if cfg!(feature = "lossy-utf8") {
 		Ok(cstr.to_string_lossy().into_owned())
 	} else {
-		Ok(cstr.to_str().map(str::to_owned)?)
+		cstr.to_str().map(str::to_owned).map_err(ByondError::from)
 	}
 }
