@@ -2,7 +2,7 @@
 use crate::sys::CByondXYZ;
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone)]
 #[repr(transparent)]
 pub struct ByondXYZ(pub CByondXYZ);
 
@@ -71,6 +71,13 @@ impl ByondXYZ {
 		let dz = self.z().saturating_sub(other.z()).pow(2) as f64;
 
 		(dx + dy + dz).sqrt()
+	}
+}
+
+impl Default for ByondXYZ {
+	#[inline]
+	fn default() -> Self {
+		Self::new(1, 1, 1)
 	}
 }
 
