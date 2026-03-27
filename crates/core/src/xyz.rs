@@ -80,6 +80,18 @@ impl PartialEq for ByondXYZ {
 	}
 }
 
+impl PartialEq<&ByondXYZ> for ByondXYZ {
+	fn eq(&self, other: &&Self) -> bool {
+		*self == **other
+	}
+}
+
+impl PartialEq<ByondXYZ> for &ByondXYZ {
+	fn eq(&self, other: &ByondXYZ) -> bool {
+		*self == other
+	}
+}
+
 impl Eq for ByondXYZ {}
 
 impl std::hash::Hash for ByondXYZ {
