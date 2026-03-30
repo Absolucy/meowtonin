@@ -96,11 +96,11 @@ fn generate_wrapper_fn(
 
 	let call_block = if variadic {
 		quote! {
-			let mut __func = move |args: ::std::vec::Vec<::meowtonin::ByondValue>| -> #return_type {
+			let mut __func = move || -> #return_type {
 				let args = __args;
 				#body
 			};
-			let ret = __func(__args);
+			let ret = __func();
 		}
 	} else {
 		quote! {
