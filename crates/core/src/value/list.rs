@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{ByondError, ByondResult, ByondValue, FromByond, ToByond, byond};
+use crate::{
+	ByondError, ByondResult, ByondValue, ByondValueType, FromByond, ToByond, byond, sys::u4c,
+};
 use std::mem::MaybeUninit;
 
 impl ByondValue {
+	/// Creates an empty list (referenced). Equivalent to `list()`.
 	pub fn new_list() -> ByondResult<Self> {
 		unsafe {
 			let mut value = MaybeUninit::uninit();
@@ -11,7 +14,18 @@ impl ByondValue {
 		}
 	}
 
+	/// Creates a list (referenced) with a given length. Equivalent to `new
+	/// /list(len)`.
+	pub fn new_list_len(length: u4c) -> ByondResult<Self> {
+		unsafe {
+			let mut value = MaybeUninit::uninit();
+			map_byond_error!(byond().Byond_CreateListLen(value.as_mut_ptr(), length))?;
+			Ok(Self(unsafe { value.assume_init() }))
+		}
+	}
+
 	// TODO: properly refcounted lists
+	/// Reads items (referenced) from a list.
 	pub fn read_list(&self) -> ByondResult<Vec<Self>> {
 		if !self.is_list() {
 			return Err(ByondError::NotAList);
@@ -26,6 +40,7 @@ impl ByondValue {
 	}
 
 	// TODO: properly refcounted lists
+	/// Reads items as key,value pairs from an associative list.
 	pub fn read_assoc_list(&self) -> ByondResult<Vec<[Self; 2]>> {
 		if !self.is_list() {
 			return Err(ByondError::NotAList);
@@ -46,10 +61,14 @@ impl ByondValue {
 	///
 	/// Do not rely on this being 100% accurate.
 	pub fn is_likely_assoc(&self) -> ByondResult<bool> {
+		if self.get_type() == ByondValueType::Alist {
+			return Ok(true);
+		}
 		let list = self.read_assoc_list()?;
 		Ok(crate::misc::is_likely_assoc(&list))
 	}
 
+	/// Writes items to a list, in place of old contents.
 	pub fn write_list<List>(&mut self, contents: List) -> ByondResult<()>
 	where
 		List: IntoIterator<Item = Self>,
@@ -62,6 +81,7 @@ impl ByondValue {
 		))
 	}
 
+	/// Reads an item (referenced) from a list.
 	pub fn read_list_index<Idx, Value>(&self, idx: &Idx) -> ByondResult<Value>
 	where
 		Idx: ToByond,
@@ -78,6 +98,7 @@ impl ByondValue {
 		}
 	}
 
+	/// Writes an item to a list.
 	pub fn write_list_index<Idx, Value>(&mut self, idx: Idx, value: Value) -> ByondResult<()>
 	where
 		Idx: ToByond,

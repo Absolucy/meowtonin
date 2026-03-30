@@ -35,7 +35,7 @@ pub use crate::{
 	proc::call_global,
 	sys::ByondVersion,
 	to::ToByond,
-	value::{ByondValue, reference::RcByondValue, typecheck::ByondValueType},
+	value::{ByondValue, typecheck::ByondValueType},
 	xyz::ByondXYZ,
 };
 pub use inventory;
@@ -91,8 +91,5 @@ pub fn dmb_version() -> sys::u4c {
 pub fn setup_once() {
 	static SETUP: Once = Once::new();
 
-	SETUP.call_once(|| {
-		let _ = sync::is_main_thread(); // initialize main thread OnceCell
-		std::panic::set_hook(Box::new(panic::panic_hook))
-	});
+	SETUP.call_once(|| std::panic::set_hook(Box::new(panic::panic_hook)));
 }

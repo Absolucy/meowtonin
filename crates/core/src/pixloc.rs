@@ -49,6 +49,18 @@ impl PartialEq for ByondPixLoc {
 	}
 }
 
+impl PartialEq<&ByondPixLoc> for ByondPixLoc {
+	fn eq(&self, other: &&Self) -> bool {
+		*self == **other
+	}
+}
+
+impl PartialEq<ByondPixLoc> for &ByondPixLoc {
+	fn eq(&self, other: &ByondPixLoc) -> bool {
+		*self == other
+	}
+}
+
 impl Hash for ByondPixLoc {
 	fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
 		self.x().to_bits().hash(state);

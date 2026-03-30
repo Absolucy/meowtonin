@@ -18,8 +18,8 @@ cfg-if = "1"
 constcat = { version = "0.6" }
 inventory = "0.3"
 libloading = { workspace = true }
-meowtonin-byondapi-sys = { path = "../sys", version = "0.2", default-features = false }
-meowtonin-impl = { path = "../impl", version = "0.2" }
+meowtonin-byondapi-sys = { path = "../sys", version = "0.3", default-features = false }
+meowtonin-impl = { path = "../impl", version = "0.3" }
 nohash-hasher = "0.2"
 papaya = "0.2"
 parking_lot = "0.12"
@@ -29,7 +29,7 @@ smol_str = { version = "0.3", features = ["serde"] }
 thiserror = "2"
 
 [target.'cfg(windows)'.dependencies]
-windows = { version = "0.61", features = ["Win32_Foundation", "Win32_System", "Win32_System_Console", "Win32_System_LibraryLoader"] }
+windows = { version = "0.62", features = ["Win32_Foundation", "Win32_System", "Win32_System_Console", "Win32_System_LibraryLoader"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 libc = "0.2"
@@ -43,8 +43,6 @@ lossy-utf8 = []
 # Speed up ByondValue type checking by directly using the "type" var in the struct, however this is technically not "official" and may break in future BYOND updates.
 fast-typechecking = []
 bytemuck = ["meowtonin-byondapi-sys/bytemuck"]
-# Allows
-byond-1664 = ["meowtonin-byondapi-sys/byond-1664"]
 ref-debugging = []
 
 [package.metadata.docs.rs]

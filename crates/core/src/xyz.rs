@@ -2,7 +2,7 @@
 use crate::sys::CByondXYZ;
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone)]
 #[repr(transparent)]
 pub struct ByondXYZ(pub CByondXYZ);
 
@@ -74,9 +74,28 @@ impl ByondXYZ {
 	}
 }
 
+impl Default for ByondXYZ {
+	#[inline]
+	fn default() -> Self {
+		Self::new(1, 1, 1)
+	}
+}
+
 impl PartialEq for ByondXYZ {
 	fn eq(&self, other: &Self) -> bool {
 		self.x() == other.x() && self.y() == other.y() && self.z() == other.z()
+	}
+}
+
+impl PartialEq<&ByondXYZ> for ByondXYZ {
+	fn eq(&self, other: &&Self) -> bool {
+		*self == **other
+	}
+}
+
+impl PartialEq<ByondXYZ> for &ByondXYZ {
+	fn eq(&self, other: &ByondXYZ) -> bool {
+		*self == other
 	}
 }
 

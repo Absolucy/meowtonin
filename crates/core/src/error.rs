@@ -3,7 +3,7 @@ use crate::byond;
 use std::{
 	borrow::Cow,
 	convert::Infallible,
-	ffi::{CStr, CString, FromBytesUntilNulError, IntoStringError, NulError},
+	ffi::{CString, FromBytesUntilNulError, IntoStringError, NulError},
 	str::Utf8Error,
 };
 
@@ -101,15 +101,14 @@ pub struct ByondApiError(pub CString);
 
 impl ByondApiError {
 	pub fn get_last() -> Option<Self> {
-		// Safety: It's always safe to call Byond_LastError
-		let ptr = unsafe { byond().Byond_LastError() };
-		if !ptr.is_null() {
-			// Safety: We just have to trust that Byond gave us a valid cstring...
-			let cstr = unsafe { CStr::from_ptr(ptr) };
-			Some(ByondApiError(cstr.to_owned()))
-		} else {
-			None
-		}
+		let last_error: ByondResult<CString> = unsafe {
+			crate::misc::with_buffer::<_, u8, _, _>(
+				None,
+				|ptr, len| byond().Byond_LastError(ptr.cast(), len),
+				|buffer| CString::from_vec_with_nul(buffer).unwrap_or_default(),
+			)
+		};
+		last_error.ok().map(Self)
 	}
 }
 

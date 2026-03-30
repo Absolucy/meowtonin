@@ -18,7 +18,6 @@ use std::{
 
 #[must_use]
 #[repr(transparent)]
-#[derive(Clone)]
 pub struct ByondValue(pub CByondValue);
 
 impl ByondValue {
@@ -185,7 +184,6 @@ impl ByondValue {
 	}
 
 	/// Equivalent to calling `istype(src, text2path(typepath))``.
-	#[cfg(feature = "byond-1664")]
 	pub fn is_type<Str>(&self, typepath: Str) -> bool
 	where
 		Str: AsRef<str>,
@@ -194,6 +192,40 @@ impl ByondValue {
 			Ok(typepath) => unsafe { byond().ByondValue_IsType(&self.0, typepath.as_ptr()) },
 			Err(_) => false,
 		}
+	}
+
+	/// Compares two values for equivalence (a ~= b)
+	pub fn is_equivalent(&self, other: &ByondValue) -> bool {
+		unsafe { byond().ByondValue_Equiv(&self.0, &other.0) }
+	}
+
+	/// Replaces this value with a null value.
+	/// This will decref the old value on its own.
+	pub fn clear(&mut self) {
+		self.dec_ref();
+		unsafe { byond().ByondValue_Clear(&mut self.0) };
+	}
+
+	/// "Detaches" the [`CByondValue`] from this [`ByondValue`], meaning it
+	/// won't automatically decref on drop. Really should only be used for the
+	/// return value of your byondapi functions.
+	pub fn detach(self) -> CByondValue {
+		let value = self.0;
+		std::mem::forget(self);
+		value
+	}
+}
+
+impl Drop for ByondValue {
+	fn drop(&mut self) {
+		self.dec_ref();
+	}
+}
+
+impl Clone for ByondValue {
+	fn clone(&self) -> Self {
+		self.inc_ref();
+		Self(self.0)
 	}
 }
 
@@ -211,6 +243,12 @@ impl PartialEq for ByondValue {
 
 impl PartialEq<&ByondValue> for ByondValue {
 	fn eq(&self, other: &&Self) -> bool {
+		unsafe { byond().ByondValue_Equals(&self.0, &other.0) }
+	}
+}
+
+impl PartialEq<ByondValue> for &ByondValue {
+	fn eq(&self, other: &ByondValue) -> bool {
 		unsafe { byond().ByondValue_Equals(&self.0, &other.0) }
 	}
 }
