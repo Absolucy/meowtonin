@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: 0BSD
 use crate::{ByondError, ByondResult, ByondValue, ByondXYZ, byond, sys::u4c};
+use rustc_hash::FxBuildHasher;
 use std::mem::MaybeUninit;
 
 pub fn block(corner_a: ByondXYZ, corner_b: ByondXYZ) -> ByondResult<Vec<ByondValue>> {
@@ -40,7 +41,8 @@ pub fn locate(
 ///
 /// Do not rely on this being 100% accurate.
 pub fn is_likely_assoc(list: &[[ByondValue; 2]]) -> bool {
-	let mut found_keys = ahash::AHashSet::<&ByondValue>::with_capacity(list.len());
+	let mut found_keys =
+		rustc_hash::FxHashSet::<&ByondValue>::with_capacity_and_hasher(list.len(), FxBuildHasher);
 	for [key, value] in list {
 		if !value.is_null() {
 			return true;

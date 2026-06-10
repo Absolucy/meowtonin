@@ -8,7 +8,7 @@ edition = "2024"
 license = "0BSD"
 repository = "https://github.com/Absolucy/meowtonin"
 rust-version = "1.85"
-version = "0.3.1"
+version = "0.3.2"
 
 [workspace.dependencies]
 libloading = "0.9"

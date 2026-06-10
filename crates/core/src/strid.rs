@@ -3,9 +3,9 @@ use crate::{
 	ByondValue, ByondValueType, byond,
 	sys::{NONE, u4c},
 };
-use ahash::AHasher;
 use nohash_hasher::BuildNoHashHasher;
 use papaya::HashMap;
+use rustc_hash::FxHasher;
 use std::{
 	ffi::CString,
 	hash::{Hash, Hasher},
@@ -19,7 +19,7 @@ pub(crate) static STRID_CACHE: LazyLock<HashMap<u64, Option<u4c>, BuildNoHashHas
 	});
 
 fn string_hash(string: impl AsRef<str>) -> u64 {
-	let mut hasher = AHasher::default();
+	let mut hasher = FxHasher::default();
 	string.as_ref().hash(&mut hasher);
 	hasher.finish()
 }
