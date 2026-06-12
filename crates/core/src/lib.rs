@@ -47,17 +47,6 @@ use std::sync::Once;
 /// Rust value that implements [`ToByond`](crate::to::ToByond).
 #[macro_export]
 macro_rules! byondval {
-	(const $value:expr) => {{
-		static __BYONDVAL: ::std::sync::OnceLock<$crate::value::ByondValue> =
-			::std::sync::OnceLock::new();
-		__BYONDVAL
-			.get_or_init(|| {
-				$crate::ToByond::to_byond(&$value)
-					.expect("failed to initialize const byondval")
-					.persist()
-			})
-			.clone()
-	}};
 	($value:expr) => {
 		$crate::ToByond::to_byond(&$value).unwrap()
 	};
