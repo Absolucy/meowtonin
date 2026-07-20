@@ -118,7 +118,7 @@ impl ByondValue {
 		Name: AsRef<str>,
 		Return: FromByond,
 	{
-		if !self.is_ref() {
+		if !self.is_ref() && self.get_type() != ByondValueType::Turf {
 			return Err(ByondError::NotReferenceable);
 		}
 		let name_id = lookup_string_id(name).ok_or(ByondError::InvalidVariable)?;
@@ -135,7 +135,7 @@ impl ByondValue {
 		Name: AsRef<str>,
 		Value: ToByond,
 	{
-		if !self.is_ref() {
+		if !self.is_ref() && self.get_type() != ByondValueType::Turf {
 			return Err(ByondError::NotReferenceable);
 		}
 		let name_id = lookup_string_id(name).ok_or(ByondError::InvalidVariable)?;
