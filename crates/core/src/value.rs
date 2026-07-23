@@ -118,9 +118,6 @@ impl ByondValue {
 		Name: AsRef<str>,
 		Return: FromByond,
 	{
-		if !self.is_ref() && self.get_type() != ByondValueType::Turf {
-			return Err(ByondError::NotReferenceable);
-		}
 		let name_id = lookup_string_id(name).ok_or(ByondError::InvalidVariable)?;
 		unsafe {
 			let mut result = MaybeUninit::uninit();
@@ -135,9 +132,6 @@ impl ByondValue {
 		Name: AsRef<str>,
 		Value: ToByond,
 	{
-		if !self.is_ref() && self.get_type() != ByondValueType::Turf {
-			return Err(ByondError::NotReferenceable);
-		}
 		let name_id = lookup_string_id(name).ok_or(ByondError::InvalidVariable)?;
 		let value = value.to_byond()?;
 		map_byond_error!(byond().Byond_WriteVarByStrId(&self.0, name_id, &value.0))
