@@ -7,8 +7,8 @@ pub mod string;
 pub mod typecheck;
 
 use crate::{
-	ByondError, ByondResult, ByondValueType, FromByond, ToByond, byond, pixloc::ByondPixLoc,
-	strid::lookup_string_id, sys::CByondValue,
+	ByondError, ByondResult, ByondValueType, ByondXYZ, FromByond, ToByond, byond,
+	pixloc::ByondPixLoc, strid::lookup_string_id, sys::CByondValue,
 };
 use std::{
 	fmt,
@@ -172,6 +172,19 @@ impl ByondValue {
 		let mut pixloc = MaybeUninit::uninit();
 		if unsafe { byond().Byond_PixLoc(&self.0, pixloc.as_mut_ptr()) } {
 			Some(ByondPixLoc(unsafe { pixloc.assume_init() }))
+		} else {
+			None
+		}
+	}
+
+	/// Gets the X/Y/Z coordinates of an atom.
+	///
+	/// Returns `None` if the value doesn't have X/Y/Z coordinates, such as if
+	/// value is not an atom.
+	pub fn xyz(&self) -> Option<ByondXYZ> {
+		let mut result = MaybeUninit::uninit();
+		if unsafe { byond().Byond_XYZ(&self.0, result.as_mut_ptr()) } {
+			Some(ByondXYZ(unsafe { result.assume_init() }))
 		} else {
 			None
 		}
