@@ -6,6 +6,8 @@ pub mod reference;
 pub mod string;
 pub mod typecheck;
 
+use meowtonin_byondapi_sys::u1c;
+
 use crate::{
 	ByondError, ByondResult, ByondValueType, ByondXYZ, FromByond, ToByond, byond,
 	pixloc::ByondPixLoc, strid::lookup_string_id, sys::CByondValue,
@@ -171,6 +173,21 @@ impl ByondValue {
 	pub fn pixloc(&self) -> Option<ByondPixLoc> {
 		let mut pixloc = MaybeUninit::uninit();
 		if unsafe { byond().Byond_PixLoc(&self.0, pixloc.as_mut_ptr()) } {
+			Some(ByondPixLoc(unsafe { pixloc.assume_init() }))
+		} else {
+			None
+		}
+	}
+
+	/// Gets the pixloc coords of an atom based on its bounding box.
+	///
+	/// Returns `None` if the value doesn't have pixloc coordinates, such as if
+	/// value is not an atom.
+	///
+	/// If the atom is off-map, this will return [ByondPixLoc::ZERO].
+	pub fn bound_pixloc(&self, dir: u1c) -> Option<ByondPixLoc> {
+		let mut pixloc = MaybeUninit::uninit();
+		if unsafe { byond().Byond_BoundPixLoc(&self.0, dir, pixloc.as_mut_ptr()) } {
 			Some(ByondPixLoc(unsafe { pixloc.assume_init() }))
 		} else {
 			None
