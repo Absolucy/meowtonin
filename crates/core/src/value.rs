@@ -6,11 +6,11 @@ pub mod reference;
 pub mod string;
 pub mod typecheck;
 
-use meowtonin_byondapi_sys::u1c;
-
 use crate::{
 	ByondError, ByondResult, ByondValueType, ByondXYZ, FromByond, ToByond, byond,
-	pixloc::ByondPixLoc, strid::lookup_string_id, sys::CByondValue,
+	pixloc::ByondPixLoc,
+	strid::lookup_string_id,
+	sys::{CByondValue, u1c},
 };
 use std::{
 	fmt,
