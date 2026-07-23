@@ -7,8 +7,10 @@ pub mod string;
 pub mod typecheck;
 
 use crate::{
-	ByondError, ByondResult, ByondValueType, FromByond, ToByond, byond, pixloc::ByondPixLoc,
-	strid::lookup_string_id, sys::CByondValue,
+	ByondError, ByondResult, ByondValueType, ByondXYZ, FromByond, ToByond, byond,
+	pixloc::ByondPixLoc,
+	strid::lookup_string_id,
+	sys::{CByondValue, u1c},
 };
 use std::{
 	fmt,
@@ -118,9 +120,6 @@ impl ByondValue {
 		Name: AsRef<str>,
 		Return: FromByond,
 	{
-		if !self.is_ref() {
-			return Err(ByondError::NotReferenceable);
-		}
 		let name_id = lookup_string_id(name).ok_or(ByondError::InvalidVariable)?;
 		unsafe {
 			let mut result = MaybeUninit::uninit();
@@ -135,9 +134,6 @@ impl ByondValue {
 		Name: AsRef<str>,
 		Value: ToByond,
 	{
-		if !self.is_ref() {
-			return Err(ByondError::NotReferenceable);
-		}
 		let name_id = lookup_string_id(name).ok_or(ByondError::InvalidVariable)?;
 		let value = value.to_byond()?;
 		map_byond_error!(byond().Byond_WriteVarByStrId(&self.0, name_id, &value.0))
@@ -178,6 +174,34 @@ impl ByondValue {
 		let mut pixloc = MaybeUninit::uninit();
 		if unsafe { byond().Byond_PixLoc(&self.0, pixloc.as_mut_ptr()) } {
 			Some(ByondPixLoc(unsafe { pixloc.assume_init() }))
+		} else {
+			None
+		}
+	}
+
+	/// Gets the pixloc coords of an atom based on its bounding box.
+	///
+	/// Returns `None` if the value doesn't have pixloc coordinates, such as if
+	/// value is not an atom.
+	///
+	/// If the atom is off-map, this will return [ByondPixLoc::ZERO].
+	pub fn bound_pixloc(&self, dir: u1c) -> Option<ByondPixLoc> {
+		let mut pixloc = MaybeUninit::uninit();
+		if unsafe { byond().Byond_BoundPixLoc(&self.0, dir, pixloc.as_mut_ptr()) } {
+			Some(ByondPixLoc(unsafe { pixloc.assume_init() }))
+		} else {
+			None
+		}
+	}
+
+	/// Gets the X/Y/Z coordinates of an atom.
+	///
+	/// Returns `None` if the value doesn't have X/Y/Z coordinates, such as if
+	/// value is not an atom.
+	pub fn xyz(&self) -> Option<ByondXYZ> {
+		let mut result = MaybeUninit::uninit();
+		if unsafe { byond().Byond_XYZ(&self.0, result.as_mut_ptr()) } {
+			Some(ByondXYZ(unsafe { result.assume_init() }))
 		} else {
 			None
 		}

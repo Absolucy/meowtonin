@@ -65,6 +65,8 @@ impl ByondValue {
 	/// Evaluates whether the [ByondValue] is a reference (object) type or
 	/// not. Does not check validity.
 	///
+	/// Warning: this will return `false` for turfs.
+	///
 	/// # Returns
 	/// `true` if the value is a reference, `false` otherwise.
 	pub fn is_ref(&self) -> bool {

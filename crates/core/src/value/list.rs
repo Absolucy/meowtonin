@@ -14,6 +14,24 @@ impl ByondValue {
 		}
 	}
 
+	/// Creates a new dimensional list (referenced).
+	/// Equivalent to `new /list(sizes[0], sizes[1], ...)`.
+	pub fn new_dimensional_list<Sizes>(sizes: Sizes) -> ByondResult<Self>
+	where
+		Sizes: AsRef<[u4c]>,
+	{
+		let sizes = sizes.as_ref();
+		unsafe {
+			let mut value = MaybeUninit::uninit();
+			map_byond_error!(byond().Byond_CreateDimensionalList(
+				value.as_mut_ptr(),
+				sizes.as_ptr(),
+				sizes.len() as _
+			))?;
+			Ok(Self(unsafe { value.assume_init() }))
+		}
+	}
+
 	/// Creates a list (referenced) with a given length. Equivalent to `new
 	/// /list(len)`.
 	pub fn new_list_len(length: u4c) -> ByondResult<Self> {
