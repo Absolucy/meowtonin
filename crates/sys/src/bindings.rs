@@ -11,8 +11,8 @@ pub type u1c = ::std::os::raw::c_uchar;
 pub type s1c = ::std::os::raw::c_schar;
 pub type u2c = ::std::os::raw::c_ushort;
 pub type s2c = ::std::os::raw::c_short;
-pub type u4c = ::std::os::raw::c_ulong;
-pub type s4c = ::std::os::raw::c_long;
+pub type u4c = u32;
+pub type s4c = i32;
 pub type s8c = ::std::os::raw::c_longlong;
 pub type u8c = ::std::os::raw::c_ulonglong;
 #[repr(C)]

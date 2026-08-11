@@ -13,6 +13,10 @@ mod inner {
 			.dynamic_link_require_all(true)
 			.allowlist_item("C?Byond.*")
 			.allowlist_item("[su][1-9].*")
+			// these next 3 lines are needed for linux x86_64 compat
+			.blocklist_type("[su]4c")
+			.raw_line("pub type u4c = u32;")
+			.raw_line("pub type s4c = i32;")
 			.override_abi(Abi::CUnwind, "Byond.*")
 			.generate_block(true)
 			.derive_default(true)
