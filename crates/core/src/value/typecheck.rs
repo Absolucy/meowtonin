@@ -401,8 +401,8 @@ impl ByondValueType {
 	/// [`NUMBER`](Self::NUMBER), and [`WORLD`](Self::WORLD).
 	#[inline]
 	pub const fn should_ref_count(self) -> bool {
-		// we have to compare the inner values for the world check to keep this const.
-		// it's dumb, I know.
+		// we have to compare the inner values for the world check to keep this
+		// const. it's dumb, I know.
 		self.is_ref_counted() && self.0 != Self::World.0
 	}
 }
