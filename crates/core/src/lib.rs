@@ -64,7 +64,8 @@ pub unsafe fn parse_args(argc: sys::u4c, argv: *mut CByondValue) -> Vec<ByondVal
 	unsafe { std::slice::from_raw_parts(argv, argc as usize) }
 		.iter()
 		.map(|value| {
-			// we need to increment the ref count here because byond will decrement it when the call returns
+			// we need to increment the ref count here because byond will
+			// decrement it when the call returns
 			let value = ByondValue(*value);
 			value.inc_ref();
 			value
