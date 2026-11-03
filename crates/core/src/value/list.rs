@@ -42,34 +42,44 @@ impl ByondValue {
 		}
 	}
 
-	// TODO: properly refcounted lists
-	/// Reads items (referenced) from a list.
+	/// Reads items from a list, each with an owned reference.
 	pub fn read_list(&self) -> ByondResult<Vec<Self>> {
 		if !self.is_list() {
 			return Err(ByondError::NotAList);
 		}
-		unsafe {
+		let values = unsafe {
 			crate::misc::with_buffer::<_, ByondValue, _, _>(
 				None,
 				|ptr, len| byond().Byond_ReadList(&self.0, ptr.cast(), len),
 				|buffer| buffer,
 			)
+		}?;
+		// on 516 byond it won't return persistent refs.
+		// Acquire one for each wrapper so Drop balances this reference.
+		for value in &values {
+			value.inc_ref();
 		}
+		Ok(values)
 	}
 
-	// TODO: properly refcounted lists
-	/// Reads items as key,value pairs from an associative list.
+	/// Reads key,value pairs from an associative list, with owned references.
 	pub fn read_assoc_list(&self) -> ByondResult<Vec<[Self; 2]>> {
 		if !self.is_list() {
 			return Err(ByondError::NotAList);
 		}
-		unsafe {
+		let values = unsafe {
 			crate::misc::with_buffer::<_, ByondValue, _, _>(
 				None,
 				|ptr, len| byond().Byond_ReadListAssoc(&self.0, ptr.cast(), len),
 				|buffer| stupid_assoc_cast(buffer),
 			)
+		}?;
+		// As with Byond_ReadList, give each wrapper a reference for Drop to release.
+		for [key, value] in &values {
+			key.inc_ref();
+			value.inc_ref();
 		}
+		Ok(values)
 	}
 
 	/// Returns if this is likely an associative list or not.
