@@ -65,13 +65,16 @@ impl ByondValue {
 	/// Evaluates whether the [ByondValue] is a reference (object) type or
 	/// not. Does not check validity.
 	///
-	/// Warning: this will return `false` for turfs.
+	/// An ID of 0 (like `world`) counts as not a reference.
 	///
 	/// # Returns
 	/// `true` if the value is a reference, `false` otherwise.
 	pub fn is_ref(&self) -> bool {
 		if cfg!(feature = "fast-typechecking") {
-			self.get_type().is_ref_counted()
+			!matches!(
+				self.get_type(),
+				ByondValueType::Null | ByondValueType::Number
+			) && unsafe { self.0.data.ref_ } != 0
 		} else {
 			unsafe { byond().ByondValue_GetRef(&self.0) != 0 }
 		}
@@ -364,46 +367,32 @@ impl ByondValueType {
 		}
 	}
 
-	/// Returns if this type is reference counted or not.
-	///
-	/// If you're checking to see if you should call [`ByondValue::inc_ref()`],
-	/// [`ByondValue::dec_ref()`], or [`ByondValue::dec_temp_ref()`], use
-	/// [`should_ref_count()`](Self::should_ref_count) instead.
-	///
-	/// # Returns
-	/// `true` if the value is reference counted, `false` otherwise.
+	/// Returns if byondapi reference counts this type. Mirrors BYOND's own
+	/// table, dumped from 516.1687 on Windows.
 	#[inline]
 	pub const fn is_ref_counted(&self) -> bool {
 		!matches!(
-			*self,
-			Self::Null
-				| Self::Number
-				| Self::MobTypepath
-				| Self::ObjTypepath
-				| Self::TurfTypepath
-				| Self::AreaTypepath
-				| Self::DatumTypepath
-				| Self::Turf
+			self.0,
+			0x00 | 0x01
+				| 0x07..=0x0C
+				| 0x0E | 0x10
+				| 0x13 | 0x18
+				| 0x1A | 0x20
+				| 0x22 | 0x24..=0x26
+				| 0x28..=0x2A
+				| 0x2E | 0x36
+				| 0x37 | 0x3B
+				| 0x3D..=0x3F
+				| 0x4B | 0x4E
+				| 0x51 | 0x52
+				| 0x58..
 		)
 	}
 
-	/// Returns if this type SHOULD be reference counted.
-	///
-	/// The difference between this and
-	/// [`is_ref_counted()`](Self::is_ref_counted) is that this also checks to
-	/// see if this type SHOULDN'T be refcounted, even if it is technically a
-	/// reference.
-	///
-	/// # Returns
-	/// `true` if the value should be reference counted, `false` otherwise.
-	///
-	/// Currently, this only returns `false` for [`NULL`](Self::NULL),
-	/// [`NUMBER`](Self::NUMBER), and [`WORLD`](Self::WORLD).
+	#[deprecated(since = "0.3.5", note = "use is_ref_counted(), they are the same now")]
 	#[inline]
 	pub const fn should_ref_count(self) -> bool {
-		// we have to compare the inner values for the world check to keep this
-		// const. it's dumb, I know.
-		self.is_ref_counted() && self.0 != Self::World.0
+		self.is_ref_counted()
 	}
 }
 

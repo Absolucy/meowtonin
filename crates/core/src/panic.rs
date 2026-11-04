@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: 0BSD
 mod resolve;
 
-use crate::byond;
+use crate::{ByondValue, byond, sys::CByondValue};
 use aho_corasick::AhoCorasick;
 use backtrace::{Backtrace, BacktraceSymbol};
 use parking_lot::RwLock;
@@ -259,8 +259,10 @@ thread_local! {
 	static CRASH_REASON: RefCell<CString> = RefCell::new(CString::default());
 }
 
+/// Raises `reason` as a BYOND runtime error. Returns null when BYOND doesn't
+/// throw: no proc running, or the proc already crashed.
 #[doc(hidden)]
-pub fn byond_crash(reason: String) -> ! {
+pub fn byond_crash(reason: String) -> CByondValue {
 	let reason = CString::new(reason).unwrap_or_else(|error| {
 		let safe_len = error.nul_position();
 		let mut reason = error.into_vec();
@@ -271,8 +273,6 @@ pub fn byond_crash(reason: String) -> ! {
 		*return_string = reason;
 		return_string.as_ptr()
 	});
-	unsafe {
-		byond().Byond_CRASH(reason_ptr); // this does a longjmp - any subsequent code will be UNREACHABLE
-		std::hint::unreachable_unchecked()
-	}
+	unsafe { byond().Byond_CRASH(reason_ptr) };
+	ByondValue::NULL.detach()
 }

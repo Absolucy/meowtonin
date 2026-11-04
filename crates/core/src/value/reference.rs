@@ -8,13 +8,22 @@ impl ByondValue {
 	/// Creates a new reference with the given value type and reference ID.
 	/// This will return `None` if the provided reference is invalid.
 	pub fn new_ref(value_type: ByondValueType, ref_id: u32) -> Option<Self> {
-		unsafe { Self::new_ref_unchecked(value_type, ref_id) }.test_ref()
+		crate::sync::on_main_thread(|| {
+			let mut raw = unsafe { Self::new_ref_unchecked(value_type, ref_id) }.detach();
+			if !unsafe { byond().Byond_TestRef(&mut raw) } {
+				return None;
+			}
+			let value = Self(raw);
+			value.inc_ref();
+			Some(value)
+		})
 	}
 
 	/// Creates a new reference with the given value type and reference ID.
 	///
-	/// This is unsafe because it does not check if the provided reference is
-	/// valid, you should normally use [`new_ref()`](Self::new_ref) instead.
+	/// # Safety
+	/// Doesn't validate or take a reference, but dropping the result releases
+	/// one. Only wrap a reference you already own.
 	pub const unsafe fn new_ref_unchecked(value_type: ByondValueType, ref_id: u32) -> Self {
 		Self(CByondValue {
 			type_: value_type.0,

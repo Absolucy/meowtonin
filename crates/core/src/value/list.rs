@@ -42,44 +42,48 @@ impl ByondValue {
 		}
 	}
 
-	/// Reads items from a list, each with an owned reference.
+	/// Reads items (referenced) from a list.
 	pub fn read_list(&self) -> ByondResult<Vec<Self>> {
 		if !self.is_list() {
 			return Err(ByondError::NotAList);
 		}
-		let values = unsafe {
-			crate::misc::with_buffer::<_, ByondValue, _, _>(
-				None,
-				|ptr, len| byond().Byond_ReadList(&self.0, ptr.cast(), len),
-				|buffer| buffer,
-			)
-		}?;
-		// on 516 byond it won't return persistent refs.
-		// Acquire one for each wrapper so Drop balances this reference.
-		for value in &values {
-			value.inc_ref();
-		}
-		Ok(values)
+		crate::sync::on_main_thread(|| {
+			let values = unsafe {
+				crate::misc::with_buffer::<_, ByondValue, _, _>(
+					None,
+					|ptr, len| byond().Byond_ReadList(&self.0, ptr.cast(), len),
+					|buffer| buffer,
+				)
+			}?;
+			// only a plain /list hands its items over unreferenced
+			if self.get_type() == ByondValueType::List {
+				for value in &values {
+					value.inc_ref();
+				}
+			}
+			Ok(values)
+		})
 	}
 
-	/// Reads key,value pairs from an associative list, with owned references.
+	/// Reads key,value pairs (referenced) from a `/list` or `/alist`.
 	pub fn read_assoc_list(&self) -> ByondResult<Vec<[Self; 2]>> {
 		if !self.is_list() {
 			return Err(ByondError::NotAList);
 		}
-		let values = unsafe {
-			crate::misc::with_buffer::<_, ByondValue, _, _>(
+		// off the main thread BYOND runs Byond_ReadList here instead
+		crate::sync::on_main_thread(|| unsafe {
+			// BYOND counts single items, the buffer counts pairs
+			crate::misc::with_buffer::<_, [ByondValue; 2], _, _>(
 				None,
-				|ptr, len| byond().Byond_ReadListAssoc(&self.0, ptr.cast(), len),
-				|buffer| stupid_assoc_cast(buffer),
+				|ptr, pairs| {
+					let mut items = *pairs * 2;
+					let ok = byond().Byond_ReadListAssoc(&self.0, ptr.cast(), &mut items);
+					*pairs = items.div_ceil(2);
+					ok
+				},
+				|buffer| buffer,
 			)
-		}?;
-		// As with Byond_ReadList, give each wrapper a reference for Drop to release.
-		for [key, value] in &values {
-			key.inc_ref();
-			value.inc_ref();
-		}
-		Ok(values)
+		})
 	}
 
 	/// Returns if this is likely an associative list or not.
@@ -241,22 +245,4 @@ impl Iterator for ListIterator<'_> {
 	fn size_hint(&self) -> (usize, Option<usize>) {
 		(0, Some(self.len))
 	}
-}
-
-// Safety: `list` should always have a length that is a multiple of 2.
-unsafe fn stupid_assoc_cast(list: Vec<ByondValue>) -> Vec<[ByondValue; 2]> {
-	use crate::sys::CByondValue;
-
-	assert_eq!(
-		std::mem::size_of::<CByondValue>() * 2,
-		std::mem::size_of::<[ByondValue; 2]>()
-	);
-	unsafe { std::hint::assert_unchecked(list.len() % 2 == 0) };
-	let stupid: Vec<CByondValue> = list.into_iter().map(|x| x.detach()).collect();
-	let assoc_list: Vec<[CByondValue; 2]> =
-		unsafe { bytemuck::try_cast_vec(stupid).unwrap_unchecked() };
-	assoc_list
-		.into_iter()
-		.map(|[a, b]| [ByondValue(a), ByondValue(b)])
-		.collect()
 }
