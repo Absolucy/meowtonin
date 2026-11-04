@@ -29,10 +29,10 @@ pub fn locate(
 	unsafe {
 		let mut result = MaybeUninit::uninit();
 		let list = list.into();
-		let list = list
-			.map(|list| &list.0 as *const _)
-			.unwrap_or_else(std::ptr::null);
-		map_byond_error!(byond().Byond_LocateIn(&typepath.0, list, result.as_mut_ptr()))?;
+		let list_ptr = list
+			.as_ref()
+			.map_or(std::ptr::null(), |list| &list.0 as *const _);
+		map_byond_error!(byond().Byond_LocateIn(&typepath.0, list_ptr, result.as_mut_ptr()))?;
 		Ok(ByondValue(unsafe { result.assume_init() }))
 	}
 }
@@ -64,44 +64,25 @@ where
 	F: FnOnce(Vec<B>) -> T,
 	W: Fn(*mut std::ffi::c_void, &mut u4c) -> bool,
 {
-	let mut buffer: Vec<B> = match initial_capacity {
-		Some(cap) => Vec::with_capacity(cap),
-		None => Vec::new(),
-	};
-	let mut needed_len = buffer.capacity() as u4c;
+	let mut buffer: Vec<B> = Vec::new();
+	buffer.resize_with(initial_capacity.unwrap_or(0), B::default);
 
-	if !writer(buffer.as_mut_ptr().cast(), &mut needed_len) {
-		// buffer doesn't have enough space, let's allocate more.
-		buffer.reserve((needed_len as usize).saturating_sub(buffer.len()));
-		// maximum of 16 iterations - which should never happen, but well,
-		// whenever a coder says "this should never happen", it almost
-		// guarantees that somehow, said thing will happen.
-		let mut iters_left = 16_u8;
-		loop {
-			if writer(buffer.as_mut_ptr().cast(), &mut needed_len) {
-				// if writer returns true, then the buffer has successfully
-				// filled completely.
-				break;
-			}
-			iters_left -= 1;
-			if iters_left == 0 {
-				// We've somehow managed to hit 16 iterations without having
-				// sufficient length, return the last BYOND error.
-				return Err(ByondError::get_last_byond_error());
-			}
-			// Reallocate and try again
-			buffer.reserve((needed_len as usize).saturating_sub(buffer.len()));
+	// maximum of 16 iterations - which should never happen, but well,
+	// whenever a coder says "this should never happen", it almost
+	// guarantees that somehow, said thing will happen.
+	for _ in 0..16 {
+		let mut len = buffer.len() as u4c;
+		if writer(buffer.as_mut_ptr().cast(), &mut len) {
+			buffer.truncate(len as usize);
+			return Ok(transform(buffer));
 		}
+		// false with a length of 0 is a real error, not "too small"
+		if len == 0 {
+			return Err(ByondError::get_last_byond_error());
+		}
+		// drops refs a contents/vars walk wrote before running out
+		buffer.clear();
+		buffer.resize_with(len as usize, B::default);
 	}
-
-	debug_assert!(
-		needed_len as usize <= buffer.capacity(),
-		"buffer capacity was allocated incorrectly (needed len = {needed_len} > capacity = {})",
-		buffer.capacity()
-	);
-
-	// Safety: needed_len is always <= capacity here,
-	// unless BYOND did a really bad fucky wucky.
-	unsafe { buffer.set_len(needed_len as usize) };
-	Ok(transform(buffer))
+	Err(ByondError::get_last_byond_error())
 }

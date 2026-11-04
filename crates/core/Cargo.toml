@@ -12,7 +12,6 @@ license.workspace = true
 [dependencies]
 aho-corasick = "1"
 backtrace = "0.3"
-bytemuck = { version = "1", features = ["extern_crate_std"] }
 cfg-if = "1"
 constcat = { version = "0.6" }
 inventory = "0.3"

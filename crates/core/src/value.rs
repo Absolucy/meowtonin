@@ -242,13 +242,17 @@ impl ByondValue {
 
 impl Drop for ByondValue {
 	fn drop(&mut self) {
-		self.dec_ref();
+		if self.get_type().is_ref_counted() {
+			self.dec_ref();
+		}
 	}
 }
 
 impl Clone for ByondValue {
 	fn clone(&self) -> Self {
-		self.inc_ref();
+		if self.get_type().is_ref_counted() {
+			self.inc_ref();
+		}
 		Self(self.0)
 	}
 }
