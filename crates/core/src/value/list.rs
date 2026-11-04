@@ -74,7 +74,8 @@ impl ByondValue {
 				|buffer| stupid_assoc_cast(buffer),
 			)
 		}?;
-		// As with Byond_ReadList, give each wrapper a reference for Drop to release.
+		// As with Byond_ReadList, give each wrapper a reference
+		// for Drop to release.
 		for [key, value] in &values {
 			key.inc_ref();
 			value.inc_ref();
