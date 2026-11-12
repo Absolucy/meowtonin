@@ -39,6 +39,9 @@ pub fn locate(
 
 /// Returns if this is likely an associative list or not.
 ///
+/// A non-null value means it probably is. A number key or a repeated key
+/// means it is a plain list.
+///
 /// Do not rely on this being 100% accurate.
 pub fn is_likely_assoc(list: &[[ByondValue; 2]]) -> bool {
 	let mut found_keys =
@@ -47,7 +50,7 @@ pub fn is_likely_assoc(list: &[[ByondValue; 2]]) -> bool {
 		if !value.is_null() {
 			return true;
 		}
-		if key.is_number() || found_keys.insert(key) {
+		if key.is_number() || !found_keys.insert(key) {
 			return false;
 		}
 	}

@@ -14,7 +14,9 @@ impl ByondValue {
 				return None;
 			}
 			let value = Self(raw);
-			value.inc_ref();
+			if value.get_type().is_ref_counted() {
+				value.inc_ref();
+			}
 			Some(value)
 		})
 	}

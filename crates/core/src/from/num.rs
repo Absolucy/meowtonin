@@ -2,6 +2,10 @@
 use crate::{ByondError, ByondResult, ByondValue, FromByond};
 use std::borrow::Cow;
 
+// the wide types use an exclusive upper bound: `MAX as f32` rounds up to the
+// next power of two, so an inclusive range would let one out-of-range whole
+// number through to a saturating cast.
+
 ///////////////////////
 // Unsigned integers //
 ///////////////////////
@@ -9,7 +13,7 @@ use std::borrow::Cow;
 impl FromByond for u8 {
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
 		const MAX_VALUE: f32 = u8::MAX as f32;
-		let num = value.get_number()?.round();
+		let num = value.get_number()?;
 		if num.fract() != 0.0 || !(0.0..=MAX_VALUE).contains(&num) {
 			return Err(ByondError::InvalidConversion {
 				expected: Cow::Borrowed("8-bit unsigned integer"),
@@ -23,7 +27,7 @@ impl FromByond for u8 {
 impl FromByond for u16 {
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
 		const MAX_VALUE: f32 = u16::MAX as f32;
-		let num = value.get_number()?.round();
+		let num = value.get_number()?;
 		if num.fract() != 0.0 || !(0.0..=MAX_VALUE).contains(&num) {
 			return Err(ByondError::InvalidConversion {
 				expected: Cow::Borrowed("16-bit unsigned integer"),
@@ -37,8 +41,8 @@ impl FromByond for u16 {
 impl FromByond for u32 {
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
 		const MAX_VALUE: f32 = u32::MAX as f32;
-		let num = value.get_number()?.round();
-		if !(0.0..=MAX_VALUE).contains(&num) {
+		let num = value.get_number()?;
+		if num.fract() != 0.0 || !(0.0..MAX_VALUE).contains(&num) {
 			return Err(ByondError::InvalidConversion {
 				expected: Cow::Borrowed("32-bit unsigned integer"),
 				got: Cow::Borrowed("float"),
@@ -50,11 +54,11 @@ impl FromByond for u32 {
 
 impl FromByond for u64 {
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
-		const MAX_VALUE: f32 = u32::MAX as f32;
-		let num = value.get_number()?.round();
-		if num.fract() != 0.0 || !(0.0..=MAX_VALUE).contains(&num) {
+		const MAX_VALUE: f32 = u64::MAX as f32;
+		let num = value.get_number()?;
+		if num.fract() != 0.0 || !(0.0..MAX_VALUE).contains(&num) {
 			return Err(ByondError::InvalidConversion {
-				expected: Cow::Borrowed("32-bit unsigned integer"),
+				expected: Cow::Borrowed("64-bit unsigned integer"),
 				got: Cow::Borrowed("float"),
 			});
 		}
@@ -64,11 +68,11 @@ impl FromByond for u64 {
 
 impl FromByond for u128 {
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
-		const MAX_VALUE: f32 = u32::MAX as f32;
-		let num = value.get_number()?.round();
-		if num.fract() != 0.0 || !(0.0..=MAX_VALUE).contains(&num) {
+		const MAX_VALUE: f32 = u128::MAX as f32;
+		let num = value.get_number()?;
+		if num.fract() != 0.0 || !(0.0..MAX_VALUE).contains(&num) {
 			return Err(ByondError::InvalidConversion {
-				expected: Cow::Borrowed("32-bit unsigned integer"),
+				expected: Cow::Borrowed("128-bit unsigned integer"),
 				got: Cow::Borrowed("float"),
 			});
 		}
@@ -78,10 +82,9 @@ impl FromByond for u128 {
 
 impl FromByond for usize {
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
-		const MAX_VALUE: f32 = u32::MAX as f32;
-
-		let num = value.get_number()?.round();
-		if num.fract() != 0.0 || !(0.0..=MAX_VALUE).contains(&num) {
+		const MAX_VALUE: f32 = usize::MAX as f32;
+		let num = value.get_number()?;
+		if num.fract() != 0.0 || !(0.0..MAX_VALUE).contains(&num) {
 			return Err(ByondError::InvalidConversion {
 				expected: Cow::Borrowed("pointer-sized unsigned integer"),
 				got: Cow::Borrowed("float"),
@@ -100,7 +103,7 @@ impl FromByond for i8 {
 		const MIN_VALUE: f32 = i8::MIN as f32;
 		const MAX_VALUE: f32 = i8::MAX as f32;
 
-		let num = value.get_number()?.round();
+		let num = value.get_number()?;
 		if num.fract() != 0.0 || !(MIN_VALUE..=MAX_VALUE).contains(&num) {
 			return Err(ByondError::InvalidConversion {
 				expected: Cow::Borrowed("8-bit signed integer"),
@@ -116,7 +119,7 @@ impl FromByond for i16 {
 		const MIN_VALUE: f32 = i16::MIN as f32;
 		const MAX_VALUE: f32 = i16::MAX as f32;
 
-		let num = value.get_number()?.round();
+		let num = value.get_number()?;
 		if num.fract() != 0.0 || !(MIN_VALUE..=MAX_VALUE).contains(&num) {
 			return Err(ByondError::InvalidConversion {
 				expected: Cow::Borrowed("16-bit signed integer"),
@@ -132,8 +135,8 @@ impl FromByond for i32 {
 		const MIN_VALUE: f32 = i32::MIN as f32;
 		const MAX_VALUE: f32 = i32::MAX as f32;
 
-		let num = value.get_number()?.round();
-		if num.fract() != 0.0 || !(MIN_VALUE..=MAX_VALUE).contains(&num) {
+		let num = value.get_number()?;
+		if num.fract() != 0.0 || !(MIN_VALUE..MAX_VALUE).contains(&num) {
 			return Err(ByondError::InvalidConversion {
 				expected: Cow::Borrowed("32-bit signed integer"),
 				got: Cow::Borrowed("float"),
@@ -145,13 +148,13 @@ impl FromByond for i32 {
 
 impl FromByond for i64 {
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
-		const MIN_VALUE: f32 = i32::MIN as f32;
-		const MAX_VALUE: f32 = i32::MAX as f32;
+		const MIN_VALUE: f32 = i64::MIN as f32;
+		const MAX_VALUE: f32 = i64::MAX as f32;
 
-		let num = value.get_number()?.round();
-		if num.fract() != 0.0 || !(MIN_VALUE..=MAX_VALUE).contains(&num) {
+		let num = value.get_number()?;
+		if num.fract() != 0.0 || !(MIN_VALUE..MAX_VALUE).contains(&num) {
 			return Err(ByondError::InvalidConversion {
-				expected: Cow::Borrowed("32-bit signed integer"),
+				expected: Cow::Borrowed("64-bit signed integer"),
 				got: Cow::Borrowed("float"),
 			});
 		}
@@ -161,13 +164,13 @@ impl FromByond for i64 {
 
 impl FromByond for i128 {
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
-		const MIN_VALUE: f32 = i32::MIN as f32;
-		const MAX_VALUE: f32 = i32::MAX as f32;
+		const MIN_VALUE: f32 = i128::MIN as f32;
+		const MAX_VALUE: f32 = i128::MAX as f32;
 
-		let num = value.get_number()?.round();
-		if num.fract() != 0.0 || !(MIN_VALUE..=MAX_VALUE).contains(&num) {
+		let num = value.get_number()?;
+		if num.fract() != 0.0 || !(MIN_VALUE..MAX_VALUE).contains(&num) {
 			return Err(ByondError::InvalidConversion {
-				expected: Cow::Borrowed("32-bit signed integer"),
+				expected: Cow::Borrowed("128-bit signed integer"),
 				got: Cow::Borrowed("float"),
 			});
 		}
@@ -177,11 +180,11 @@ impl FromByond for i128 {
 
 impl FromByond for isize {
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
-		const MIN_VALUE: f32 = i32::MIN as f32;
-		const MAX_VALUE: f32 = i32::MAX as f32;
+		const MIN_VALUE: f32 = isize::MIN as f32;
+		const MAX_VALUE: f32 = isize::MAX as f32;
 
-		let num = value.get_number()?.round();
-		if num.fract() != 0.0 || !(MIN_VALUE..=MAX_VALUE).contains(&num) {
+		let num = value.get_number()?;
+		if num.fract() != 0.0 || !(MIN_VALUE..MAX_VALUE).contains(&num) {
 			return Err(ByondError::InvalidConversion {
 				expected: Cow::Borrowed("pointer-sized signed integer"),
 				got: Cow::Borrowed("float"),

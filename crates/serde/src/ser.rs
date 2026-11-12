@@ -38,7 +38,7 @@ impl<'a> Serializer for &'a mut ByondSerializer {
 	}
 
 	fn serialize_i64(self, v: i64) -> Result<Self::Ok, Self::Error> {
-		(v as i32).to_byond().map_err(SerializeError::from)
+		v.to_byond().map_err(SerializeError::from)
 	}
 
 	fn serialize_u8(self, v: u8) -> Result<Self::Ok, Self::Error> {
@@ -54,7 +54,7 @@ impl<'a> Serializer for &'a mut ByondSerializer {
 	}
 
 	fn serialize_u64(self, v: u64) -> Result<Self::Ok, Self::Error> {
-		(v as u32).to_byond().map_err(SerializeError::from)
+		v.to_byond().map_err(SerializeError::from)
 	}
 
 	fn serialize_f32(self, v: f32) -> Result<Self::Ok, Self::Error> {
@@ -62,7 +62,7 @@ impl<'a> Serializer for &'a mut ByondSerializer {
 	}
 
 	fn serialize_f64(self, v: f64) -> Result<Self::Ok, Self::Error> {
-		(v as f32).to_byond().map_err(SerializeError::from)
+		v.to_byond().map_err(SerializeError::from)
 	}
 
 	fn serialize_char(self, v: char) -> Result<Self::Ok, Self::Error> {
@@ -178,5 +178,17 @@ impl<'a> Serializer for &'a mut ByondSerializer {
 		_len: usize,
 	) -> Result<Self::SerializeStructVariant, Self::Error> {
 		map::ByondMapSerializer::new(self, Some(variant)).map_err(SerializeError::from)
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::ByondSerializer;
+	use serde::ser::Serializer;
+
+	// used to wrap to 705032704 via `as i32`
+	#[test]
+	fn i64_past_2_pow_24_is_rejected() {
+		assert!((&mut ByondSerializer).serialize_i64(5_000_000_000).is_err());
 	}
 }

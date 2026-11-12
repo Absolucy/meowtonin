@@ -237,8 +237,7 @@ impl<'de> Deserializer<'de> for &ByondDeserializer {
 	where
 		V: de::Visitor<'de>,
 	{
-		let iter = self.value.iter()?;
-		let vec: VecDeque<_> = iter.map(|(key, _)| key).collect();
+		let vec: VecDeque<_> = self.value.values()?.collect();
 		visitor.visit_seq(ByondSeqAccess { iter: vec })
 	}
 
