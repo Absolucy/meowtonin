@@ -16,8 +16,8 @@ cfg-if = "1"
 constcat = { version = "0.6" }
 inventory = "0.3"
 libloading = { workspace = true }
-meowtonin-byondapi-sys = { path = "../sys", version = "0.3", default-features = false }
-meowtonin-impl = { path = "../impl", version = "0.3" }
+meowtonin-byondapi-sys = { path = "../sys", version = "0.4", default-features = false }
+meowtonin-impl = { path = "../impl", version = "0.4" }
 nohash-hasher = "0.2"
 parking_lot = "0.13"
 rustc-hash = "2"
