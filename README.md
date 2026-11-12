@@ -2,7 +2,7 @@
 
 ![Meowtonin Logo](.github/assets/meowtonin-logo.png)
 
-**Meowtonin** is a safe Rust crate for interacting with the BYOND API, present in the latest versions of BYOND 515.
+**Meowtonin** is a safe Rust crate for interacting with the BYOND API, present in the latest versions of BYOND 516.
 
 ## Setup
 
