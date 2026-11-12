@@ -68,7 +68,9 @@ pub unsafe fn parse_args(argc: sys::u4c, argv: *mut CByondValue) -> Vec<ByondVal
 			// we need to increment the ref count here because byond will
 			// decrement it when the call returns
 			let value = ByondValue(*value);
-			value.inc_ref();
+			if value.get_type().is_ref_counted() {
+				value.inc_ref();
+			}
 			value
 		})
 		.collect()

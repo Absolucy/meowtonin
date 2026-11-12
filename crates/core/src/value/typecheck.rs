@@ -7,42 +7,32 @@ use std::{
 	ops::Deref,
 };
 
-/// Simple helper macro that does a "fast" typecheck when the
-/// `fast-typechecking` feature is enabled, and uses the actual byondapi
-/// function to check otherwise.
-macro_rules! check_byondvalue_type {
-	($value:ident, $type:expr, $api:ident) => {
-		if cfg!(feature = "fast-typechecking") {
-			$value.get_type() == $type
-		} else {
-			unsafe { byond().$api(&$value.0) }
-		}
-	};
-}
-
 impl ByondValue {
 	/// Determines if the [ByondValue] is a null value.
 	///
 	/// # Returns
 	/// `true` if the value is null, `false` otherwise.
+	#[inline]
 	pub fn is_null(&self) -> bool {
-		check_byondvalue_type!(self, ByondValueType::Null, ByondValue_IsNull)
+		self.get_type() == ByondValueType::Null
 	}
 
 	/// Checks if the [ByondValue] is a number.
 	///
 	/// # Returns
 	/// `true` if the value is a number, `false` otherwise.
+	#[inline]
 	pub fn is_number(&self) -> bool {
-		check_byondvalue_type!(self, ByondValueType::Number, ByondValue_IsNum)
+		self.get_type() == ByondValueType::Number
 	}
 
 	/// Checks if the [ByondValue] is a string.
 	///
 	/// # Returns
 	/// `true` if the value is a string, `false` otherwise.
+	#[inline]
 	pub fn is_string(&self) -> bool {
-		check_byondvalue_type!(self, ByondValueType::String, ByondValue_IsStr)
+		self.get_type() == ByondValueType::String
 	}
 
 	/// Determines if the [ByondValue] represents a list.
