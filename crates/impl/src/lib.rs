@@ -1,36 +1,37 @@
 // SPDX-License-Identifier: 0BSD
+mod metadata;
+
 use darling::FromMeta;
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::{ToTokens, quote};
-use syn::{FnArg, ItemFn, PatType, ReturnType, parse_macro_input, spanned::Spanned};
+use syn::{ItemFn, PatType, ReturnType, parse_macro_input, spanned::Spanned};
 
-#[derive(Debug, FromMeta, Copy, Clone)]
+#[derive(Debug, FromMeta, Clone)]
 #[darling(derive_syn_parse)]
 struct ByondFnArgs {
 	#[darling(default)]
 	variadic: bool,
 	#[darling(default)]
 	debug_log: bool,
+	name: Option<String>,
 }
 
-/// Generates argument parsing code for a function parameter
-fn generate_arg_parser(input: &FnArg, idx: usize) -> TokenStream2 {
-	if let FnArg::Typed(PatType { attrs, pat, ty, .. }) = input {
-		let mutability = attrs.iter().find(|attr| attr.path().is_ident("mut"));
-		let arg_name = syn::Ident::new(&format!("__arg_{idx}"), pat.span());
-		let error_message = format!(
-			"failed to parse argument {idx} ({pat}: {ty})",
-			idx = idx + 1,
-			pat = pat.to_token_stream(),
-			ty = ty.to_token_stream(),
-		);
-		quote! {
-			let #mutability #pat: #ty = ::meowtonin::FromByond::from_byond(#arg_name)
-				.expect(#error_message);
-		}
-	} else {
-		quote!()
+/// Generates the code that parses one argument into a temporary, which the
+/// wrapper then passes to the original function.
+fn generate_arg_parser(param: &PatType, idx: usize) -> TokenStream2 {
+	let PatType { pat, ty, .. } = param;
+	let arg_name = syn::Ident::new(&format!("__arg_{idx}"), pat.span());
+	let parsed_name = syn::Ident::new(&format!("__parsed_{idx}"), pat.span());
+	let error_message = format!(
+		"failed to parse argument {idx} ({pat}: {ty})",
+		idx = idx + 1,
+		pat = pat.to_token_stream(),
+		ty = ty.to_token_stream(),
+	);
+	quote! {
+		let #parsed_name: #ty = ::meowtonin::FromByond::from_byond(#arg_name)
+			.expect(#error_message);
 	}
 }
 
@@ -60,64 +61,48 @@ fn generate_return_conversion(ret_type: &ReturnType) -> (TokenStream2, TokenStre
 	}
 }
 
-/// Generates the wrapper function that handles argument parsing and return
-/// conversion
+/// Generates the wrapper function that handles argument parsing, calls the
+/// original function, and converts its return value
 fn generate_wrapper_fn(
 	wrapper_ident: &syn::Ident,
-	parse_args: &[TokenStream2],
+	func_name: &syn::Ident,
+	params: &[&PatType],
 	return_type: &TokenStream2,
 	return_conversion: &TokenStream2,
-	body: &syn::Block,
-	arg_count: usize,
 	variadic: bool,
 ) -> TokenStream2 {
-	let args_ident = if variadic {
-		quote! { __args: ::std::vec::Vec<::meowtonin::ByondValue> }
-	} else if arg_count > 0 {
-		let arg_params: Vec<_> = (0..arg_count)
-			.map(|i| {
-				let arg_name =
-					syn::Ident::new(&format!("__arg_{i}"), proc_macro2::Span::call_site());
-				quote! { #arg_name: ::meowtonin::ByondValue }
-			})
-			.collect();
-		quote! { #(#arg_params),* }
+	let (wrapper_params, parse_block, call_args) = if variadic {
+		(
+			quote! { __args: ::std::vec::Vec<::meowtonin::ByondValue> },
+			quote! {},
+			quote! { __args },
+		)
 	} else {
-		quote! {}
+		let arg_names = (0..params.len())
+			.map(|idx| syn::Ident::new(&format!("__arg_{idx}"), proc_macro2::Span::call_site()))
+			.collect::<Vec<_>>();
+		let parsed_names = (0..params.len())
+			.map(|idx| syn::Ident::new(&format!("__parsed_{idx}"), proc_macro2::Span::call_site()))
+			.collect::<Vec<_>>();
+		let parsers = params
+			.iter()
+			.enumerate()
+			.map(|(idx, param)| generate_arg_parser(param, idx));
+		(
+			quote! { #(#arg_names: ::meowtonin::ByondValue),* },
+			quote! { #(#parsers)* },
+			quote! { #(#parsed_names),* },
+		)
 	};
 
-	let parse_block = if !variadic {
-		quote! {
-			#(#parse_args)*
-		}
-	} else {
-		quote! {}
-	};
-
-	let call_block = if variadic {
-		quote! {
-			let mut __func = move || -> #return_type {
-				let args = __args;
-				#body
-			};
-			let ret = __func();
-		}
-	} else {
-		quote! {
-			let mut __func = move || -> #return_type {
-				#body
-			};
-			let ret = __func();
-		}
-	};
-
+	// has to be `super::`, a bare name would find the export below it instead
 	quote! {
-		fn #wrapper_ident(#args_ident)
+		fn #wrapper_ident(#wrapper_params)
 			-> ::std::result::Result<::meowtonin::ByondValue, ::std::boxed::Box<dyn ::std::error::Error>>
 		{
 			#parse_block
 
-			#call_block
+			let ret: #return_type = super::#func_name(#call_args);
 
 			#return_conversion
 		}
@@ -240,7 +225,8 @@ pub fn byond_fn(attr: TokenStream, item: TokenStream) -> TokenStream {
 		}
 	};
 
-	let func = parse_macro_input!(item as ItemFn);
+	let mut func = parse_macro_input!(item as ItemFn);
+	let param_docs = metadata::take_param_docs(&mut func);
 
 	let func_name = &func.sig.ident;
 	let wrapper_name = format!("__byond_{func_name}_inner");
@@ -249,36 +235,23 @@ pub fn byond_fn(attr: TokenStream, item: TokenStream) -> TokenStream {
 	let mod_name = format!("__byond_export_{func_name}");
 	let mod_ident = syn::Ident::new(&mod_name, func_name.span());
 
-	// Generate argument parsing code for each parameter (only for non-variadic)
-	let parse_args: Vec<_> = if !args.variadic {
-		func.sig
-			.inputs
-			.iter()
-			.enumerate()
-			.map(|(idx, input)| generate_arg_parser(input, idx))
-			.collect()
-	} else {
-		vec![]
-	};
-
-	// Generate return type handling code
 	let (return_type, return_conversion) = generate_return_conversion(&func.sig.output);
 
-	// Generate the wrapper function
+	let params = metadata::typed_params(&func);
 	let wrapper_fn = generate_wrapper_fn(
 		&wrapper_ident,
-		&parse_args,
+		func_name,
+		&params,
 		&return_type,
 		&return_conversion,
-		&func.block,
-		func.sig.inputs.len(),
 		args.variadic,
 	);
 
-	// Generate the exported FFI function
-	let export_fn = generate_export_fn(func_name, &wrapper_ident, func.sig.inputs.len(), &args);
+	let export_fn = generate_export_fn(func_name, &wrapper_ident, params.len(), &args);
 
-	// Combine everything into the final output
+	let dm_name = args.name.clone().unwrap_or_else(|| func_name.to_string());
+	let submit = metadata::submit_tokens(&func, &param_docs, &dm_name, args.variadic);
+
 	quote! {
 		#func
 
@@ -288,6 +261,7 @@ pub fn byond_fn(attr: TokenStream, item: TokenStream) -> TokenStream {
 
 			#wrapper_fn
 			#export_fn
+			#submit
 		}
 	}
 	.into()

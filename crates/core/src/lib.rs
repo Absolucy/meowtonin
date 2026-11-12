@@ -9,6 +9,7 @@
 #![allow(unused_unsafe, clippy::missing_safety_doc)]
 #![cfg_attr(debug_assertions, allow(dead_code))]
 
+pub mod bindings;
 pub mod byond;
 #[macro_use]
 pub mod error;
