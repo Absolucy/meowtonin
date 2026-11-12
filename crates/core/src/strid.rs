@@ -4,9 +4,10 @@ use crate::{
 	sys::{NONE, u4c},
 };
 use nohash_hasher::BuildNoHashHasher;
-use papaya::HashMap;
+use parking_lot::Mutex;
 use rustc_hash::FxHasher;
 use std::{
+	collections::HashMap,
 	ffi::CString,
 	hash::{Hash, Hasher},
 	mem::ManuallyDrop,
@@ -14,10 +15,14 @@ use std::{
 };
 
 const DEFAULT_CACHE_CAPACITY: usize = 512;
-pub(crate) static STRID_CACHE: LazyLock<HashMap<u64, Option<u4c>, BuildNoHashHasher<u64>>> =
-	LazyLock::new(|| {
-		HashMap::with_capacity_and_hasher(DEFAULT_CACHE_CAPACITY, BuildNoHashHasher::default())
-	});
+
+type StrIdMap = HashMap<u64, Option<u4c>, BuildNoHashHasher<u64>>;
+pub(crate) static STRID_CACHE: LazyLock<Mutex<StrIdMap>> = LazyLock::new(|| {
+	Mutex::new(HashMap::with_capacity_and_hasher(
+		DEFAULT_CACHE_CAPACITY,
+		BuildNoHashHasher::default(),
+	))
+});
 
 fn string_hash(string: impl AsRef<str>) -> u64 {
 	let mut hasher = FxHasher::default();
@@ -39,8 +44,9 @@ pub fn lookup_string_id(string: impl AsRef<str>) -> Option<u4c> {
 	let string = string.as_ref();
 	let hash = string_hash(string);
 	*STRID_CACHE
-		.pin()
-		.get_or_insert_with(hash, || get_str_id(string))
+		.lock()
+		.entry(hash)
+		.or_insert_with(|| get_str_id(string))
 }
 
 /// Returns the bytes of the string with the given string ID, or `None` if the

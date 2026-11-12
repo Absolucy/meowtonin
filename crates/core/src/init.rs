@@ -18,7 +18,7 @@ pub struct InitFunc(pub fn() -> ());
 #[doc(hidden)]
 pub fn do_init() {
 	// Clear string ID cache, just in case anything's changed.
-	crate::strid::STRID_CACHE.pin().clear();
+	crate::strid::STRID_CACHE.lock().clear();
 
 	// Run any custom initialization functions.
 	for func in inventory::iter::<InitFunc> {
