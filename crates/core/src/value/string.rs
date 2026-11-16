@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{ByondError, ByondResult, ByondValue, byond};
-use std::mem::MaybeUninit;
+use crate::{ByondError, ByondResult, ByondValue, byond, sys::u4c};
+use std::{mem::MaybeUninit, slice};
 
 impl ByondValue {
 	pub fn new_string<Str>(string: Str) -> Self
@@ -27,21 +27,35 @@ impl ByondValue {
 	}
 
 	pub fn get_string(&self) -> ByondResult<String> {
-		self.get_string_bytes().and_then(buffer_to_string)
+		let mut stack = [MaybeUninit::<u8>::uninit(); 256];
+		let mut len = stack.len() as u4c;
+		if unsafe { byond().Byond_ToString(&self.0, stack.as_mut_ptr().cast(), &mut len) } {
+			let written = unsafe { slice::from_raw_parts(stack.as_ptr().cast(), len as usize) };
+			return bytes_to_string(written);
+		}
+		if len == 0 {
+			return Err(ByondError::get_last_byond_error());
+		}
+		let buffer = unsafe {
+			crate::misc::with_buffer::<_, u8, _, _>(
+				Some(len as usize),
+				|ptr, len| byond().Byond_ToString(&self.0, ptr.cast(), len),
+				|buffer| buffer,
+			)
+		}?;
+		bytes_to_string(&buffer)
 	}
 }
 
-fn buffer_to_string(mut buffer: Vec<u8>) -> ByondResult<String> {
-	let nul = buffer
+fn bytes_to_string(bytes: &[u8]) -> ByondResult<String> {
+	let nul = bytes
 		.iter()
 		.position(|&byte| byte == 0)
 		.ok_or(ByondError::NonUtf8String)?;
-	buffer.truncate(nul);
-	match String::from_utf8(buffer) {
-		Ok(string) => Ok(string),
-		Err(err) if cfg!(feature = "lossy-utf8") => {
-			Ok(String::from_utf8_lossy(err.as_bytes()).into_owned())
-		}
+	let bytes = &bytes[..nul];
+	match std::str::from_utf8(bytes) {
+		Ok(string) => Ok(string.to_owned()),
+		Err(_) if cfg!(feature = "lossy-utf8") => Ok(String::from_utf8_lossy(bytes).into_owned()),
 		Err(_) => Err(ByondError::NonUtf8String),
 	}
 }
