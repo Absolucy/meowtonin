@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: 0BSD
 use crate::{
 	ByondError, ByondResult, ByondValue, FromByond, ToByond, byond, strid::lookup_string_id,
+	to::RawValues,
 };
 use std::mem::MaybeUninit;
 
@@ -15,10 +16,8 @@ where
 	Return: FromByond,
 {
 	let name_id = lookup_string_id(name).ok_or(ByondError::InvalidProc)?;
-	let args = args
-		.into_iter()
-		.map(|arg| arg.to_byond())
-		.collect::<ByondResult<Vec<_>>>()?;
+	let args = RawValues::collect(args.into_iter().map(ToByond::into_byond_cow))?;
+	let args = args.as_slice();
 	unsafe {
 		let mut result = MaybeUninit::zeroed();
 		map_byond_error!(byond().Byond_CallGlobalProcByStrId(

@@ -76,6 +76,16 @@ pub unsafe fn parse_args(argc: sys::u4c, argv: *mut CByondValue) -> Vec<ByondVal
 		.collect()
 }
 
+/// # Safety
+/// Same as [`parse_args`], and the slice must not outlive the export call.
+#[doc(hidden)]
+pub unsafe fn borrow_args<'a>(argc: sys::u4c, argv: *mut CByondValue) -> &'a [ByondValue] {
+	if argc == 0 || argv.is_null() {
+		return &[];
+	}
+	unsafe { std::slice::from_raw_parts(argv.cast::<ByondValue>(), argc as usize) }
+}
+
 /// Returns the current major version and build version of BYOND.
 pub fn byond_version() -> ByondVersion {
 	byond().get_version()

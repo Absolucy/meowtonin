@@ -30,7 +30,7 @@ fn generate_arg_parser(param: &PatType, idx: usize) -> TokenStream2 {
 		ty = ty.to_token_stream(),
 	);
 	quote! {
-		let #parsed_name: #ty = ::meowtonin::FromByond::from_byond(#arg_name)
+		let #parsed_name: #ty = <#ty as ::meowtonin::FromByond>::from_byond_ref(#arg_name)
 			.map_err(|err| ::std::format!("{}: {}", #error_message, err))?;
 	}
 }
@@ -89,7 +89,7 @@ fn generate_wrapper_fn(
 			.enumerate()
 			.map(|(idx, param)| generate_arg_parser(param, idx));
 		(
-			quote! { #(#arg_names: ::meowtonin::ByondValue),* },
+			quote! { #(#arg_names: &::meowtonin::ByondValue),* },
 			quote! { #(#parsers)* },
 			quote! { #(#parsed_names),* },
 		)
@@ -133,9 +133,14 @@ fn generate_export_fn(
 	let debug_end = generate_debug_msg(&func_name_str, "end", args);
 	let debug_crash = generate_debug_msg(&func_name_str, "CRASH!!!", args);
 
-	let let_args = if args.variadic || length > 0 {
+	// BYOND holds argv's refs until we return, so only variadic needs its own
+	let let_args = if args.variadic {
 		quote! {
-			let mut __args = unsafe { ::meowtonin::parse_args(__argc, __argv) };
+			let __args = unsafe { ::meowtonin::parse_args(__argc, __argv) };
+		}
+	} else if length > 0 {
+		quote! {
+			let __args = unsafe { ::meowtonin::borrow_args(__argc, __argv) };
 		}
 	} else {
 		quote! {}
@@ -146,17 +151,12 @@ fn generate_export_fn(
 			#wrapper_ident(__args)
 		}
 	} else if length > 0 {
-		let args: Vec<_> = (0..length)
-			.map(|_| {
-				quote! {
-					__args_iter
-						.next()
-						.unwrap_or(::meowtonin::ByondValue::NULL)
-				}
-			})
-			.collect();
+		let args = (0..length).map(|idx| {
+			quote! {
+				__args.get(#idx).unwrap_or(&::meowtonin::ByondValue::NULL)
+			}
+		});
 		quote! {
-			let mut __args_iter = __args.into_iter();
 			#wrapper_ident(#(#args),*)
 		}
 	} else {

@@ -13,8 +13,15 @@ fn not_a_string(got: ByondValueType) -> ByondError {
 	}
 }
 
+// keep the type check before get_string, ToString on an object can run DM code
 impl FromByond for CString {
+	const CONVERTS_WITHOUT_DM: bool = true;
+
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
+		Self::from_byond_ref(&value)
+	}
+
+	fn from_byond_ref(value: &ByondValue) -> ByondResult<Self> {
 		match value.get_type() {
 			ByondValueType::String => {
 				Ok(CStr::from_bytes_until_nul(value.get_string_bytes()?.as_slice())?.to_owned())
@@ -26,7 +33,13 @@ impl FromByond for CString {
 }
 
 impl FromByond for String {
+	const CONVERTS_WITHOUT_DM: bool = true;
+
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
+		Self::from_byond_ref(&value)
+	}
+
+	fn from_byond_ref(value: &ByondValue) -> ByondResult<Self> {
 		match value.get_type() {
 			ByondValueType::String => value.get_string(),
 			ByondValueType::Null => Ok(String::new()),
@@ -36,7 +49,13 @@ impl FromByond for String {
 }
 
 impl FromByond for PathBuf {
+	const CONVERTS_WITHOUT_DM: bool = true;
+
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
-		String::from_byond(value).map(PathBuf::from)
+		Self::from_byond_ref(&value)
+	}
+
+	fn from_byond_ref(value: &ByondValue) -> ByondResult<Self> {
+		String::from_byond_ref(value).map(PathBuf::from)
 	}
 }

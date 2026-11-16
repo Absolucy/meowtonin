@@ -1,23 +1,28 @@
 // SPDX-License-Identifier: 0BSD
-use crate::{ByondError, ByondResult, ByondValue, ToByond};
+use crate::{ByondError, ByondResult, ByondValue, ToByond, byond, to::RawValues};
 use std::{
 	borrow::Cow,
 	collections::{BTreeMap, BTreeSet, HashMap, HashSet, VecDeque},
 	hash::Hash,
 };
 
+fn list_from<'a, Value>(items: impl IntoIterator<Item = &'a Value>) -> ByondResult<ByondValue>
+where
+	Value: ToByond + 'a,
+{
+	let items = RawValues::collect(items.into_iter().map(ToByond::to_byond_borrowed))?;
+	let items = items.as_slice();
+	let list = ByondValue::new_list()?;
+	map_byond_error!(byond().Byond_WriteList(&list.0, items.as_ptr().cast(), items.len() as _))?;
+	Ok(list)
+}
+
 impl<const LENGTH: usize, Value> ToByond for [Value; LENGTH]
 where
 	Value: ToByond,
 {
 	fn to_byond(&self) -> ByondResult<ByondValue> {
-		let list = self
-			.iter()
-			.map(|value| value.to_byond())
-			.collect::<ByondResult<Vec<ByondValue>>>()?;
-		let mut value = ByondValue::new_list()?;
-		value.write_list(list)?;
-		Ok(value)
+		list_from(self)
 	}
 }
 
@@ -26,13 +31,7 @@ where
 	Value: ToByond,
 {
 	fn to_byond(&self) -> ByondResult<ByondValue> {
-		let list = self
-			.iter()
-			.map(|value| value.to_byond())
-			.collect::<ByondResult<Vec<ByondValue>>>()?;
-		let mut value = ByondValue::new_list()?;
-		value.write_list(list)?;
-		Ok(value)
+		list_from(*self)
 	}
 }
 
@@ -41,13 +40,7 @@ where
 	Value: ToByond,
 {
 	fn to_byond(&self) -> ByondResult<ByondValue> {
-		let list = self
-			.iter()
-			.map(|value| value.to_byond())
-			.collect::<ByondResult<Vec<ByondValue>>>()?;
-		let mut value = ByondValue::new_list()?;
-		value.write_list(list)?;
-		Ok(value)
+		list_from(*self)
 	}
 }
 
@@ -56,13 +49,7 @@ where
 	Value: ToByond,
 {
 	fn to_byond(&self) -> ByondResult<ByondValue> {
-		let list = self
-			.iter()
-			.map(|value| value.to_byond())
-			.collect::<ByondResult<Vec<ByondValue>>>()?;
-		let mut value = ByondValue::new_list()?;
-		value.write_list(list)?;
-		Ok(value)
+		list_from(self)
 	}
 }
 
@@ -75,7 +62,7 @@ where
 {
 	let mut list = ByondValue::new_list()?;
 	for (key, value) in pairs {
-		let key = key.to_byond()?;
+		let key = key.to_byond_borrowed()?;
 		if key.is_number() {
 			return Err(ByondError::InvalidConversion {
 				expected: Cow::Borrowed(
@@ -84,8 +71,8 @@ where
 				got: Cow::Borrowed("number"),
 			});
 		}
-		let value = value.to_byond()?;
-		list.write_list_index(&key, &value)?;
+		let value = value.to_byond_borrowed()?;
+		list.write_list_index(&*key, &*value)?;
 	}
 	Ok(list)
 }
@@ -105,13 +92,7 @@ where
 	Value: ToByond,
 {
 	fn to_byond(&self) -> ByondResult<ByondValue> {
-		let list = self
-			.iter()
-			.map(|value| value.to_byond())
-			.collect::<ByondResult<Vec<ByondValue>>>()?;
-		let mut value = ByondValue::new_list()?;
-		value.write_list(list)?;
-		Ok(value)
+		list_from(self)
 	}
 }
 
@@ -140,13 +121,7 @@ where
 	Key: ToByond + Eq + Hash,
 {
 	fn to_byond(&self) -> ByondResult<ByondValue> {
-		let list = self
-			.iter()
-			.map(|key| key.to_byond())
-			.collect::<ByondResult<Vec<ByondValue>>>()?;
-		let mut value = ByondValue::new_list()?;
-		value.write_list(list)?;
-		Ok(value)
+		list_from(self)
 	}
 }
 
@@ -165,12 +140,6 @@ where
 	Key: ToByond + Eq + Ord,
 {
 	fn to_byond(&self) -> ByondResult<ByondValue> {
-		let list = self
-			.iter()
-			.map(|key| key.to_byond())
-			.collect::<ByondResult<Vec<ByondValue>>>()?;
-		let mut value = ByondValue::new_list()?;
-		value.write_list(list)?;
-		Ok(value)
+		list_from(self)
 	}
 }

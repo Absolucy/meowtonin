@@ -2,7 +2,7 @@
 use crate::{
 	ByondError, ByondResult, ByondValue, ByondValueType, FromByond, ToByond, byond, sys::u4c,
 };
-use std::mem::MaybeUninit;
+use std::mem::{ManuallyDrop, MaybeUninit};
 
 impl ByondValue {
 	/// Creates an empty list (referenced). Equivalent to `list()`.
@@ -132,7 +132,7 @@ impl ByondValue {
 		}
 		unsafe {
 			let mut result = MaybeUninit::zeroed();
-			let idx = idx.to_byond()?;
+			let idx = idx.to_byond_borrowed()?;
 			map_byond_error!(byond().Byond_ReadListIndex(&self.0, &idx.0, result.as_mut_ptr()))?;
 			Value::from_byond(Self(unsafe { result.assume_init() }))
 		}
@@ -147,8 +147,8 @@ impl ByondValue {
 		if !self.is_list() {
 			return Err(ByondError::NotAList);
 		}
-		let idx = idx.to_byond()?;
-		let value = value.to_byond()?;
+		let idx = idx.into_byond_cow()?;
+		let value = value.into_byond_cow()?;
 		map_byond_error!(byond().Byond_WriteListIndex(&self.0, &idx.0, &value.0))
 	}
 
@@ -228,5 +228,27 @@ impl ByondValue {
 
 	pub fn values(&self) -> ByondResult<impl Iterator<Item = ByondValue>> {
 		Ok(self.read_list()?.into_iter())
+	}
+
+	pub(crate) fn collect_values<T, C>(&self) -> ByondResult<C>
+	where
+		T: FromByond,
+		C: FromIterator<T>,
+	{
+		let unreferenced_ok = T::CONVERTS_WITHOUT_DM
+			&& self.get_type() == ByondValueType::List
+			&& crate::sync::is_main_thread();
+		if !unreferenced_ok {
+			return self.values()?.map(T::from_byond).collect();
+		}
+		// unreferenced items, fine as long as no DM code runs mid-loop
+		let items = unsafe {
+			crate::misc::with_buffer::<_, ManuallyDrop<ByondValue>, _, _>(
+				None,
+				|ptr, len| byond().Byond_ReadList(&self.0, ptr.cast(), len),
+				|buffer| buffer,
+			)
+		}?;
+		items.iter().map(|item| T::from_byond_ref(item)).collect()
 	}
 }

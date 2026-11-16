@@ -11,6 +11,8 @@ use std::borrow::Cow;
 ///////////////////////
 
 impl FromByond for u8 {
+	const CONVERTS_WITHOUT_DM: bool = true;
+
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
 		const MAX_VALUE: f32 = u8::MAX as f32;
 		let num = value.get_number()?;
@@ -25,6 +27,8 @@ impl FromByond for u8 {
 }
 
 impl FromByond for u16 {
+	const CONVERTS_WITHOUT_DM: bool = true;
+
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
 		const MAX_VALUE: f32 = u16::MAX as f32;
 		let num = value.get_number()?;
@@ -39,6 +43,8 @@ impl FromByond for u16 {
 }
 
 impl FromByond for u32 {
+	const CONVERTS_WITHOUT_DM: bool = true;
+
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
 		const MAX_VALUE: f32 = u32::MAX as f32;
 		let num = value.get_number()?;
@@ -53,6 +59,8 @@ impl FromByond for u32 {
 }
 
 impl FromByond for u64 {
+	const CONVERTS_WITHOUT_DM: bool = true;
+
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
 		const MAX_VALUE: f32 = u64::MAX as f32;
 		let num = value.get_number()?;
@@ -67,6 +75,8 @@ impl FromByond for u64 {
 }
 
 impl FromByond for u128 {
+	const CONVERTS_WITHOUT_DM: bool = true;
+
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
 		const MAX_VALUE: f32 = u128::MAX as f32;
 		let num = value.get_number()?;
@@ -81,6 +91,8 @@ impl FromByond for u128 {
 }
 
 impl FromByond for usize {
+	const CONVERTS_WITHOUT_DM: bool = true;
+
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
 		const MAX_VALUE: f32 = usize::MAX as f32;
 		let num = value.get_number()?;
@@ -99,6 +111,8 @@ impl FromByond for usize {
 /////////////////////
 
 impl FromByond for i8 {
+	const CONVERTS_WITHOUT_DM: bool = true;
+
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
 		const MIN_VALUE: f32 = i8::MIN as f32;
 		const MAX_VALUE: f32 = i8::MAX as f32;
@@ -115,6 +129,8 @@ impl FromByond for i8 {
 }
 
 impl FromByond for i16 {
+	const CONVERTS_WITHOUT_DM: bool = true;
+
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
 		const MIN_VALUE: f32 = i16::MIN as f32;
 		const MAX_VALUE: f32 = i16::MAX as f32;
@@ -131,6 +147,8 @@ impl FromByond for i16 {
 }
 
 impl FromByond for i32 {
+	const CONVERTS_WITHOUT_DM: bool = true;
+
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
 		const MIN_VALUE: f32 = i32::MIN as f32;
 		const MAX_VALUE: f32 = i32::MAX as f32;
@@ -147,6 +165,8 @@ impl FromByond for i32 {
 }
 
 impl FromByond for i64 {
+	const CONVERTS_WITHOUT_DM: bool = true;
+
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
 		const MIN_VALUE: f32 = i64::MIN as f32;
 		const MAX_VALUE: f32 = i64::MAX as f32;
@@ -163,6 +183,8 @@ impl FromByond for i64 {
 }
 
 impl FromByond for i128 {
+	const CONVERTS_WITHOUT_DM: bool = true;
+
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
 		const MIN_VALUE: f32 = i128::MIN as f32;
 		const MAX_VALUE: f32 = i128::MAX as f32;
@@ -179,6 +201,8 @@ impl FromByond for i128 {
 }
 
 impl FromByond for isize {
+	const CONVERTS_WITHOUT_DM: bool = true;
+
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
 		const MIN_VALUE: f32 = isize::MIN as f32;
 		const MAX_VALUE: f32 = isize::MAX as f32;
@@ -199,12 +223,16 @@ impl FromByond for isize {
 ////////////
 
 impl FromByond for f32 {
+	const CONVERTS_WITHOUT_DM: bool = true;
+
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
 		value.get_number()
 	}
 }
 
 impl FromByond for f64 {
+	const CONVERTS_WITHOUT_DM: bool = true;
+
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
 		value.get_number().map(f64::from)
 	}

@@ -10,7 +10,11 @@ where
 	Value: FromByond,
 {
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
-		value.values()?.map(Value::from_byond).collect()
+		Self::from_byond_ref(&value)
+	}
+
+	fn from_byond_ref(value: &ByondValue) -> ByondResult<Self> {
+		value.collect_values()
 	}
 }
 
@@ -20,6 +24,10 @@ where
 	Value: FromByond,
 {
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
+		Self::from_byond_ref(&value)
+	}
+
+	fn from_byond_ref(value: &ByondValue) -> ByondResult<Self> {
 		value
 			.iter()?
 			.map(|(key, value)| Ok((Key::from_byond(key)?, Value::from_byond(value)?)))
@@ -32,7 +40,11 @@ where
 	Value: FromByond,
 {
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
-		value.values()?.map(Value::from_byond).collect()
+		Self::from_byond_ref(&value)
+	}
+
+	fn from_byond_ref(value: &ByondValue) -> ByondResult<Self> {
+		value.collect_values()
 	}
 }
 
@@ -42,6 +54,10 @@ where
 	Value: FromByond,
 {
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
+		Self::from_byond_ref(&value)
+	}
+
+	fn from_byond_ref(value: &ByondValue) -> ByondResult<Self> {
 		value
 			.iter()?
 			.map(|(key, value)| Ok((Key::from_byond(key)?, Value::from_byond(value)?)))
@@ -56,6 +72,10 @@ where
 	Hasher: BuildHasher + Default,
 {
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
+		Self::from_byond_ref(&value)
+	}
+
+	fn from_byond_ref(value: &ByondValue) -> ByondResult<Self> {
 		let mut out = HashMap::with_capacity_and_hasher(value.length()?, Hasher::default());
 		for (key, value) in value.iter()? {
 			out.insert(Key::from_byond(key)?, Value::from_byond(value)?);
@@ -70,11 +90,11 @@ where
 	Hasher: BuildHasher + Default,
 {
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
-		let mut out = HashSet::with_capacity_and_hasher(value.length()?, Hasher::default());
-		for key in value.values()? {
-			out.insert(Value::from_byond(key)?);
-		}
-		Ok(out)
+		Self::from_byond_ref(&value)
+	}
+
+	fn from_byond_ref(value: &ByondValue) -> ByondResult<Self> {
+		value.collect_values()
 	}
 }
 
@@ -84,6 +104,10 @@ where
 	Value: FromByond,
 {
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
+		Self::from_byond_ref(&value)
+	}
+
+	fn from_byond_ref(value: &ByondValue) -> ByondResult<Self> {
 		let mut out = BTreeMap::new();
 		for (key, value) in value.iter()? {
 			out.insert(Key::from_byond(key)?, Value::from_byond(value)?);
@@ -97,10 +121,10 @@ where
 	Value: FromByond + Eq + Ord,
 {
 	fn from_byond(value: ByondValue) -> ByondResult<Self> {
-		let mut out = BTreeSet::new();
-		for value in value.values()? {
-			out.insert(Value::from_byond(value)?);
-		}
-		Ok(out)
+		Self::from_byond_ref(&value)
+	}
+
+	fn from_byond_ref(value: &ByondValue) -> ByondResult<Self> {
+		value.collect_values()
 	}
 }

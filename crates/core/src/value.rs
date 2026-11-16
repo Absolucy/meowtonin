@@ -13,6 +13,7 @@ use crate::{
 	sys::{CByondValue, u1c},
 };
 use std::{
+	borrow::Cow,
 	fmt,
 	hash::{Hash, Hasher},
 	mem::MaybeUninit,
@@ -57,7 +58,7 @@ impl ByondValue {
 	where
 		Value: ToByond,
 	{
-		value.to_byond()
+		value.into_byond_cow().map(Cow::into_owned)
 	}
 
 	/// Shorthand for [FromByond::from_byond].
@@ -135,7 +136,7 @@ impl ByondValue {
 		Value: ToByond,
 	{
 		let name_id = lookup_string_id(name).ok_or(ByondError::InvalidVariable)?;
-		let value = value.to_byond()?;
+		let value = value.into_byond_cow()?;
 		map_byond_error!(byond().Byond_WriteVarByStrId(&self.0, name_id, &value.0))
 	}
 
@@ -160,7 +161,7 @@ impl ByondValue {
 		if self.get_type() != ByondValueType::Pointer {
 			return Err(ByondError::NotReferenceable);
 		}
-		let value = value.to_byond()?;
+		let value = value.into_byond_cow()?;
 		unsafe { map_byond_error!(byond().Byond_WritePointer(&self.0, &value.0)) }
 	}
 

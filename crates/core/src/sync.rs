@@ -138,7 +138,7 @@ pub(crate) fn record_main_thread() {
 }
 
 #[inline]
-fn is_main_thread() -> bool {
+pub(crate) fn is_main_thread() -> bool {
 	MAIN_THREAD.load(Ordering::Relaxed) == os_thread_id()
 }
 
