@@ -132,20 +132,20 @@ impl<'a> Serializer for &'a mut ByondSerializer {
 		Ok(list)
 	}
 
-	fn serialize_seq(self, _len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
-		seq::ByondSeqSerializer::new(self)
+	fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
+		Ok(seq::ByondSeqSerializer::new(self, len))
 	}
 
-	fn serialize_tuple(self, _len: usize) -> Result<Self::SerializeTuple, Self::Error> {
-		seq::ByondSeqSerializer::new(self)
+	fn serialize_tuple(self, len: usize) -> Result<Self::SerializeTuple, Self::Error> {
+		Ok(seq::ByondSeqSerializer::new(self, Some(len)))
 	}
 
 	fn serialize_tuple_struct(
 		self,
 		_name: &'static str,
-		_len: usize,
+		len: usize,
 	) -> Result<Self::SerializeTupleStruct, Self::Error> {
-		seq::ByondSeqSerializer::new(self)
+		Ok(seq::ByondSeqSerializer::new(self, Some(len)))
 	}
 
 	fn serialize_tuple_variant(
@@ -153,9 +153,9 @@ impl<'a> Serializer for &'a mut ByondSerializer {
 		_name: &'static str,
 		_variant_index: u32,
 		variant: &'static str,
-		_len: usize,
+		len: usize,
 	) -> Result<Self::SerializeTupleVariant, Self::Error> {
-		variant::ByondVariantSerializer::new(self, variant)
+		Ok(variant::ByondVariantSerializer::new(self, variant, len))
 	}
 
 	fn serialize_map(self, _len: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {

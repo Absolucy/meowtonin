@@ -179,6 +179,13 @@ fn encode_panic(panic_info: &PanicHookInfo) -> Panic {
 		file: location.file().to_owned(),
 		line: location.line(),
 	});
+	if !cfg!(any(debug_assertions, feature = "rel-debugging")) {
+		return Panic {
+			message,
+			location,
+			backtrace: Vec::new(),
+		};
+	}
 	let backtrace = Backtrace::new()
 		.frames()
 		.iter()

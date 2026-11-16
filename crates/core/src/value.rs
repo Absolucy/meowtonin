@@ -77,7 +77,7 @@ impl ByondValue {
 		Args: AsRef<[Self]>,
 	{
 		unsafe {
-			let mut result = MaybeUninit::uninit();
+			let mut result = MaybeUninit::zeroed();
 			let path = path.into().to_byond()?;
 			let args = args.as_ref();
 			map_byond_error!(byond().Byond_New(
@@ -95,7 +95,7 @@ impl ByondValue {
 	/// Equivalent to calling `length(self)` in DM.
 	pub fn length(&self) -> ByondResult<usize> {
 		unsafe {
-			let mut result = MaybeUninit::uninit();
+			let mut result = MaybeUninit::zeroed();
 			map_byond_error!(byond().Byond_Length(&self.0, result.as_mut_ptr()))?;
 			Self(unsafe { result.assume_init() })
 				.get_number()
@@ -111,7 +111,7 @@ impl ByondValue {
 
 	/// Returns the typepath of the value as a string, if it is a reference.
 	pub fn typepath(&self) -> ByondResult<String> {
-		self.read_var("type")
+		self.read_var::<_, ByondValue>("type")?.get_string()
 	}
 
 	/// Read a variable through the ref. Fails if this isn't a ref type.
@@ -122,7 +122,7 @@ impl ByondValue {
 	{
 		let name_id = lookup_string_id(name).ok_or(ByondError::InvalidVariable)?;
 		unsafe {
-			let mut result = MaybeUninit::uninit();
+			let mut result = MaybeUninit::zeroed();
 			map_byond_error!(byond().Byond_ReadVarByStrId(&self.0, name_id, result.as_mut_ptr()))?;
 			Return::from_byond(Self(unsafe { result.assume_init() }))
 		}
@@ -147,7 +147,7 @@ impl ByondValue {
 			return Err(ByondError::NotReferenceable);
 		}
 		unsafe {
-			let mut result = MaybeUninit::uninit();
+			let mut result = MaybeUninit::zeroed();
 			map_byond_error!(byond().Byond_ReadPointer(&self.0, result.as_mut_ptr()))?;
 			Return::from_byond(Self(unsafe { result.assume_init() }))
 		}
@@ -171,7 +171,7 @@ impl ByondValue {
 	///
 	/// If the atom is off-map, this will return [ByondPixLoc::ZERO].
 	pub fn pixloc(&self) -> Option<ByondPixLoc> {
-		let mut pixloc = MaybeUninit::uninit();
+		let mut pixloc = MaybeUninit::zeroed();
 		if unsafe { byond().Byond_PixLoc(&self.0, pixloc.as_mut_ptr()) } {
 			Some(ByondPixLoc(unsafe { pixloc.assume_init() }))
 		} else {
@@ -186,7 +186,7 @@ impl ByondValue {
 	///
 	/// If the atom is off-map, this will return [ByondPixLoc::ZERO].
 	pub fn bound_pixloc(&self, dir: u1c) -> Option<ByondPixLoc> {
-		let mut pixloc = MaybeUninit::uninit();
+		let mut pixloc = MaybeUninit::zeroed();
 		if unsafe { byond().Byond_BoundPixLoc(&self.0, dir, pixloc.as_mut_ptr()) } {
 			Some(ByondPixLoc(unsafe { pixloc.assume_init() }))
 		} else {
@@ -199,7 +199,7 @@ impl ByondValue {
 	/// Returns `None` if the value doesn't have X/Y/Z coordinates, such as if
 	/// value is not an atom.
 	pub fn xyz(&self) -> Option<ByondXYZ> {
-		let mut result = MaybeUninit::uninit();
+		let mut result = MaybeUninit::zeroed();
 		if unsafe { byond().Byond_XYZ(&self.0, result.as_mut_ptr()) } {
 			Some(ByondXYZ(unsafe { result.assume_init() }))
 		} else {
@@ -304,7 +304,8 @@ impl Hash for ByondValue {
 		unsafe {
 			match value_type {
 				ByondValueType::Null => (),
-				ByondValueType::Number => self.0.data.num.to_bits().hash(state),
+				// -0.0 == 0.0, so they have to hash the same
+				ByondValueType::Number => (self.0.data.num + 0.0).to_bits().hash(state),
 				_ => self.0.data.ref_.hash(state),
 			}
 		}

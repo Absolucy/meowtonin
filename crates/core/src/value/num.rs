@@ -8,7 +8,7 @@ impl ByondValue {
 		Num: Into<f32>,
 	{
 		unsafe {
-			let mut value = MaybeUninit::uninit();
+			let mut value = MaybeUninit::zeroed();
 			byond().ByondValue_SetNum(value.as_mut_ptr(), num.into());
 			Self(value.assume_init()) // numbers are not refcounted
 		}

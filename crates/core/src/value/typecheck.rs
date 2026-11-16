@@ -353,7 +353,7 @@ impl ByondValueType {
 			Self::PixLoc => Cow::Borrowed("pixloc"),
 			Self::Vector => Cow::Borrowed("vector"),
 			Self::Callee => Cow::Borrowed("callee"),
-			other => Cow::Owned(format!("unknown ({other})")),
+			other => Cow::Owned(format!("unknown ({:#04x})", other.0)),
 		}
 	}
 

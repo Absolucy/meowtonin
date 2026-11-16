@@ -19,5 +19,5 @@ pub fn deserialize<'de, Value>(value: ByondValue) -> Result<Value, error::Deseri
 where
 	Value: serde::Deserialize<'de>,
 {
-	Value::deserialize(&de::ByondDeserializer { value })
+	Value::deserialize(de::ByondDeserializer { value })
 }

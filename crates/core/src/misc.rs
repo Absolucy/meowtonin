@@ -5,7 +5,7 @@ use std::mem::MaybeUninit;
 
 pub fn block(corner_a: ByondXYZ, corner_b: ByondXYZ) -> ByondResult<Vec<ByondValue>> {
 	unsafe {
-		let initial_capacity = corner_a.total_block_size(&corner_b) as usize;
+		let initial_capacity = corner_a.total_block_size(&corner_b).min(1 << 20) as usize;
 		with_buffer::<_, ByondValue, _, _>(
 			Some(initial_capacity),
 			|ptr, len| byond().Byond_Block(&corner_a.0, &corner_b.0, ptr.cast(), len),
@@ -16,7 +16,7 @@ pub fn block(corner_a: ByondXYZ, corner_b: ByondXYZ) -> ByondResult<Vec<ByondVal
 
 pub fn locate_xyz(location: ByondXYZ) -> ByondResult<ByondValue> {
 	unsafe {
-		let mut result = MaybeUninit::uninit();
+		let mut result = MaybeUninit::zeroed();
 		map_byond_error!(byond().Byond_LocateXYZ(&location.0, result.as_mut_ptr()))?;
 		Ok(ByondValue(result.assume_init())) // turfs are not refcounted
 	}
@@ -27,7 +27,7 @@ pub fn locate(
 	list: impl Into<Option<ByondValue>>,
 ) -> ByondResult<ByondValue> {
 	unsafe {
-		let mut result = MaybeUninit::uninit();
+		let mut result = MaybeUninit::zeroed();
 		let list = list.into();
 		let list_ptr = list
 			.as_ref()

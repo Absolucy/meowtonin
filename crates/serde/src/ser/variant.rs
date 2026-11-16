@@ -1,25 +1,22 @@
 // SPDX-License-Identifier: 0BSD
 use super::ByondSerializer;
 use crate::error::SerializeError;
-use meowtonin::{ByondValue, ToByond};
+use meowtonin::ByondValue;
 use serde::ser::{Serialize, SerializeTupleVariant};
 
 pub(crate) struct ByondVariantSerializer<'a> {
 	pub serializer: &'a mut ByondSerializer,
 	pub variant: &'static str,
-	pub sequence: ByondValue,
+	pub items: Vec<ByondValue>,
 }
 
 impl<'a> ByondVariantSerializer<'a> {
-	pub fn new(
-		serializer: &'a mut ByondSerializer,
-		variant: &'static str,
-	) -> Result<Self, SerializeError> {
-		Ok(Self {
+	pub fn new(serializer: &'a mut ByondSerializer, variant: &'static str, len: usize) -> Self {
+		Self {
 			serializer,
 			variant,
-			sequence: ByondValue::new_list()?,
-		})
+			items: Vec::with_capacity(len),
+		}
 	}
 }
 
@@ -31,14 +28,15 @@ impl SerializeTupleVariant for ByondVariantSerializer<'_> {
 	where
 		T: Serialize + ?Sized,
 	{
-		self.sequence
-			.push_list(value.serialize(&mut *self.serializer)?)
-			.map_err(SerializeError::from)
+		self.items.push(value.serialize(&mut *self.serializer)?);
+		Ok(())
 	}
 
 	fn end(self) -> Result<Self::Ok, Self::Error> {
+		let mut sequence = ByondValue::new_list()?;
+		sequence.write_list(self.items)?;
 		let mut list = ByondValue::new_list()?;
-		list.write_list_index(self.variant.to_byond()?, self.sequence.to_byond()?)?;
+		list.write_list_index(self.variant, &sequence)?;
 		Ok(list)
 	}
 }

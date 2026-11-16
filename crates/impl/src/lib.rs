@@ -31,7 +31,7 @@ fn generate_arg_parser(param: &PatType, idx: usize) -> TokenStream2 {
 	);
 	quote! {
 		let #parsed_name: #ty = ::meowtonin::FromByond::from_byond(#arg_name)
-			.expect(#error_message);
+			.map_err(|err| ::std::format!("{}: {}", #error_message, err))?;
 	}
 }
 
@@ -185,11 +185,7 @@ fn generate_export_fn(
 						__retval = Ok(value);
 					},
 					Ok(Err(err)) => {
-						__retval = Err(format!(
-							"panic at {source}: {error}",
-							error = err.to_string(),
-							source = #func_name_str.to_string()
-						));
+						__retval = Err(format!("{}: {}", #func_name_str, err));
 					},
 					Err(_err) => match ::meowtonin::panic::get_stack_trace() {
 						Some(message) => {

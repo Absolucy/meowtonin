@@ -29,19 +29,19 @@ where
 
 impl<Value> ToByond for Rc<Value>
 where
-	Value: ToByond + Clone,
+	Value: ToByond,
 {
 	fn to_byond(&self) -> ByondResult<ByondValue> {
-		(**self).clone().to_byond()
+		(**self).to_byond()
 	}
 }
 
 impl<Value> ToByond for Arc<Value>
 where
-	Value: ToByond + Clone,
+	Value: ToByond,
 {
 	fn to_byond(&self) -> ByondResult<ByondValue> {
-		(**self).clone().to_byond()
+		(**self).to_byond()
 	}
 }
 

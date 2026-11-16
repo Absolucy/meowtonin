@@ -6,15 +6,29 @@ use serde::ser::{Serialize, SerializeSeq, SerializeTuple, SerializeTupleStruct};
 
 pub(crate) struct ByondSeqSerializer<'a> {
 	serializer: &'a mut ByondSerializer,
-	list: ByondValue,
+	items: Vec<ByondValue>,
 }
 
 impl<'a> ByondSeqSerializer<'a> {
-	pub fn new(serializer: &'a mut ByondSerializer) -> Result<Self, SerializeError> {
-		Ok(Self {
+	pub fn new(serializer: &'a mut ByondSerializer, len: Option<usize>) -> Self {
+		Self {
 			serializer,
-			list: ByondValue::new_list()?,
-		})
+			items: Vec::with_capacity(len.unwrap_or(0)),
+		}
+	}
+
+	fn push<T>(&mut self, value: &T) -> Result<(), SerializeError>
+	where
+		T: Serialize + ?Sized,
+	{
+		self.items.push(value.serialize(&mut *self.serializer)?);
+		Ok(())
+	}
+
+	fn finish(self) -> Result<ByondValue, SerializeError> {
+		let mut list = ByondValue::new_list()?;
+		list.write_list(self.items)?;
+		Ok(list)
 	}
 }
 
@@ -26,13 +40,11 @@ impl SerializeSeq for ByondSeqSerializer<'_> {
 	where
 		T: Serialize + ?Sized,
 	{
-		self.list
-			.push_list(value.serialize(&mut *self.serializer)?)?;
-		Ok(())
+		self.push(value)
 	}
 
 	fn end(self) -> Result<Self::Ok, Self::Error> {
-		Ok(self.list)
+		self.finish()
 	}
 }
 
@@ -44,13 +56,11 @@ impl SerializeTuple for ByondSeqSerializer<'_> {
 	where
 		T: Serialize + ?Sized,
 	{
-		self.list
-			.push_list(value.serialize(&mut *self.serializer)?)
-			.map_err(SerializeError::from)
+		self.push(value)
 	}
 
 	fn end(self) -> Result<Self::Ok, Self::Error> {
-		Ok(self.list)
+		self.finish()
 	}
 }
 
@@ -62,12 +72,10 @@ impl SerializeTupleStruct for ByondSeqSerializer<'_> {
 	where
 		T: Serialize + ?Sized,
 	{
-		self.list
-			.push_list(value.serialize(&mut *self.serializer)?)
-			.map_err(SerializeError::from)
+		self.push(value)
 	}
 
 	fn end(self) -> Result<Self::Ok, Self::Error> {
-		Ok(self.list)
+		self.finish()
 	}
 }

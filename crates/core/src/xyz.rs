@@ -41,9 +41,10 @@ impl ByondXYZ {
 	}
 
 	/// Returns the total volume of a block between two corners.
-	pub const fn total_block_size(&self, other: &ByondXYZ) -> u16 {
+	pub const fn total_block_size(&self, other: &ByondXYZ) -> u32 {
 		let (w, h) = self.block_size(other);
-		w.saturating_mul(h)
+		let d = (self.z() as i32 - other.z() as i32).unsigned_abs() + 1;
+		(w as u32).saturating_mul(h as u32).saturating_mul(d)
 	}
 
 	/// Returns the tile distance between two [`ByondXYZ`] values.
@@ -66,11 +67,11 @@ impl ByondXYZ {
 	/// If you want something identical to BYOND's `get_dist` proc, aka
 	/// Chebyshev distance, use [`distance()`](Self::distance).
 	pub fn distance_euclidean(&self, other: &ByondXYZ) -> f64 {
-		let dx = self.x().saturating_sub(other.x()).pow(2) as f64;
-		let dy = self.y().saturating_sub(other.y()).pow(2) as f64;
-		let dz = self.z().saturating_sub(other.z()).pow(2) as f64;
+		let dx = f64::from(self.x()) - f64::from(other.x());
+		let dy = f64::from(self.y()) - f64::from(other.y());
+		let dz = f64::from(self.z()) - f64::from(other.z());
 
-		(dx + dy + dz).sqrt()
+		(dx * dx + dy * dy + dz * dz).sqrt()
 	}
 }
 

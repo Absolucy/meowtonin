@@ -1,18 +1,10 @@
 // SPDX-License-Identifier: 0BSD
-use crate::init::InitFunc;
 use meowtonin_byondapi_sys::ByondApi;
 use std::sync::OnceLock;
 
 static BYOND: OnceLock<ByondApi> = OnceLock::new();
 
-fn init_lib() -> ByondApi {
-	// Clear string ID cache, just in case anything's changed.
-	crate::strid::STRID_CACHE.lock().clear();
-
-	// Run any custom initialization functions.
-	for func in inventory::iter::<InitFunc> {
-		func.0();
-	}
+fn load_api() -> ByondApi {
 	// Dynamically load the byondcore dylib.
 	let library = {
 		cfg_if::cfg_if! {
@@ -29,9 +21,27 @@ fn init_lib() -> ByondApi {
 		.expect("failed to initialize byondapi")
 }
 
+#[cold]
+#[inline(never)]
+fn init_lib() -> &'static ByondApi {
+	let mut loaded_here = false;
+	let api = BYOND.get_or_init(|| {
+		loaded_here = true;
+		load_api()
+	});
+	// outside the OnceLock init, so an init func can call byond()
+	if loaded_here {
+		crate::init::do_init();
+	}
+	api
+}
+
 /// Gets the global [ByondApi] instance, initializing it if necessary.
 #[inline(always)]
 #[must_use]
 pub fn byond() -> &'static ByondApi {
-	BYOND.get_or_init(init_lib)
+	match BYOND.get() {
+		Some(api) => api,
+		None => init_lib(),
+	}
 }

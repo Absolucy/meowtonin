@@ -20,7 +20,7 @@ where
 		.map(|arg| arg.to_byond())
 		.collect::<ByondResult<Vec<_>>>()?;
 	unsafe {
-		let mut result = MaybeUninit::uninit();
+		let mut result = MaybeUninit::zeroed();
 		map_byond_error!(byond().Byond_CallGlobalProcByStrId(
 			name_id,
 			args.as_ptr().cast(),

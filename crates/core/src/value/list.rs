@@ -8,7 +8,7 @@ impl ByondValue {
 	/// Creates an empty list (referenced). Equivalent to `list()`.
 	pub fn new_list() -> ByondResult<Self> {
 		unsafe {
-			let mut value = MaybeUninit::uninit();
+			let mut value = MaybeUninit::zeroed();
 			map_byond_error!(byond().Byond_CreateList(value.as_mut_ptr()))?;
 			Ok(Self(unsafe { value.assume_init() }))
 		}
@@ -22,7 +22,7 @@ impl ByondValue {
 	{
 		let sizes = sizes.as_ref();
 		unsafe {
-			let mut value = MaybeUninit::uninit();
+			let mut value = MaybeUninit::zeroed();
 			map_byond_error!(byond().Byond_CreateDimensionalList(
 				value.as_mut_ptr(),
 				sizes.as_ptr(),
@@ -36,7 +36,7 @@ impl ByondValue {
 	/// Equivalent to `new /list(len)`.
 	pub fn new_list_len(length: u4c) -> ByondResult<Self> {
 		unsafe {
-			let mut value = MaybeUninit::uninit();
+			let mut value = MaybeUninit::zeroed();
 			map_byond_error!(byond().Byond_CreateListLen(value.as_mut_ptr(), length))?;
 			Ok(Self(unsafe { value.assume_init() }))
 		}
@@ -131,7 +131,7 @@ impl ByondValue {
 			return Err(ByondError::NotAList);
 		}
 		unsafe {
-			let mut result = MaybeUninit::uninit();
+			let mut result = MaybeUninit::zeroed();
 			let idx = idx.to_byond()?;
 			map_byond_error!(byond().Byond_ReadListIndex(&self.0, &idx.0, result.as_mut_ptr()))?;
 			Value::from_byond(Self(unsafe { result.assume_init() }))
@@ -178,7 +178,7 @@ impl ByondValue {
 				// not Remove(): that would split a key that is itself a list
 				let removed = unsafe { byond().Byond_ListRemove(&self.0, &key.0, 1) };
 				if removed == 0 {
-					return Err(ByondError::get_last_byond_error());
+					return Err(ByondError::UnknownByondError);
 				}
 				Ok(Some(key))
 			});

@@ -42,6 +42,11 @@ impl SerializeMap for ByondMapSerializer<'_> {
 		T: Serialize + ?Sized,
 	{
 		let key = std::mem::take(&mut self.key);
+		if key.is_number() {
+			return Err(SerializeError::Expected(
+				"a string or object map key, a /list can't have number keys",
+			));
+		}
 		let value = value.serialize(&mut *self.serializer)?;
 		self.map
 			.write_list_index(&key, &value)

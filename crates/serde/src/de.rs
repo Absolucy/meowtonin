@@ -4,13 +4,28 @@ use meowtonin::{ByondValue, ByondValueType, FromByond};
 use serde::de::{
 	self, DeserializeSeed, Deserializer, EnumAccess, MapAccess, SeqAccess, VariantAccess,
 };
-use std::collections::{HashMap, VecDeque};
 
 pub(crate) struct ByondDeserializer {
 	pub(crate) value: ByondValue,
 }
 
-impl<'de> Deserializer<'de> for &ByondDeserializer {
+fn visit_number<'de, V>(num: f32, visitor: V) -> Result<V::Value, DeserializeError>
+where
+	V: de::Visitor<'de>,
+{
+	if num.fract() != 0.0 {
+		return visitor.visit_f32(num);
+	}
+	if (0.0..u64::MAX as f32).contains(&num) {
+		visitor.visit_u64(num as u64)
+	} else if (i64::MIN as f32..0.0).contains(&num) {
+		visitor.visit_i64(num as i64)
+	} else {
+		visitor.visit_f32(num)
+	}
+}
+
+impl<'de> Deserializer<'de> for ByondDeserializer {
 	type Error = DeserializeError;
 
 	fn deserialize_any<V>(self, visitor: V) -> Result<V::Value, Self::Error>
@@ -21,11 +36,20 @@ impl<'de> Deserializer<'de> for &ByondDeserializer {
 		match val {
 			ByondValueType::Null => visitor.visit_unit(),
 			ByondValueType::String => self.deserialize_string(visitor),
-			ByondValueType::Number => self.deserialize_f32(visitor),
+			ByondValueType::Number => visit_number(self.value.get_number()?, visitor),
 			ByondValueType::Pointer => Err(DeserializeError::Unexpected(
 				"serializable value (null, str, num, list, string-ish)".into(),
 				"pointer".into(),
 			)),
+			ByondValueType::List => {
+				let pairs = self.value.read_assoc_list()?;
+				if meowtonin::misc::is_likely_assoc(&pairs) {
+					visitor.visit_map(ByondMapAccess::new(pairs))
+				} else {
+					let items = pairs.into_iter().map(|[key, _]| key).collect();
+					visitor.visit_seq(ByondSeqAccess::new(items))
+				}
+			}
 			_ if self.value.is_list() => {
 				if self.value.is_likely_assoc()? {
 					self.deserialize_map(visitor)
@@ -47,136 +71,107 @@ impl<'de> Deserializer<'de> for &ByondDeserializer {
 	where
 		V: de::Visitor<'de>,
 	{
-		bool::from_byond(self.value.clone())
-			.map_err(DeserializeError::from)
-			.and_then(|value| visitor.visit_bool(value))
+		visitor.visit_bool(bool::from_byond(self.value)?)
 	}
 
 	fn deserialize_i8<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
 	{
-		i8::from_byond(self.value.clone())
-			.map_err(DeserializeError::from)
-			.and_then(|value| visitor.visit_i8(value))
+		visitor.visit_i8(i8::from_byond(self.value)?)
 	}
 
 	fn deserialize_i16<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
 	{
-		i16::from_byond(self.value.clone())
-			.map_err(DeserializeError::from)
-			.and_then(|value| visitor.visit_i16(value))
+		visitor.visit_i16(i16::from_byond(self.value)?)
 	}
 
 	fn deserialize_i32<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
 	{
-		i32::from_byond(self.value.clone())
-			.map_err(DeserializeError::from)
-			.and_then(|value| visitor.visit_i32(value))
+		visitor.visit_i32(i32::from_byond(self.value)?)
 	}
 
 	fn deserialize_i64<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
 	{
-		i64::from_byond(self.value.clone())
-			.map_err(DeserializeError::from)
-			.and_then(|value| visitor.visit_i64(value))
+		visitor.visit_i64(i64::from_byond(self.value)?)
 	}
 
 	fn deserialize_u8<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
 	{
-		u8::from_byond(self.value.clone())
-			.map_err(DeserializeError::from)
-			.and_then(|value| visitor.visit_u8(value))
+		visitor.visit_u8(u8::from_byond(self.value)?)
 	}
 
 	fn deserialize_u16<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
 	{
-		u16::from_byond(self.value.clone())
-			.map_err(DeserializeError::from)
-			.and_then(|value| visitor.visit_u16(value))
+		visitor.visit_u16(u16::from_byond(self.value)?)
 	}
 
 	fn deserialize_u32<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
 	{
-		u32::from_byond(self.value.clone())
-			.map_err(DeserializeError::from)
-			.and_then(|value| visitor.visit_u32(value))
+		visitor.visit_u32(u32::from_byond(self.value)?)
 	}
 
 	fn deserialize_u64<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
 	{
-		u64::from_byond(self.value.clone())
-			.map_err(DeserializeError::from)
-			.and_then(|value| visitor.visit_u64(value))
+		visitor.visit_u64(u64::from_byond(self.value)?)
 	}
 
 	fn deserialize_f32<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
 	{
-		f32::from_byond(self.value.clone())
-			.map_err(DeserializeError::from)
-			.and_then(|value| visitor.visit_f32(value))
+		visitor.visit_f32(f32::from_byond(self.value)?)
 	}
 
 	fn deserialize_f64<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
 	{
-		f64::from_byond(self.value.clone())
-			.map_err(DeserializeError::from)
-			.and_then(|value| visitor.visit_f64(value))
+		visitor.visit_f64(f64::from_byond(self.value)?)
 	}
 
 	fn deserialize_char<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
 	{
-		String::from_byond(self.value.clone())
-			.map_err(DeserializeError::from)
-			.and_then(|value| value.chars().next().ok_or(DeserializeError::EndOfArray))
-			.and_then(|value| visitor.visit_char(value))
+		let string = String::from_byond(self.value)?;
+		let char = string.chars().next().ok_or(DeserializeError::EndOfArray)?;
+		visitor.visit_char(char)
 	}
 
 	fn deserialize_str<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
 	{
-		String::from_byond(self.value.clone())
-			.map_err(DeserializeError::from)
-			.and_then(|value| visitor.visit_str(&value))
+		visitor.visit_str(&String::from_byond(self.value)?)
 	}
 
 	fn deserialize_string<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
 	{
-		String::from_byond(self.value.clone())
-			.map_err(DeserializeError::from)
-			.and_then(|value| visitor.visit_string(value))
+		visitor.visit_string(String::from_byond(self.value)?)
 	}
 
 	fn deserialize_bytes<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
 	{
-		Vec::<u8>::from_byond(self.value.clone())
-			.map_err(DeserializeError::from)
-			.and_then(|value| visitor.visit_byte_buf(value))
+		visitor.visit_byte_buf(Vec::<u8>::from_byond(self.value)?)
 	}
 
 	fn deserialize_byte_buf<V>(self, visitor: V) -> Result<V::Value, Self::Error>
@@ -237,8 +232,7 @@ impl<'de> Deserializer<'de> for &ByondDeserializer {
 	where
 		V: de::Visitor<'de>,
 	{
-		let vec: VecDeque<_> = self.value.values()?.collect();
-		visitor.visit_seq(ByondSeqAccess { iter: vec })
+		visitor.visit_seq(ByondSeqAccess::new(self.value.read_list()?))
 	}
 
 	fn deserialize_tuple<V>(self, _len: usize, visitor: V) -> Result<V::Value, Self::Error>
@@ -264,12 +258,12 @@ impl<'de> Deserializer<'de> for &ByondDeserializer {
 	where
 		V: de::Visitor<'de>,
 	{
-		let iter = self.value.iter()?;
-		let map: HashMap<_, _> = iter.collect();
-		visitor.visit_map(ByondMapAccess {
-			iter: map.into_iter(),
-			current: None,
-		})
+		let pairs = self
+			.value
+			.iter()?
+			.map(|(key, value)| [key, value])
+			.collect();
+		visitor.visit_map(ByondMapAccess::new(pairs))
 	}
 
 	fn deserialize_struct<V>(
@@ -293,21 +287,47 @@ impl<'de> Deserializer<'de> for &ByondDeserializer {
 	where
 		V: de::Visitor<'de>,
 	{
-		visitor.visit_enum(ByondEnumAccess { deserializer: self })
+		let kind = self.value.get_type();
+		if kind == ByondValueType::String {
+			return visitor.visit_enum(ByondEnumAccess {
+				variant: self.value,
+				contents: ByondValue::NULL,
+			});
+		}
+		if !self.value.is_list() {
+			return Err(DeserializeError::Unexpected(
+				"enum variant name or list(variant = contents)".into(),
+				kind.name(),
+			));
+		}
+		let mut pairs = self.value.iter()?;
+		let (Some((variant, contents)), None) = (pairs.next(), pairs.next()) else {
+			return Err(DeserializeError::Unexpected(
+				"list(variant = contents) with exactly one entry".into(),
+				"a list with zero or several entries".into(),
+			));
+		};
+		visitor.visit_enum(ByondEnumAccess { variant, contents })
 	}
 
 	fn deserialize_identifier<V>(self, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
 	{
-		std::thread::yield_now(); // this is needed in order to not crash. just... don't think about it too hard.
-		self.deserialize_str(visitor)
+		visitor.visit_string(self.value.get_string()?)
 	}
 }
 
-// Additional structs for SeqAccess and MapAccess
 struct ByondSeqAccess {
-	iter: VecDeque<ByondValue>,
+	items: std::vec::IntoIter<ByondValue>,
+}
+
+impl ByondSeqAccess {
+	fn new(items: Vec<ByondValue>) -> Self {
+		Self {
+			items: items.into_iter(),
+		}
+	}
 }
 
 impl<'de> SeqAccess<'de> for ByondSeqAccess {
@@ -317,18 +337,25 @@ impl<'de> SeqAccess<'de> for ByondSeqAccess {
 	where
 		T: DeserializeSeed<'de>,
 	{
-		if let Some(value) = self.iter.pop_front() {
-			let deserializer = ByondDeserializer { value };
-			seed.deserialize(&deserializer).map(Some)
-		} else {
-			Ok(None)
+		match self.items.next() {
+			Some(value) => seed.deserialize(ByondDeserializer { value }).map(Some),
+			None => Ok(None),
 		}
 	}
 }
 
 struct ByondMapAccess {
-	iter: std::collections::hash_map::IntoIter<ByondValue, ByondValue>,
-	current: Option<(ByondValue, ByondValue)>,
+	pairs: std::vec::IntoIter<[ByondValue; 2]>,
+	value: Option<ByondValue>,
+}
+
+impl ByondMapAccess {
+	fn new(pairs: Vec<[ByondValue; 2]>) -> Self {
+		Self {
+			pairs: pairs.into_iter(),
+			value: None,
+		}
+	}
 }
 
 impl<'de> MapAccess<'de> for ByondMapAccess {
@@ -338,48 +365,45 @@ impl<'de> MapAccess<'de> for ByondMapAccess {
 	where
 		K: DeserializeSeed<'de>,
 	{
-		self.current = self.iter.next();
-		if let Some((key, _)) = &self.current {
-			let deserializer = ByondDeserializer { value: key.clone() };
-			seed.deserialize(&deserializer).map(Some)
-		} else {
-			Ok(None)
-		}
+		let Some([key, value]) = self.pairs.next() else {
+			return Ok(None);
+		};
+		self.value = Some(value);
+		seed.deserialize(ByondDeserializer { value: key }).map(Some)
 	}
 
 	fn next_value_seed<V>(&mut self, seed: V) -> Result<V::Value, Self::Error>
 	where
 		V: DeserializeSeed<'de>,
 	{
-		let value = self
-			.current
-			.as_ref()
-			.map(|(_, v)| v)
-			.ok_or(DeserializeError::EndOfArray)?
-			.clone();
-		let deserializer = ByondDeserializer { value };
-		seed.deserialize(&deserializer)
+		let value = self.value.take().ok_or(DeserializeError::EndOfArray)?;
+		seed.deserialize(ByondDeserializer { value })
 	}
 }
 
-struct ByondEnumAccess<'a> {
-	deserializer: &'a ByondDeserializer,
+struct ByondEnumAccess {
+	variant: ByondValue,
+	contents: ByondValue,
 }
 
-impl<'de> EnumAccess<'de> for ByondEnumAccess<'_> {
+impl<'de> EnumAccess<'de> for ByondEnumAccess {
 	type Error = DeserializeError;
-	type Variant = Self;
+	type Variant = ByondDeserializer;
 
 	fn variant_seed<V>(self, seed: V) -> Result<(V::Value, Self::Variant), Self::Error>
 	where
 		V: DeserializeSeed<'de>,
 	{
-		let variant: <V as DeserializeSeed>::Value = seed.deserialize(self.deserializer)?;
-		Ok((variant, self))
+		let variant = seed.deserialize(ByondDeserializer {
+			value: self.variant,
+		})?;
+		Ok((variant, ByondDeserializer {
+			value: self.contents,
+		}))
 	}
 }
 
-impl<'de> VariantAccess<'de> for ByondEnumAccess<'_> {
+impl<'de> VariantAccess<'de> for ByondDeserializer {
 	type Error = DeserializeError;
 
 	fn unit_variant(self) -> Result<(), Self::Error> {
@@ -390,14 +414,14 @@ impl<'de> VariantAccess<'de> for ByondEnumAccess<'_> {
 	where
 		T: DeserializeSeed<'de>,
 	{
-		seed.deserialize(self.deserializer)
+		seed.deserialize(self)
 	}
 
 	fn tuple_variant<V>(self, _len: usize, visitor: V) -> Result<V::Value, Self::Error>
 	where
 		V: de::Visitor<'de>,
 	{
-		de::Deserializer::deserialize_seq(self.deserializer, visitor)
+		self.deserialize_seq(visitor)
 	}
 
 	fn struct_variant<V>(
@@ -408,6 +432,6 @@ impl<'de> VariantAccess<'de> for ByondEnumAccess<'_> {
 	where
 		V: de::Visitor<'de>,
 	{
-		de::Deserializer::deserialize_map(self.deserializer, visitor)
+		self.deserialize_map(visitor)
 	}
 }
