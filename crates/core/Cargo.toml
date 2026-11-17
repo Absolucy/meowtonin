@@ -2,6 +2,7 @@
 name = "meowtonin"
 description = "Fully featured Rust wrapper around byondapi."
 documentation = "https://docs.rs/meowtonin"
+readme = "../../README.md"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
@@ -41,7 +42,6 @@ lossy-utf8 = []
 # Speed up ByondValue type checking by directly using the "type" var in the struct, however this is technically not "official" and may break in future BYOND updates.
 fast-typechecking = []
 bytemuck = ["meowtonin-byondapi-sys/bytemuck"]
-ref-debugging = []
 
 [package.metadata.docs.rs]
 targets = ["i686-pc-windows-msvc", "i686-unknown-linux-gnu"]
