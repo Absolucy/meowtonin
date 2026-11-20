@@ -123,13 +123,14 @@ fn generate_dm() {
 /// * b - the second number
 ///
 /// Rust: `fn add(a: f32, b: f32) -> f32`
-#define mylib_add(a, b) call_ext(__mylib_add ||= load_ext(MYLIB, "byond:add"))(a, b)
+#define mylib_add(a, b) __MYLIB_EXT(__mylib_add, "byond:add")(a, b)
 var/static/__mylib_add
 ```
 
 - defines use the rust function name, so add a prefix (or use `name`). otherwise an `add(...)` elsewhere in your code gets rewritten.
 - trailing `Option` params can be left off the call.
 - define `MYLIB` before including the file to change where the library loads from.
+- `__MYLIB_EXT` caches each function with `load_ext`, except under OpenDream, which has no `load_ext` and gets plain `call_ext`.
 
 ## Credits
 

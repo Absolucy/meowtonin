@@ -5,6 +5,13 @@
 #define TEST_LIB (world.system_type == MS_WINDOWS ? "test_lib" : "libtest_lib")
 #endif
 
+// OpenDream has no load_ext, so look the function up on every call there
+#ifdef OPENDREAM
+#define __TEST_LIB_EXT(handle, symbol) call_ext(TEST_LIB, symbol)
+#else
+#define __TEST_LIB_EXT(handle, symbol) call_ext(handle ||= load_ext(TEST_LIB, symbol))
+#endif
+
 /// Says hi.
 ///
 /// Arguments:
@@ -13,19 +20,19 @@
 /// * mark - (optional)
 ///
 /// Rust: `fn greet(name: String, greeting: Option<String>, mark: Option<String>) -> String`
-#define greet(name, greeting...) call_ext(__test_lib_greet ||= load_ext(TEST_LIB, "byond:greet"))(name, greeting)
+#define greet(name, greeting...) __TEST_LIB_EXT(__test_lib_greet, "byond:greet")(name, greeting)
 var/static/__test_lib_greet
 
 /// Rust: `fn ignore_first(_: f32, mut count: f32) -> f32`
-#define ignore_first(arg_1, count) call_ext(__test_lib_ignore_first ||= load_ext(TEST_LIB, "byond:ignore_first"))(arg_1, count)
+#define ignore_first(arg_1, count) __TEST_LIB_EXT(__test_lib_ignore_first, "byond:ignore_first")(arg_1, count)
 var/static/__test_lib_ignore_first
 
 /// Rust: `fn log_all(args: Vec<ByondValue>)`
-#define log_all(args...) call_ext(__test_lib_log_all ||= load_ext(TEST_LIB, "byond:log_all"))(args)
+#define log_all(args...) __TEST_LIB_EXT(__test_lib_log_all, "byond:log_all")(args)
 var/static/__test_lib_log_all
 
 /// Rust: `fn ping()`
-#define ping(...) call_ext(__test_lib_ping ||= load_ext(TEST_LIB, "byond:ping"))()
+#define ping(...) __TEST_LIB_EXT(__test_lib_ping, "byond:ping")()
 var/static/__test_lib_ping
 
 /// Adds two numbers.
@@ -37,5 +44,5 @@ var/static/__test_lib_ping
 /// * b - the second number
 ///
 /// Rust: `fn add(a: f32, b: f32) -> f32`
-#define test_lib_add(a, b) call_ext(__test_lib_add ||= load_ext(TEST_LIB, "byond:add"))(a, b)
+#define test_lib_add(a, b) __TEST_LIB_EXT(__test_lib_add, "byond:add")(a, b)
 var/static/__test_lib_add
